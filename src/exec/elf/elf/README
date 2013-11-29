@@ -1,0 +1,8 @@
+			     -*- Text -*-
+
+.intro: A wrapper for <elf.h>
+
+This is necessary because <elf.h> on some systems does not contain all
+that it should.  Each directory should contain at least `mut_elf.h'.
+
+XREF: <URI:mut/src/include/README>

@@ -1,0 +1,4 @@
+ACC=$(CC) $(ACC_INCLUDE) $(ACC_LIB)
+ACC_WARNINGS= -Wall -Wcast-align -Wcast-qual -Winline \
+              -Wmissing-prototypes -Wpointer-arith \
+              -Wstrict-prototypes -Wwrite-strings

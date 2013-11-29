@@ -1,0 +1,97 @@
+			     -*- Text -*-
+
+  $Id$
+
+.intro: mut_resources.h template
+
+typedef ... mut_resources;
+
+extern void
+mut_resource_make_producer
+( mut_resource  * obj
+, mut_action    * producer
+, size_t          obj_size
+, mut_backtrace * backtrace
+);
+
+ `mut_resource_make_producer' marks `obj' as having being produced by
+ `producer' with a size of `obj_size'.
+
+ `mut_resource_make_producer' owns `backtrace'.
+
+
+extern void
+mut_resources_open(mut_resources * map, mut_log * log, int really_delete);
+
+  `mut_resources_open' opens up	`map' read for use.  This must be done
+  before any other call to a mut_resource function is applied to `map'.
+  `really_delete' indicates whether objects should be removed from
+  `map' when mut_resources_delete_resource is called or whether they
+  should just be marked as deleted so that they can still be referred
+  to later.
+
+
+extern mut_resource *
+mut_resources_create_resource(mut_resources * map, mut_exec_addr addr);
+
+  `mut_resources_create_resource' attempts to enter `addr' into `map'.
+  If there is no existing resource allocated at `addr', then a new
+  resource is created an added to `map'.  If an existing resource in
+  `map' has the key `addr', then that resource is returned.  These two
+  cases can be told apart by the fact that the `action' field will be
+  NULL for a new resource.  If a new resource cannot be created for 
+  some reason, then NULL is returned and the cause of the problem is
+  logged.
+
+  The returned resource is owned by `map'.
+
+
+extern mut_resource *
+mut_resources_lookup(mut_resources * map, mut_exec_addr addr);
+
+  `mut_resources_lookup' attempts to locate a resource at `addr' in `map'.
+  If there is a resource, it is returned, otherwise NULL is returned.
+  The returned resource is owned by `map'.
+
+
+extern void
+mut_resources_delete_resource(mut_resources * map, mut_resource * obj, mut_action * consumer);
+
+  `mut_resources_delete_resource' marks `obj' as having been deleted
+  by `consumer'.  Whether `obj' is really deleted or not depends on
+  whether `really_delete' was set when `map' was opened.
+
+
+exern size_t
+mut_resources_iter_open(mut_resources * map, mut_resources_iter * iter, int all);
+
+  `mut_resources_iter_open' opens `iter' on `map' with `all'
+  indicating whether all resources should be iterated over, or just
+  those which have not been consumed.  
+
+  `mut_resources_iter_open' returns the number of objects that can be
+  iterated over.
+
+  The result of calling an mut_resource_iter operation on an iterator
+  which has not been opened is undefined.
+
+
+extern mut_resource *
+mut_resources_iter_read(mut_resources_iter * iter)
+
+  `mut_resources_iter_read' reads the next resource from `iter' and
+  returns it.  The result is NULL if there are no more resources.
+  The returned resource is owned by the map that `iter' was opened on.
+
+
+extern void
+mut_resources_iter_close(mut_resources_iter * iter);
+
+  `mut_resources_iter_close' closes `iter'.
+
+
+extern void
+mut_resources_close(mut_resources * map);
+
+  `mut_resources_close' closes `map'.  Once this has been done, all
+  the resources owned by `map' are no longer available.

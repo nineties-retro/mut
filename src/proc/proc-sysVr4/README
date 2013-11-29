@@ -1,0 +1,8 @@
+			     -*- Text -*-
+
+.intro: process tracing via the SysV R4 /proc file system interface.
+
+.status: Partially written.  Abandoned when I found that my Linux
+1.3.25 kernel doesn't support the various PIOCxxx codes that are
+listed in <URI:mut/bib/nohr>.  After upgrading to 2.0.24 plus up to
+date libc ... etc., this doesn't have the PIOCxxx codes either.

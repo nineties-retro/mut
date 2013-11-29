@@ -1,0 +1,131 @@
+			     -*- Text -*-
+
+19:14 - Start.
+
+19:36 - Cured part of the problem by adding the call :-
+
+          rld_process_restore(m->process, pc, consumer->instr)
+
+        to the consuming branch of the producer resource case in
+        <URI:rld/src/rld_manager.c#rld_manager_do_consumer>.  My guess
+        is that this got lost when rld_manager_do_consumer was
+        reorganised on or before 19961130.
+
+./main -c ../tests/ccr
+A
+B
+C
+./main error 0 CUR free 7000 main 144 _entry 39 <?> 0
+./main info process.exited 0
+$ 
+
+19:41 - The CUR error is because after the resource has been consumed,
+        rld thinks that the value is unallocated.  This is unlikely to
+        happen in a real program as the resource would probably be
+        reallocated before an attempt was made to free it again.
+
+20:20 - Added a comment about why nlist isn't used in
+        <URI:rld/src/exec/aout/rld_exec.c>.  Also added code to check
+        that the MAGIC and MACHTYPE values are set correctly.
+
+20:29 - Added intro hooks and MANIFEST generation to
+        <URI:rld/src/exec/aout> and <URI:rld/src/exec/aout>.
+
+20:49 - Added idea.backtrace and sol.backtrace.{x86,sparc} and the
+        README files in the implementation.
+
+20:57 - Trying rld on cur_chain compiled with -fomit-frame-pointer
+        (not surprisingly) causes it to diverge :-
+
+./main ../tests/cur_chain
+A
+./main error 0 CUR free 10 foo da <?> 0
+A
+./main error 0 CUR free 10 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 foo da <?> 448b0000 <?> 0
+A
+...
+
+         What is curious is the way that it diverges.  I expected it
+         to diverge during the backtrace generation, but instead it
+         seems to be stuck in a cycle doing A and then generating a
+         backtrace.  Looking at the machine code :-
+
+(gdb) x/40i main
+0xf4 <main>:	subl   $0x4,%esp
+0xf7 <main+3>:	pushl  %ebp
+0xf8 <main+4>:	call   0x1ec <__main>
+0xfd <main+9>:	pushl  $0x2
+0xff <main+11>:	pushl  $0xe2
+0x104 <main+16>:	pushl  $0x1
+0x106 <main+18>:	call   0xfb4 <write>
+0x10b <main+23>:	addl   $0xc,%esp
+0x10e <main+26>:	call   0xc4 <foo>
+0x113 <main+31>:	pushl  $0x2
+0x115 <main+33>:	pushl  $0xe5
+0x11a <main+38>:	pushl  $0x1
+0x11c <main+40>:	call   0xfb4 <write>
+0x121 <main+45>:	addl   $0xc,%esp
+0x124 <main+48>:	pushl  $0x8
+0x126 <main+50>:	call   0x94 <__gnu_malloc>
+0x12b <main+55>:	addl   $0x4,%esp
+0x12e <main+58>:	movl   %eax,0x4(%esp,1)
+0x132 <main+62>:	pushl  $0x2
+0x134 <main+64>:	pushl  $0xe8
+0x139 <main+69>:	pushl  $0x1
+0x13b <main+71>:	call   0xfb4 <write>
+0x140 <main+76>:	addl   $0xc,%esp
+0x143 <main+79>:	movl   0x4(%esp,1),%edx
+0x147 <main+83>:	pushl  %edx
+0x148 <main+84>:	call   0x8b4 <free>
+0x14d <main+89>:	addl   $0x4,%esp
+0x150 <main+92>:	xorl   %eax,%eax
+0x152 <main+94>:	jmp    0x154 <main+96>
+0x154 <main+96>:	popl   %ebp
+0x155 <main+97>:	addl   $0x4,%esp
+0x158 <main+100>:	ret    
+0x159 <main+101>:	nop    
+0x15a <main+102>:	nop    
+0x15b <main+103>:	nop    
+
+(gdb) x/20i foo
+0xc4 <foo>:	subl   $0x4,%esp
+0xc7 <foo+3>:	pushl  %ebp
+0xc8 <foo+4>:	movl   $0x10,0x4(%esp,1)
+0xd0 <foo+12>:	movl   0x4(%esp,1),%eax
+0xd4 <foo+16>:	pushl  %eax
+0xd5 <foo+17>:	call   0x8b4 <free>
+0xda <foo+22>:	addl   $0x4,%esp
+0xdd <foo+25>:	popl   %ebp
+0xde <foo+26>:	addl   $0x4,%esp
+0xe1 <foo+29>:	ret    
+
+(gdb) break foo
+Breakpoint 1 at 0xc4
+(gdb) run
+Starting program: rld/tests/cur_chain 
+A
+
+Breakpoint 1, 0xc4 in foo ()
+(gdb) bt
+#0  0xc4 in foo ()
+#1  0x113 in main ()
+(gdb) 
+
+21:05 - ebp is still being used and GDB is happy so what is different?
+
+(gdb) info reg ebp esp
+ebp            0xbffffb6c	0xbffffb6c
+esp            0xbffffdc4	0xbffffdc4
+(gdb) x/3wx $ebp-4
+0xbffffb68 <end+3221211008>:	0x00000000	0x00000000	0x00000000
+(gdb) x/3wx $esp-4
+0xbffffdc0 <end+3221211608>:	0x000000e2	0x00000113	0xbffffb6c
+(gdb) 
+
+21:30 - Time to trace the backtrace generation.
+
+21:43 - Can't spot anything obvious but haven't found the problem.
+
+21:43 - Backup.

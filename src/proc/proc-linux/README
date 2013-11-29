@@ -1,0 +1,23 @@
+			     -*- Text -*-
+
+.intro: process tracing via the Linux /proc file system interface.
+
+.plan9: The /proc interface under Linux 2 is not like that of SysVr4,
+ instead it looks more like a Plan 9 /proc file system.
+
+.mem: It has a /proc/<pid>/mem which allows the memory of a process to
+ be read and written (though it isn't clear if write works).
+
+.exe: It has a /proc/<pid>/exe which appears to be equivalent
+ to a /proc/<pid>/text in Plan 9.
+
+.reg: In Plan 9 the registers are read and written via
+ /proc/<pid>/mem, it is not clear from the kernel code if this is
+ supported in the Linux interface -- there is no obvious code to do
+ this in the mem interface and I could not see any other interface
+ which implements this feature.
+
+.ctl: There does not seem to be an equivalent of /proc/<pid>/ctl to
+ control the status of a process.  There are the various
+ /proc/<pid>/stat{,m,us} files, but all of them are read only in
+ version 2.0.20 (there is no code in the kernel to deal with writes).

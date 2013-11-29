@@ -1,0 +1,235 @@
+                             -*- Text -*-
+
+Unpacked after a 12+ year hibernation.
+
+Try to make it compile under Ubuntu 12.04.
+
+Seems 2001 vintage changes to make it compile under OpenBSD 2.8 broke
+ELF due to some API changes that were no propagated to the ELF code.
+
+Since Code was an inconsistent mixture of original 2 space indentation
+and K&R II done in 2001 decided to make it consistent.  Went with
+Linux kernel style since that's what I'm used to now.
+  
+17:15
+  Now builds.  Tried it out on ls ...
+
+    $ out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty /bin/ls
+    Makefile  README  arch	backtrace  bin	counter  exec  include	log  make  mem	mut.c  mut.h  mut.sh  mut_action.h  out  proc  resources  ui  uint64  xxx
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info process.exited 0
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 3612 8AD35D8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 252 8AD32D8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 7 8ADB440
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 6 8ADB430
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 5 8ADB420
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 4 8ADB410
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 3 8ADB400
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 13 8ADB3E8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 4 8ADB3D8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 9 8ADB3C8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 7 8ADB3B8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 5 8ADB3A8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 8 8ADB398
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 4 8ADB388
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 7 8ADB378
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 10 8ADB368
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 4 8ADB358
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 5 8ADB348
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 8 8ADB338
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 5 8ADB328
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 10 8ADB318
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 4 8ADB308
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 6 8ADB2F8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 12800 8AD00A8
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 48 8AD0070
+    out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 48 8AD0038
+    $ 
+
+  Hm, ls really leak?  Let's try running the test suite ...
+
+17:31
+  Tests now compile, so let's try running them ...
+
+    $ tests/scripts/mut_test -c tests/gen/results.x86/correct/ -r tests/gen/results.x86/current src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+    tests/scripts/mut_test: 31: tests/scripts/mut_test: Syntax error: "(" unexpected
+    $ 
+
+17:32
+  Turns out my /bin/sh script was really a Bashism in it.  Fixed that
+  and now ...
+
+    $ tests/scripts/mut_test -c tests/gen/results.x86/correct/ -r tests/gen/results.x86/current src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+    afm_free_exe FAILED
+    afm_free_exs FAILED
+    calloc_exe_t FAILED
+    calloc_exe_bt FAILED
+    calloc_exe_bft FAILED
+    calloc_exe_bfst FAILED
+    calloc_exs_t FAILED
+    calloc_exs_bt FAILED
+    calloc_exs_bft FAILED
+    calloc_exs_bfst FAILED
+
+17:33
+  Stopped here since all the tests are failing.
+
+  Break.
+
+18:13
+  Hm ...
+
+    $ src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe 
+    A
+    B
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info process.exited 0
+    $ 
+
+  Clearly not the correct result given that mlk_malloc.exe leaks memory.
+
+18:21
+  Seems like the interception is not working for the tests ...
+
+    $ src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty -b -s -t -x@@GLIBC_2.0 tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe 
+    A
+    B
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info process.exited 0
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info stats alloc.now 0 0 alloc.total 0 0 alloc.max.space 0 0 alloc.max.count 0 0 malloc 0 free 0 realloc 0 calloc 0 cfree 0
+    $ 
+
+18:24
+  Tried the static versoins of the tests and that's finding something,
+  but more than should be found ...
+
+    $ src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.static.elfd.off.on/exe/mlk_malloc.exe 
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info duplicate.addr cfree free 804E840
+    A
+    B
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info process.exited 0
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 8 896B718
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 2480 896AD60
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 20 896AD48
+    $ 
+
+18:28
+  Static tests are failling because finding more memory being leaked
+  than is being explicitly allocated by my test code ...
+
+    $ src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty -z -t tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe 
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info duplicate.addr cfree free 804E920
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info trace malloc 20 825BD48
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info trace malloc 2480 825BD60
+    A
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info trace malloc 4 825C718
+    B
+    C
+    D
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info trace free 825C718 4
+    E
+    F
+    H
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty info process.exited 0
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 2480 825BD60
+    src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty error MLK malloc 20 825BD48
+    $ 
+
+18:30
+  Interestingly Valgrind claims that there is no leak ...
+
+    $ sudo ~/bin/valgrind-2.4.1 --leak-check=yes tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe 
+    ==7398== Memcheck, a memory error detector for x86-linux.
+    ==7398== Copyright (C) 2002-2005, and GNU GPL'd, by Julian Seward et al.
+    ==7398== Using valgrind-2.4.1, a program supervision framework for x86-linux.
+    ==7398== Copyright (C) 2000-2005, and GNU GPL'd, by Julian Seward et al.
+    ==7398== For more details, rerun with: -v
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x805547A: __linkin_atfork (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x8055D7B: _dl_non_dynamic_init (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804E4F5: malloc (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x8055D7B: _dl_non_dynamic_init (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804E518: malloc (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x8055D7B: _dl_non_dynamic_init (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x80498CA: __new_exitfn (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x8049968: __new_exitfn (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x8053DD8: write (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x80491A5: __libc_start_main (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    A
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804E4F5: malloc (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x80491A5: __libc_start_main (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804E518: malloc (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x80491A5: __libc_start_main (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    B
+    C
+    D
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804B31E: _int_free (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x80491A5: __libc_start_main (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== Conditional jump or move depends on uninitialised value(s)
+    ==7398==    at 0x804B36C: _int_free (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398==    by 0x80491A5: __libc_start_main (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    E
+    F
+    H
+    ==7398== 
+    ==7398== Use of uninitialised value of size 4
+    ==7398==    at 0x8049827: __run_exit_handlers (in tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe)
+    ==7398== 
+    ==7398== ERROR SUMMARY: 19 errors from 11 contexts (suppressed: 0 from 0)
+    ==7398== malloc/free: in use at exit: 0 bytes in 0 blocks.
+    ==7398== malloc/free: 0 allocs, 0 frees, 0 bytes allocated.
+    ==7398== For counts of detected errors, rerun with: -v
+    ==7398== No malloc'd blocks -- no leaks are possible.
+    $ 
+
+19:48
+  
+20:22
+  Looked at :-
+
+    $ objdump -d tests/gen/gcc.x86.fp.static.elfd.off.on/exe/afm_free.exe
+
+  and it is clear that the start up sequence is :-
+
+    start
+        __libc_start_main
+            __libc_init_first
+                _dl_non_dynamic_init
+                    _dl_init_paths
+                        __libc_malloc
+        main
+
+  Didn't look through the shutdown path but either mut is wrong or
+  there is no corresponding code to free that memory.  Presumably on
+  the grounds that it would be a waste of time given that the program
+  is going to exit.
+
+  Possible solution is to only start interception once main is reached
+  and stop it after main has terminated.
+
+    1. That would mean that any alloc/free in an atexit handler would not be recorded.
+
+    2. The call to main is done by pushing its address onto the stack
+       before calling __libc_start_main and so detecting termination
+       of main would involve putting a breakpoint on it, and when hit
+       then reaching back up the stack to find the return address and
+       putting on that before installing breakpoints for malloc/free
+       .. etc.
+
+21:05
+  Going back to the original problem it seems that ls does leak.

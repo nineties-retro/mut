@@ -1,0 +1,66 @@
+.free.unalloc: Keep a set of the allocated resources and each time
+ free is called, check that the argument is in the set.
+
+.free.free: When free is called, do not actually free the memory,
+ but mark the resource as freed.  When free is called on a resource,
+ report an error if the resource is already marked as free.
+
+.backtrace.x86: On action entry memory[ESP] contains the return
+ address and memory[EBP] contains the frame pointer of the caller frame
+ and memory[EBP+4] contains the return address of its caller.  The
+ frame pointer links can be followed until memory[EBP] is 0 at which
+ point the backtrace is complete.
+XREF: <URI:mut/src/proc/ptrace/arch/x86/mut_process_arch.c#mut_process_function_backtrace>
+
+.backtrace.x86.no-fp: GCC has the option not to use a frame pointer.
+
+.backtrace.x86.no-fp.inc: Ensure that the intial value for EBP is
+ greater than ESP and that EBP for the next frame is greater than the
+ EBP for the frame above it on the stack.  This can fail in two ways.
+
+.backtrace.x86.no-fp.inc.threads: Some thread systems implement
+ a stack such that it is not contiguous but instead consist of
+ contiguous blocks linked together.  There is no requirement that the
+ blocks are allocated such that they have decreasing addresses, indeed
+ the opposite is probably true.  In this case, sol.backtrace.x86.no-fp.inc
+ will result in a truncated backtrace.
+
+.backtrace.x86.no-fp.inc.fake: EBP may be used in such a way that
+ it contains a value that is greater than ESP and so
+ .backtrace.x86.no-fp.inc could result in an attempt to examine a
+ an address which does not really contain a frame.
+
+.backtrace.x86.no-fp.instr: Attempt to examine the instructions
+ around a function entry to determine if EBP is being saved as a frame
+ pointer.  Difficult.
+
+
+.backtrace.sparc: On action entry (i.e. before save) %o7 contains
+ the return address, %o6 contains the stack pointer and %i6 contains
+ the frame pointer.  It should be possible to follow the frame pointer
+ links through memory[%i6] until the value is 0 at which point the
+ backtrace is complete.
+
+.inter: Do not include in the program text any strings that are
+ language specific.
+
+.lib.names: To limit name clashes with other code that it needs to
+ be linked against, all external symbols should have a common prefix --
+ the proposal is "mut_".
+
+.thread.global: The program should not contain any global
+ variables that could cause problems for threads.
+
+.thread.static: The program should not contain any static
+ variables defined in a function body that might be used in a threaded
+ context.
+
+.leak.purify: Use Purify, if available.
+
+.leak.checker: Use Checker, if available.
+
+.leak.self: Once req/min has been satisfied, test the program on itself.
+
+.error-log: all errors are logged via the mut_log mechanism.
+
+.error-log.no-req: req/error-log needs a requirement.

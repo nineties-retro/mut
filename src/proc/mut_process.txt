@@ -1,0 +1,255 @@
+			     -*- Text -*-
+
+.intro: mut_process interface
+
+Any mut_process.h should contain the following :-
+
+typedef ... mut_process;
+
+
+extern int
+mut_process_open(mut_process * p, char **argv, mut_log * log);
+
+  `mut_process_open' opens a process.  `argv' is the command line 
+  (including the command name) of the command to run.  Opening a
+  process consists of creating it and then stopping it before any
+  instructions are executed.
+
+  `mut_process_open' returns a non-zero value on success and a zero
+  value on failure.
+
+  The cause of any failure will be logged with `log'
+
+
+extern int
+mut_process_wait(mut_process * p, mut_exec_addr * pc);
+
+  Wait for `p' to stop.  
+
+  If `p' stops on a breakpoint, then a positive value is returned
+  and `pc' is set to the address of the instruction that the process
+  stopped on.
+
+  If `p' exits, then a negative value is returned and the value of `pc'
+  is unspecified.
+
+  In any other circumstance zero is returned and the error is logged.
+
+
+extern int
+mut_process_breakpoint(mut_process * p, mut_exec_addr addr, mut_instr * instr);
+
+  `mut_process_breakpoint' sets a breakpoint at `addr' and returns the
+  instruction that was at `addr' before the breakpoint was set there.
+
+  `mut_process_breakpoint' returns a non-zero value on success and
+  zero if the breakpoint could not be set for any reason.
+
+  The value of `instr' is unspecified if the result is zero.
+
+
+extern int
+mut_process_read_arg(mut_process * p, size_t nth_arg, mut_arg * arg);
+
+  `mut_process_read_arg' can be called immediately on entry to a
+  function in the target process.
+  
+  `mut_process_read_arg' reads `nth_arg' (count starts at 0).
+
+  `mut_process_read_arg' returns a non-zero value on success and
+  zero if the argument could not be read for any reason.
+
+  The value of `arg' is unspecified if the result is zero.
+
+
+extern int
+mut_process_write_arg(mut_process * p, size_t nth_arg, mut_arg arg);
+
+  `mut_process_write_arg' can be called immediately on entry to a
+  function in the target process.
+  
+  `mut_process_write_arg' makes `arg' the `nth_arg' (count starts at 0).
+
+  `mut_process_write_arg' returns a non-zero value on success and
+  zero if the argument could not be read for any reason.
+
+
+extern int
+mut_process_function_return_addr(mut_process * p, mut_exec_addr * addr);
+
+  `mut_process_function_return_addr' can be called immediately on
+  entry to a function in the target process.
+
+  `mut_process_function_return_addr' returns `addr' to which execution
+  execution will resume after the target function has finished
+  execution. 
+
+  `mut_process_function_return_addr' returns a non-zero value on success and
+  zero if the argument could not be read for any reason.
+
+  The value of `addr' is unspecified if the result is zero.
+
+
+extern int
+mut_process_function_backtrace(mut_process *, mut_backtrace *);
+
+  `mut_process_function_backtrace' can be called immediately on
+  entry to function call in the target process.
+
+  `mut_process_function_backtrace' returns `backtrace' of the target
+  function calls that led to target function that was just called.
+
+  `mut_process_function_backtrace' returns a non-zero value on
+  success and zero if the bbacktrace could not be created for any reason.
+
+  The value of `backtrace' is unspecified if
+  `mut_process_function_backtrace' returns zero.
+
+
+extern int
+mut_process_read_result(mut_process *, mut_arg * result);
+
+  `mut_process_read_result' can be called immediately on
+  return from a call to a function in the target process.
+
+  `mut_process_read_result' returns `result' which the target
+  function returns.
+
+  `mut_process_read_result' returns a non-zero value on success and
+  zero if the argument could not be read for any reason.
+
+  The value of `result' is unspecified if `mut_process_read_result'
+  returns zero.
+
+
+extern int
+mut_process_write_result(mut_process *, mut_arg result);
+
+  `mut_process_write_result' can be called immediately on
+  return from a call to a function in the target process.
+
+  `mut_process_write_result' ensures that `result' is the value that
+  is returned by the function in the target process.
+
+  `mut_process_write_result' returns a non-zero value on success and
+  zero if the argument could not be written for any reason.
+
+
+extern int
+mut_process_read_word(mut_process *p, mut_exec_addr addr, int * result);
+
+  `mut_process_write_word' reads `result' from the data area at
+  `addr' which must be word aligned.
+
+  `mut_process_write_word' returns a non-zero value on success and
+  zero if the argument could not be written for any reason.
+
+  The value of `result' is unspecified if `mut_process_read_word'
+  returns zero.
+
+
+extern int
+mut_process_write_word(mut_process *p, mut_exec_addr addr, int value);
+
+  `mut_process_write_word' writes `value' into the data area at `addr'.
+
+  `mut_process_write_word' returns a non-zero value on success and
+  zero if the argument could not be written for any reason.
+
+
+extern int
+mut_process_skip_to(mut_process * p, mut_exec_addr addr);
+
+  `mut_process_skip_to' can be called immediately on
+  entry to function call in the target process and sets up the process
+  state such that when `mut_process_restore' is called the function is
+  skipped over.
+
+  XXX: `mut_process_skip_to' is a poor name for this function.
+
+
+extern int
+mut_process_restore(mut_process * p, mut_exec_addr addr, mut_instr instr);
+
+  `mut_process_restore' overwrites the instruction at `addr' with `instr'.
+
+  `mut_process_restore' returns a non-zero value on success and
+  zero if the instruction could not be set for any reason.
+
+  
+extern int
+mut_process_resume(mut_process * p);
+
+  `mut_process_resume' resumes execution of the process.
+
+  The result of calling	`mut_process_resume' if the process is not
+  stopped is undefined.
+
+  `mut_process_resume' returns a non-zero value on success and
+  zero if the process could not be resumed.
+
+
+extern int
+mut_process_memcpy(mut_process * p, mut_exec_addr dest, mut_exec_addr src, size_t nbytes)
+
+  `mut_process_memcpy' copies `nbytes' of data from `src' to `dest' in `p'.
+
+  Note that `src' and `dest' are assumed to be addresses returned by
+  malloc, calloc or realloc in `p' and as such are assumed to be at
+  least word (int) aligned.
+
+  `mut_process_memcpy' returns a non-zero value on success and
+  zero if the copy could not be performed.
+
+
+extern int
+mut_process_memset(mut_process * p, mut_exec_addr addr, int c, size_t nbytes)
+
+  `mut_process_memset' fills the first `nbytes' of the memory area
+  pointed starting at `addr' with the constant byte `c'.
+
+  Note that `addr' is assumed to be an address returned by
+  malloc, calloc or realloc in `p' and as such are assumed to be at
+  least word (int) aligned.
+
+  `mut_process_memcpy' returns a non-zero value on success and
+  zero if the initialisation could not be performed.
+
+
+extern void
+mut_process_close(mut_process *);
+
+  `mut_process_close' closes down execution of the process.
+
+
+.action-grammar: The following grammar attempts to define the legal
+sequence of actions for mut_process routines :-
+
+  start ::= 'mut_process_open' initial_action .
+  initial_action ::= { inter_action } cont_action `mut_process_wait' initial_action
+                 | 'mut_process_close' .
+  inter_action ::= 'mut_process_breakpoint'
+                 | 'mut_process_restore' 
+                 | 'mut_process_read_arg' 
+                 | 'mut_process_write_arg' 
+                 | 'mut_process_memcpy' 
+                 | 'mut_process_memset' 
+                 | 'mut_process_read_result'
+                 | 'mut_process_write_result'
+                 | 'mut_process_function_return_addr' .
+  cont_action ::= 'mut_process_resume' | 'mut_process_skip_to' .
+
+
+.instr.alt:  An alternative to having both mut_process_breakpoint and
+mut_process_restore is to define one routine such as :-
+
+  extern int
+  mut_process_instr(mut_process * p, mut_exec_addr addr,
+                    mut_instr * new, mut_instr * old);
+
+which overwrites the instruction at `addr' with `new' if it is non-NULL
+and returns the instruction at `addr' in `old' if it is non-NULL.  The
+only reason this hasn't been used is that it is a slightly less
+convenient interface than is provided by the other two routines.
+
+XREF: <URI:mut/src/proc/ptrace/mut_process_arch.h#README>

@@ -1,0 +1,7 @@
+A
+mut info trace realloc 0 0 8 80496dc 2 main 8048560 8048580 32 _start 80483d0 804842b 91
+B
+mut info trace free 80496dc 8
+C
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 8 1 alloc.max.space 8 1 alloc.max.count 8 1 malloc 0 free 1 realloc 1 calloc 0 cfree 0

@@ -1,0 +1,72 @@
+			     -*- Text -*-
+
+15:34 - Start.
+
+15:41 - Added $(exec) to rld/tests/Makefile so that aout and elf
+        examples can coexist.
+
+        Running cur with no frame pointer generates an assertion :-
+
+./main ../tests/gen/gcc.x86.nfp.static.aout/cur
+A
+./main error 0 CUR free 10 2 main f0 <?> 0
+B
+C
+rld_manager.c:356: failed assertion `action'
+IOT trap/Abort
+
+        Whereas running cur_chain with no frame pointer (still) diverges :-
+
+$ ./main ../tests/gen/gcc.x86.nfp.static.aout/cur_chain
+A
+./main error 0 CUR free 10 2 foo da <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+A
+./main error 0 CUR free 10 3 foo da <?> 448b0000 <?> 0
+
+15:42 - Concentrate on cur for now since it is easier to deal with.
+
+16:17 - Noticed that cur.c will SEGV if left to its own devices.  So
+        created rld/tests/segv.c to see what rld does when it
+        encounters a SEGV :-
+
+./main ../tests/gen/gcc.x86.fp.static.aout/segv
+A
+rld_manager.c:356: failed assertion `action'
+IOT trap/Abort
+$ 
+
+14:18 - Obviously rld needs to be taught more about (fatal) signals.
+
+17:04 - Reworked <URI:rld/src/proc/ptrace/rld_process.c#rld_process_wait>
+        so that it deals with (fatal) signal :-
+
+$ ./main ../tests/gen/gcc.x86.fp.static.aout/segv
+A
+./main info process.signaled 11
+$ 
+
+$ ./main ../tests/gen/gcc.x86.nfp.static.aout/cur
+A
+./main error 0 CUR free 10 2 main f0 <?> 0
+B
+C
+./main info process.signaled 11
+$ 
+
+17:10 - Unfortunately cur_chain still diverges.  Break.
+
+18:33 - Backup

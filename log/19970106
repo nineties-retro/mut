@@ -1,0 +1,42 @@
+			     -*- Text -*-
+
+19:00 - Start.
+
+        The redone <URI:mut/src/exec> interface is an improvement, but
+        it still doesn't help with detecting the case where malloc,
+        realloc, ... etc. are defined, but are not functions.
+
+        Time for a more general interface.
+
+19:24 - Coding done, tests pass ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+19:48 - Rewrote the interface <URI:mut/src/exec/mut_exec.h>.
+        Wrote <URI:mut/tests/src/not_func.c> and found that the info
+        about malloc and realloc not being functions was not output.
+        Had a look with gdb ...
+
+(gdb) p symbol_name
+$6 = 0x8053670 "malloc"
+(gdb) p *symbol
+$7 = {st_name = 200, st_value = 134518132, st_size = 4, st_info = 18 '\022', 
+  st_other = 0 '\000', st_shndx = 16}
+(gdb) p (symbol->st_info)&0xf
+$8 = 2
+
+
+19:52 - Hm, why 2?  According to <URI:mut/bib/nohr> ...
+
+        ST_OBJECT (1) - The symbol is associated with a data object,
+          such as a variable, an array, and so forth.
+
+        ST_FUNC (2)   - The symbol is associated with a function or
+          other executable code.
+
+        Is this a GNU bug or is it meant to be like that?
+
+20:12 - Added <URI:mut/README#status.bogus-definitions>.
+
+20:14 - Backup.

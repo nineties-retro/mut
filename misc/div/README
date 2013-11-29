@@ -1,0 +1,88 @@
+			     -*- Text -*-
+
+.intro: division by 10 tests
+
+In attempt to implement division by 10 without using hardware division
+(or at least restricting the range required of the hardware division)
+tried a couple of ways of performing division by 10.
+
+The files of the form div_XY_10.c perform division by multiple right
+shifts, and the files of the form div_XY_16.c perform division at the
+nibble/byte level.
+
+The following are some experiments to try and find the best shift
+pattern form performing n/10 when n is in the range [0..USHRT_MAX*100]
+The under and over values indicate the worst approximation either
+below or above the correct value (the lower the better in each case).
+The pattern after that indicates the shift pattern that was used to
+generate that value. 
+
+$ ./div_16_10
+under= 153621, over= 2  4+5+7-8
+$ ./div_16_10
+under= 27, over= 102398 4+5+7
+$ ./div_16_10
+under= 25625, over= 6   4+5+7-9
+$ ./div_16_10
+under= 27, over= 166388 4+5+7+10
+$ ./div_16_10
+under= 27, over= 70408  4+5+7-11
+$ ./div_16_10
+under= 27, over= 86408  4+5+7-12
+$ ./div_16_10
+under= 27, over= 100408 4+5+7-15
+$ ./div_16_10
+under= 29, over= 38400  4+5+7-9+10
+$ ./div_16_10
+under= 29, over= 6410   4+5+7-9+10-11
+$ ./div_16_10
+under= 29, over= 14410  4+5+7-9+10-11+12-13
+$ ./div_16_10
+under= 9623, over= 14   4+5+7-9+10-11-12
+$ ./div_16_10
+under= 89621, over= 2   4+5+7-8+9-10;
+$ ./div_16_10
+under= 1631, over= 12  3-5+8+9+11-13
+$ ./div_16_10
+under= 641, over= 12   3-5+8+9+11-13+16
+$ ./div_16_10
+under= 153609, over= 6  3-5+8
+$ ./div_16_10
+under= 33, over= 6404  3-5+8+9+11
+
+
+The following are some experiments to try and find the best shift
+pattern form performing n/10 when n is in the range [0..USHRT_MAX*1000]
+The under and over values indicate the worst approximation either
+below or above the correct value (the lower the better in each case).
+The pattern after that indicates the shift pattern that was used to
+generate that value. 
+
+$ ./div_16_10
+under= 6041, over= 12  3-5+8+9+11-13+16
+$ 
+
+Unfortunately I don't have the mathematical knowledge (or time) to
+determine the shift pattern any other way than empirically or to
+determine the worst case upper and lower bounds on the approximation.
+If I had more time I'd like to work on this.
+
+
+COMPILING
+
+To compile all the tests, just type :-
+
+	$ make
+
+
+CLEANING UP
+
+Typing
+
+	$ make clean
+
+will remove all the object files and typing
+
+	$ make realclean
+
+will remove all the executables.

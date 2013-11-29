@@ -1,0 +1,17 @@
+			     -*- Text -*-
+
+15:07 - Start.
+        Redo the <URI:mut/src/exec> interface.  The current one is
+        too general, it was designed to support RLD which needed to
+        look up arbitrary functions rather than MUT which really only
+        needs to know about 5.
+
+16:16 - Changes done, all tests pass.
+
+16:31 - Updated <URI:mut/src/exec/mut_exec.h>
+
+16:46 - Added -n option and changed -l -> -o.  Regenerated tests answers.
+
+17:10 - Updated <MUT:mut/doc/mut.1> wrt to above changes.
+
+17:13 - Break.

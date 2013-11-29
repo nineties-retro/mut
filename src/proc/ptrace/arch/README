@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+.intro: architecture specific process stuff.
+
+Some of the stuff is probably more OS than architecture specific.
+Will address this if and when MUT is ported to a system where the
+difference is noticable.
+
+Each subdirectory should contain at least mut_process_arch.c and
+mut_process_arch.h.

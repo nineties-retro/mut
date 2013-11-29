@@ -1,0 +1,591 @@
+			     -*- Text -*-
+
+16:18 - Start
+
+17:02 - Made various changes to accomodate a fat program counter only
+        to decide that a simpler one is just to hide the detail behind
+        some new routines rld_process_read_pc and rld_process_write_pc.
+        Of course, this only works if NPC=PC+4, but this should always
+        be the case for any breakpoints that are set by rld.
+
+17:20 - This gave rise to :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd/cur
+./main info process.signaled 11
+
+        Whilst single stepping with GDB I realised that the problem is
+        probably due to the fact that the PC only needs to adjusted on
+        a breakpoint, whereas currently it is being unconditionally
+        adjusted.
+
+17:24 - Quick bit of surgery and all is back to normal :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd/cur
+A
+./main error 0 CUR free 10 3 <undefined> 8048507 <undefined> 804848b <undefined> 0
+B
+C
+./main info process.exited 0
+$ 
+
+17:50 - Updated rld/src/proc/ptrace/arch/sparc/rld_process_arch.[ch] wrt
+        latest pc changes.  Also rewrote the all backtrace code so
+        that it has some change of being correct -- the previous code
+        was a slightly altered version of the x86 code which was
+        obviously wrong.
+
+18:10 - Added transformer type to rld/src/actions/integrated/rld_actions.[ch]
+
+18:56 - Added consumed flag to a resource since the action field for
+        a transformer marks it as a consumer and a producer.
+        Break.
+
+19:29 - Resume.  Finished first version of transformer code.  This
+        requires consuming.
+
+19:41 - Renamed rld/tests/cur.c -> rld/tests/cur_free.c
+                rld/tests/cur_chain.c -> rld/tests/cur_free_chain.c
+        added   rld/tests/cur_realloc.c
+
+19:57 - Added rld/tests/realloc.c
+
+20:05 - Added rld/tests/rlk_realloc[01].c, 
+        renamed rld/tests/rlk.c to rld/tests/rlk_malloc.c
+
+20:29 - Rewrote the rld/tests/Makefile so that adding a new test just
+        involves adding the name to one line.  In the process changed
+        all the test executables to have the extension .exe just to
+        make the Make rules clearer.
+
+20:42 - Tried running installed tar to try and locate problem :-
+
+$ ./main -c /usr/bin/tar -xMf /dev/fd0
+./main fatal 5 ptrace.peek.data 16
+$
+
+20:44 - Break.
+
+21:01 - With gdb located the problem as :-
+
+(gdb) run /usr/bin/tar -xMf /dev/fd0
+Starting program: src/main /usr/bin/tar -xMf /dev/fd0
+
+Breakpoint 1, rld_trace_read_data (p=0xbffffcb0, addr=22, data=0xbffffbe0)
+    at proc/ptrace/rld_trace.c:112
+(gdb) bt
+#0  rld_trace_read_data (p=0xbffffcb0, addr=22, data=0xbffffbe0)
+    at proc/ptrace/rld_trace.c:112
+#1  0x804b90d in rld_process_function_backtrace (p=0xbffffca8, bt=0x8050fc4)
+    at proc/ptrace/arch/x86/rld_process_arch.c:165
+#2  0x804bb0d in rld_process_function_exit_backtrace (p=0xbffffca8, 
+    bt=0x8050fc4) at proc/ptrace/arch/x86/rld_process_arch.c:209
+#3  0x804cf03 in rld_manager_produce (m=0xbffffcc0, pc=134518264, 
+    producer=0x8050f28, resource_size=18) at rld_manager.c:173
+#4  0x804d93b in rld_manager_do_transformer (m=0xbffffcc0, pc=134518264, 
+    transformer=0x8050f28) at rld_manager.c:391
+#5  0x804dd11 in rld_manager_run (m=0xbffffcc0) at rld_manager.c:451
+#6  0x804e075 in rld_run (exec=0xbffffd18, info=0xbffffcf8) at rld_cli.c:112
+#7  0x804e27d in main (argc=4, argv=0xbffffd58) at rld_cli.c:182
+#8  0x804883b in ___crt_dummy__ ()
+(gdb) p ebp
+$6 = 18
+
+21:02 - That is, it looks like the frame pointer is totally wrong.
+        Perhaps it was compiled with -fomit-frame-pointer.
+
+21:22 - Modified rld so that backtrace is now optional (-b) and reran
+        the test :-
+
+$ ./main -t -c /usr/bin/tar -xMf /dev/fd0
+./main info trace realloc 80495f8
+./main info trace realloc 18 805d930
+./main info trace malloc 40 805d948
+./main info trace malloc 40 805d978
+./main info trace malloc 102 805d9a8
+./main info trace realloc 80495f8
+./main info trace realloc 18 805da18
+./main info trace malloc 133 805da30
+./main info trace free 8049848
+./main info trace malloc 13 805da30
+./main info trace malloc 1 805da48
+./main info trace malloc 32 805da58
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dad8
+./main info trace malloc 24 805dbe0
+./main info trace malloc 260 805dc00
+./main info trace free 8049848
+./main info trace malloc 32 805dd08
+./main info trace malloc 20 805dd30
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dd48
+./main info trace free 8049848
+./main info trace malloc 13 805de50
+./main info trace free 8049848
+./main info trace malloc 13 805de50
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805de68
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805de80
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805de98
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805deb0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dec8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dee0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805def8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df10
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df28
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df40
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df58
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df70
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805df88
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dfa0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dfb8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dfd0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dfe8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805da80
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805da98
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 805dab0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c08
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c20
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c38
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c50
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c68
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c80
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060c98
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060cb0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060cc8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ce0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060cf8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d10
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d28
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d40
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d58
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d70
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060d88
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060da0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060db8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060dd0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060de8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e00
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e18
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e30
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e48
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e60
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e78
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060e90
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ea8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ec0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ed8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ef0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f08
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f20
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f38
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f50
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f68
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f80
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060f98
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060fb0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060fc8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060fe0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8060ff8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061010
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061028
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061040
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061058
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061070
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061088
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80610a0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80610b8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80610d0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80610e8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061100
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061118
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061130
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061148
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061160
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061178
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061190
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80611a8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80611c0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80611d8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80611f0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061208
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061220
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061238
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061250
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061268
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061280
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061298
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80612b0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80612c8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80612e0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80612f8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061310
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061328
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061340
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061358
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061370
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061388
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80613a0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80613b8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80613d0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80613e8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061400
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061418
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061430
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061448
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061460
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061478
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061490
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80614a8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80614c0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80614d8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80614f0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061508
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061520
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061538
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061550
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061568
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061580
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061598
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80615b0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80615c8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80615e0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80615f8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061610
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061628
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061640
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061658
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061670
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061688
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80616a0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80616b8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80616d0
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 80616e8
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061700
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061718
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061730
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061748
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061760
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info trace malloc 13 8061778
+Prepare volume #2 for /dev/fd0 and hit return: 
+
+21:25 - Now to change the behaviour of free so that a CUR still runs free.
+
+$ ./main -t -c /usr/bin/tar -xMf /dev/fd0
+./main info trace realloc 80495f8
+./main info trace realloc 18 805d930
+./main info trace malloc 40 805d948
+./main info trace malloc 40 805d978
+./main info trace malloc 102 805d9a8
+./main info trace realloc 80495f8
+./main info trace realloc 18 805da18
+./main info trace malloc 133 805da30
+./main info trace free 8049848
+./main info trace malloc 13 805da30
+./main info trace malloc 1 805da48
+./main info trace malloc 32 805da58
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dad8
+./main info trace malloc 24 805dbe0
+./main info trace malloc 260 805dc00
+./main info trace free 8049848
+./main info trace malloc 32 805dd08
+./main info trace malloc 20 805dd30
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dd48
+./main info trace free 8049848
+./main info trace malloc 13 805de50
+./main info trace free 8049848
+./main info trace malloc 13 805de50
+./main info trace free 8049848
+./main error 0 CUR free 805d458
+./main info process.signaled 11
+$ 
+
+22:01 - finished writing up a bug report on tar.
+
+22:01 - Backup.

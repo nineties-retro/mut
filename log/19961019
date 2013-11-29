@@ -1,0 +1,11 @@
+			     -*- Text -*-
+
+17:XX - Created rld/scripts/{mc,mcs} by modifying the versions used in
+        the SPARC simulator.
+
+17:XX - Created rld/bib/README.
+
+20:XX - Created rld/src/mem/debug by copying the source from the SPARC
+        simulator 
+
+23:30 - Backup.

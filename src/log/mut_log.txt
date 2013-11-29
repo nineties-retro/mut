@@ -1,0 +1,43 @@
+			     -*- Text -*-
+
+.intro: mut_log interface -- out of date!
+
+typedef ... mut_log;
+
+
+mut_log_extern void
+mut_log_open(mut_log *log, char const *program_name);
+
+  Open the log and register the `program_name' with `log'.
+  The program_name should be non-NULL and it is shared. 
+
+
+mut_log_extern void
+mut_log_fatal(mut_log * log, char const * error_name, int errno_code);
+
+  Start the logging of a fatal error called `error_name'.
+
+mut_log_extern void
+mut_log_error(mut_log *, char const *);
+
+mut_log_extern void
+mut_log_warning(mut_log *, char const *);
+
+mut_log_extern void
+mut_log_arg(mut_log *, char const *);
+
+mut_log_extern int
+mut_log_end(mut_log *);
+
+mut_log_extern void
+mut_log_close(mut_log *);
+
+
+
+
+The following grammar (using an EDIF like BNF) indicates the allowable
+calling sequence for the the above routines :-
+
+  S : 'mut_log_open' { header arguments } 'mut_log_close' .
+  header : < 'mut_log_fatal' > | 'mut_log_error' | 'mut_log_warning' .
+  arguments : { 'mut_log_arg' } .

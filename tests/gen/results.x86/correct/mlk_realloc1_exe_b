@@ -1,0 +1,6 @@
+A
+B
+C
+D
+mut info process.exited 0
+mut error MLK realloc 16 8049698 2 main 80484e0 8048520 64 _start 8048430 804848b 91

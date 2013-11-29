@@ -1,0 +1,5 @@
+mut info backtrace.off
+A
+mut info trace free 10 0
+mut error FUM free 10
+mut info process.signaled 11

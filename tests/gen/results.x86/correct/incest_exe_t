@@ -1,0 +1,6 @@
+A
+mut info trace realloc 0 0 8 80496dc
+B
+mut info trace free 80496dc 8
+C
+mut info process.exited 0

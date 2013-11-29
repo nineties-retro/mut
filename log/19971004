@@ -1,0 +1,140 @@
+			     -*- Text -*-
+
+16:37 - Intention is to add the option to create a safety zone on each
+        side of a block which is initialised with a known value which
+        is then tested when free/realloc is called.  If the value is
+        not the same, then there has been a memory overrun.
+
+17:45 - Break.
+
+18:34 - Restart.
+
+19:11 - Have implemented the malloc and free size of things (still
+        need to deal with calloc + realloc) and running the newly
+        added wum test :-
+
+$ ./main -tc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum.exe
+./main info trace malloc 10 8049674
+A
+./main info trace free 8049674 10
+main: mut.c:696: mut_log_wum: Assertion `(( obj)->consumer.action != 0)' failed.
+IOT trap/Abort
+$ 
+
+19:13 - The assert was due to a bogus assertion being left behind
+        after a cut&paste.  Updated the assertion to give :-
+
+$ ./main -tc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum.exe
+./main info trace malloc 10 8049674
+A
+./main info trace free 8049674 10
+./main error WUM free 8049670 8049674 16961Segmentation fault
+$ 
+
+
+19:25 - It looks like the SEGV was due to a cut&paste error too, or
+        rather me not paying enough attention to the logic of the
+        program -- there is no consumer in a wum error, only a producer.
+
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+(gdb) break mut_log_wum
+Breakpoint 1 at 0x804ee73: file mut.c, line 695.
+(gdb) run -tbc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum.exe
+main info trace malloc 10 8049674 2 main 80484e0 80484ed 13 _start 8048430 804848b 91
+A
+main info trace free 8049674 10
+
+Breakpoint 1, mut_log_wum (m=0xbffffbc8, obj_addr=134518384, 
+    zone_addr=134518388, zone_value=16961, consumer=0xbffffc50, obj=0x8053b18, 
+    bt=0x8053b58) at mut.c:695
+(gdb) p obj
+$1 = (mut_resource *) 0x8053b18
+(gdb) p *obj
+$2 = {next = 0x0, addr = 134518388, size = 10, producer = {
+    action = 0xbffffbfc, backtrace = 0x8053418}, consumer = {action = 0x0, 
+    backtrace = 0x0}}
+(gdb) n
+(gdb) n
+main error WUM(gdb) n
+ free(gdb) n
+ 8049670(gdb) n
+ 8049674(gdb) n
+ 4241(gdb) n
+(gdb) n
+ 2 main 80484e0 804853e 94 _start 8048430 804848b 91(gdb) s
+
+Program received signal SIGSEGV, Segmentation fault.
+0x804ef36 in mut_log_wum (m=0xbffffbc8, obj_addr=134518384, 
+    zone_addr=134518388, zone_value=16961, consumer=0xbffffc50, obj=0x8053b18, 
+    bt=0x8053b58) at mut.c:704
+(gdb) p obj
+$3 = (mut_resource *) 0x8053b18
+(gdb) p *obj
+$4 = {next = 0x0, addr = 134518388, size = 10, producer = {
+    action = 0xbffffbfc, backtrace = 0x8053418}, consumer = {action = 0x0, 
+    backtrace = 0x0}}
+(gdb) quit
+The program is running.  Quit anyway (and kill it)? (y or n) y
+
+Debugger finished
+
+
+19:29 - The obj address and pre zone address are wrong, looks like
+        another logic error ...
+
+$ ./main -tbc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum.exe
+./main info trace malloc 10 8049674 2 main 80484e0 80484ed 13 _start 8048430 804848b 91
+A
+./main info trace free 8049674 10
+./main error WUM free 8049670 8049674 4241 2 main 80484e0 804853e 94 _start 8048430 804848b 91 malloc 2 main 80484e0 80484ed 13 _start 8048430 804848b 91
+$ 
+
+19:30 - Fixed it, now the zone value looks much better too :-
+
+$ ./main -tbc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum.exe
+./main info trace malloc 10 8049674 2 main 80484e0 80484ed 13 _start 8048430 804848b 91
+A
+./main info trace free 8049674 10
+./main error WUM free 8049674 8049680 dead5a59 2 main 80484e0 804853e 94 _start 8048430 804848b 91 malloc 2 main 80484e0 80484ed 13 _start 8048430 804848b 91
+$ 
+
+19:47 - Implemented calloc (but not tested).
+
+19:52 - Break.
+
+20:40 - Restart.
+
+20:50 - A bit premature with the idea that calloc had been done.
+        Unlike the malloc case where it is possible to just round out
+        the size and add space for two zones in one simple
+        calculation, the calloc case is more complicated due to the
+        calloc interface of (n_elem, elem_size).  Easiest thing to do
+        is to break the space down into mut_zone_size chunks :-
+
+          n_elem= (n_elem * elem_size)/mut_zone_size + 1;
+          elem_size= mut_zone_size;
+          n_elem += 2;
+
+21:07 - Implemented the above and the test seems to work ok :-
+
+$ ./main -bc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum_calloc.exe
+A
+./main error WUM free 8049674 8049680 dead5a59 2 main 80484e0 8048540 96 _start 8048430 804848b 91 calloc 2 main 80484e0 80484ef 15 _start 8048430 804848b 91
+$ ./main -bc ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum_calloc.exe
+A
+B
+./main error WUM free 804969c 80496a8 dead5a59 2 main 80484e0 8048551 113 _start 8048430 804848b 91 calloc 2 main 80484e0 80484ef 15 _start 8048430 804848b 91
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum_calloc.exe
+A
+B
+C
+./main info process.exited 0
+$ 
+
+21:11 - Break.
+
+21:20 - Shutdown.

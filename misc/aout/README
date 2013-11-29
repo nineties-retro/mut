@@ -1,0 +1,575 @@
+			     -*- Text -*-
+
+.intro: A simple a.out dumper.
+
+.why: No real documentation on a.out format so aout.c is a test to see
+what the string and symbol table sections of an a.out file look like.
+
+.compile: Just type `make'.  This will build aout and malloc.
+
+.exec: The following is a sample run of the program :-
+
+$ ./aout malloc
+NSYMS= 280, SYMS= 9216, STRS= 12576
+STR_SIZE= 6180
+0 x= 4 (/usr/lib/crt0.o), type 4/4/4, value 0/0/0
+ TEXT
+1 x= 14 (__entry), type 4/4/4, value 0/0/0
+ TEXT
+2 x= 1c (done), type 4/4/4, value 64/64/40
+ TEXT
+3 x= 21 (___shared_dummy__), type 4/4/4, value 80/80/50
+ TEXT
+4 x= 33 (___shared_dummy1__), type 6/6/6, value 4096/4096/1000
+ABS TEXT
+5 x= 46 (malloc.o), type 4/4/4, value 84/84/54
+ TEXT
+6 x= 4f (gcc2_compiled.), type 4/4/4, value 84/84/54
+ TEXT
+7 x= 5e (___gnu_compiled_c), type 4/4/4, value 84/84/54
+ TEXT
+8 x= 70 (rld/misc/aout/), type 100/64/144, value 84/84/54
+ TEXT
+9 x= 8b (malloc.c), type 100/64/144, value 84/84/54
+ TEXT
+10 x= 94 (int:t1=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+11 x= b6 (char:t2=r2;0;127;), type 128/80/200, value 0/0/0
+
+12 x= c8 (long int:t3=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+13 x= ef (unsigned int:t4=r1;0;-1;), type 128/80/200, value 0/0/0
+
+14 x= 108 (long unsigned int:t5=r1;0;-1;), type 128/80/200, value 0/0/0
+
+15 x= 126 (long long int:t6=r1;01000000000000000000000;0777777777777777777777;), type 128/80/200, value 0/0/0
+
+16 x= 16a (long long unsigned int:t7=r1;0000000000000;01777777777777777777777;), type 128/80/200, value 0/0/0
+
+17 x= 1ae (short int:t8=r1;-32768;32767;), type 128/80/200, value 0/0/0
+
+18 x= 1cc (short unsigned int:t9=r1;0;65535;), type 128/80/200, value 0/0/0
+
+19 x= 1ee (signed char:t10=r1;-128;127;), type 128/80/200, value 0/0/0
+
+20 x= 20b (unsigned char:t11=r1;0;255;), type 128/80/200, value 0/0/0
+
+21 x= 227 (float:t12=r1;4;0;), type 128/80/200, value 0/0/0
+
+22 x= 239 (double:t13=r1;8;0;), type 128/80/200, value 0/0/0
+
+23 x= 24c (long double:t14=r1;12;0;), type 128/80/200, value 0/0/0
+
+24 x= 265 (complex int:t15=s8real:1,0,32;imag:1,32,32;;), type 128/80/200, value 0/0/0
+
+25 x= 292 (complex float:t16=r16;4;0;), type 128/80/200, value 0/0/0
+
+26 x= 2ad (complex double:t17=r17;8;0;), type 128/80/200, value 0/0/0
+
+27 x= 2c9 (complex long double:t18=r18;12;0;), type 128/80/200, value 0/0/0
+
+28 x= 2eb (void:t19=19), type 128/80/200, value 0/0/0
+
+29 x= 2f7 (__long_double_t:t14), type 128/80/200, value 0/0/0
+
+30 x= 30b (size_t:t4), type 128/80/200, value 0/0/0
+
+31 x= 315 (wchar_t:t3), type 128/80/200, value 0/0/0
+
+32 x= 320 (__convert_long_double:T20=u16__convert_long_double_i:21=ar1;0;3;4,0,128;\), type 128/80/200, value 0/0/0
+
+33 x= 36a (__convert_long_double_d:14,0,96;;), type 128/80/200, value 0/0/0
+
+34 x= 38c (div_t:t22=s8quot:1,0,32;rem:1,32,32;;), type 128/80/200, value 0/0/0
+
+35 x= 3b2 (ldiv_t:t23=s8quot:3,0,32;rem:3,32,32;;), type 128/80/200, value 0/0/0
+
+36 x= 3d9 (___gnu_calloc), type 4/4/4, value 84/84/54
+ TEXT
+37 x= 3e7 (/usr/include/stdlib.h), type 132/84/204, value 84/84/54
+ TEXT
+38 x= 0 (), type 68/44/104, value 84/84/54
+ TEXT
+39 x= 0 (), type 68/44/104, value 95/95/5f
+ TEXT
+40 x= 0 (), type 68/44/104, value 148/148/94
+ TEXT
+41 x= 0 (), type 68/44/104, value 148/148/94
+ TEXT
+42 x= 3fd (__gnu_calloc:f24=*19), type 36/24/44, value 84/84/54
+ TEXT
+43 x= 412 (__nmemb:p4), type 160/a0/240, value 8/8/8
+
+44 x= 41d (__n:p4), type 160/a0/240, value 12/12/c
+
+45 x= 424 (__nmemb:r4), type 64/40/100, value 3/3/3
+
+46 x= 42f (__n:r4), type 64/40/100, value 6/6/6
+
+47 x= 436 (___gnu_malloc), type 4/4/4, value 164/164/a4
+ TEXT
+48 x= 0 (), type 68/44/104, value 164/164/a4
+ TEXT
+49 x= 0 (), type 68/44/104, value 171/171/ab
+ TEXT
+50 x= 0 (), type 68/44/104, value 212/212/d4
+ TEXT
+51 x= 0 (), type 68/44/104, value 212/212/d4
+ TEXT
+52 x= 444 (__gnu_malloc:f24), type 36/24/44, value 164/164/a4
+ TEXT
+53 x= 455 (__n:p4), type 160/a0/240, value 8/8/8
+
+54 x= 45c (__n:r4), type 64/40/100, value 3/3/3
+
+55 x= 463 (__compar_fn_t:t25=*26=f1), type 128/80/200, value 0/0/0
+
+56 x= 47c (qelem:T27=s12q_forw:28=*27,0,32;q_back:28,32,32;\), type 128/80/200, value 0/0/0
+
+57 x= 4ae (q_data:29=ar1;0;0;2,64,8;;), type 128/80/200, value 0/0/0
+
+58 x= 4c9 (_G_clock_t:t3), type 128/80/200, value 0/0/0
+
+59 x= 4d7 (_G_dev_t:t9), type 128/80/200, value 0/0/0
+
+60 x= 4e3 (_G_fpos_t:t3), type 128/80/200, value 0/0/0
+
+61 x= 4f0 (_G_gid_t:t9), type 128/80/200, value 0/0/0
+
+62 x= 4fc (_G_ino_t:t5), type 128/80/200, value 0/0/0
+
+63 x= 508 (_G_mode_t:t9), type 128/80/200, value 0/0/0
+
+64 x= 515 (_G_nlink_t:t9), type 128/80/200, value 0/0/0
+
+65 x= 523 (_G_off_t:t3), type 128/80/200, value 0/0/0
+
+66 x= 52f (_G_pid_t:t1), type 128/80/200, value 0/0/0
+
+67 x= 53b (_G_ptrdiff_t:t1), type 128/80/200, value 0/0/0
+
+68 x= 54b (_G_sigset_t:t4), type 128/80/200, value 0/0/0
+
+69 x= 55a (_G_size_t:t4), type 128/80/200, value 0/0/0
+
+70 x= 567 (_G_time_t:t3), type 128/80/200, value 0/0/0
+
+71 x= 574 (_G_uid_t:t9), type 128/80/200, value 0/0/0
+
+72 x= 580 (_G_wchar_t:t3), type 128/80/200, value 0/0/0
+
+73 x= 58e (_G_int32_t:t1), type 128/80/200, value 0/0/0
+
+74 x= 59c (_G_uint32_t:t4), type 128/80/200, value 0/0/0
+
+75 x= 5ab (_G_ssize_t:t1), type 128/80/200, value 0/0/0
+
+76 x= 5b9 (_G_va_list:t24), type 128/80/200, value 0/0/0
+
+77 x= 5c8 (_IO_marker:T30=s12_next:31=*30,0,32;_sbuf:32=*33=xs_IO_FILE:,32,32;\), type 128/80/200, value 0/0/0
+
+78 x= 60d (_pos:1,64,32;;), type 128/80/200, value 0/0/0
+
+79 x= 61c (_IO_FILE:T33=s76_flags:1,0,32;_IO_read_ptr:34=*2,32,32;\), type 128/80/200, value 0/0/0
+
+80 x= 655 (_IO_read_end:34,64,32;_IO_read_base:34,96,32;\), type 128/80/200, value 0/0/0
+
+81 x= 684 (_IO_write_base:34,128,32;_IO_write_ptr:34,160,32;\), type 128/80/200, value 0/0/0
+
+82 x= 6b7 (_IO_write_end:34,192,32;_IO_buf_base:34,224,32;\), type 128/80/200, value 0/0/0
+
+83 x= 6e8 (_IO_buf_end:34,256,32;_IO_save_base:34,288,32;_IO_backup_base:34,320,32;\), type 128/80/200, value 0/0/0
+
+84 x= 732 (_IO_save_end:34,352,32;_markers:31,384,32;_chain:32,416,32;\), type 128/80/200, value 0/0/0
+
+85 x= 76f (_jumps:35=*36=xs_IO_jump_t:,448,32;_fileno:1,480,32;\), type 128/80/200, value 0/0/0
+
+86 x= 7a5 (_blksize:1,512,32;_offset:3,544,32;_cur_column:9,576,16;\), type 128/80/200, value 0/0/0
+
+87 x= 7df (_unused:2,592,8;_shortbuf:29,600,8;;), type 128/80/200, value 0/0/0
+
+88 x= 804 (_IO_FILE:t33), type 128/80/200, value 0/0/0
+
+89 x= 811 (_IO_FILE_plus:T37=s80_file:33,0,608;_vtable:38=*19,608,32;;), type 128/80/200, value 0/0/0
+
+90 x= 84d (FILE:t33), type 128/80/200, value 0/0/0
+
+91 x= 856 (fpos_t:t3), type 128/80/200, value 0/0/0
+
+92 x= 860 (malloc.c), type 132/84/204, value 84/84/54
+ TEXT
+93 x= 0 (), type 68/44/104, value 340/340/154
+ TEXT
+94 x= 0 (), type 68/44/104, value 351/351/15f
+ TEXT
+95 x= 0 (), type 68/44/104, value 351/351/15f
+ TEXT
+96 x= 0 (), type 68/44/104, value 364/364/16c
+ TEXT
+97 x= 0 (), type 68/44/104, value 377/377/179
+ TEXT
+98 x= 0 (), type 68/44/104, value 390/390/186
+ TEXT
+99 x= 0 (), type 68/44/104, value 402/402/192
+ TEXT
+100 x= 0 (), type 68/44/104, value 415/415/19f
+ TEXT
+101 x= 0 (), type 68/44/104, value 420/420/1a4
+ TEXT
+102 x= 0 (), type 68/44/104, value 420/420/1a4
+ TEXT
+103 x= 869 (main:F1), type 36/24/44, value 340/340/154
+ TEXT
+104 x= 871 (s:34), type 128/80/200, value 4294967292/-4/fffffffc
+
+105 x= 876 (), type 192/c0/300, value 267/267/10b
+
+106 x= 877 (), type 224/e0/340, value 336/336/150
+ STAB
+107 x= 878 (__main.o), type 4/4/4, value 424/424/1a8
+ TEXT
+108 x= 881 (gcc2_compiled.), type 4/4/4, value 424/424/1a8
+ TEXT
+109 x= 890 (___gnu_compiled_c), type 4/4/4, value 424/424/1a8
+ TEXT
+110 x= 8a2 (/home/jalod/gnu/src/gcc-2.5.8/), type 100/64/144, value 424/424/1a8
+ TEXT
+111 x= 8c1 (./libgcc2.c), type 100/64/144, value 424/424/1a8
+ TEXT
+112 x= 8cd (int:t1=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+113 x= 8ef (char:t2=r2;0;127;), type 128/80/200, value 0/0/0
+
+114 x= 901 (long int:t3=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+115 x= 928 (unsigned int:t4=r1;0;-1;), type 128/80/200, value 0/0/0
+
+116 x= 941 (long unsigned int:t5=r1;0;-1;), type 128/80/200, value 0/0/0
+
+117 x= 95f (long long int:t6=r1;01000000000000000000000;0777777777777777777777;), type 128/80/200, value 0/0/0
+
+118 x= 9a3 (long long unsigned int:t7=r1;0000000000000;01777777777777777777777;), type 128/80/200, value 0/0/0
+
+119 x= 9e7 (short int:t8=r1;-32768;32767;), type 128/80/200, value 0/0/0
+
+120 x= a05 (short unsigned int:t9=r1;0;65535;), type 128/80/200, value 0/0/0
+
+121 x= a27 (signed char:t10=r1;-128;127;), type 128/80/200, value 0/0/0
+
+122 x= a44 (unsigned char:t11=r1;0;255;), type 128/80/200, value 0/0/0
+
+123 x= a60 (float:t12=r1;4;0;), type 128/80/200, value 0/0/0
+
+124 x= a72 (double:t13=r1;8;0;), type 128/80/200, value 0/0/0
+
+125 x= a85 (long double:t14=r1;12;0;), type 128/80/200, value 0/0/0
+
+126 x= a9e (complex int:t15=s8real:1,0,32;imag:1,32,32;;), type 128/80/200, value 0/0/0
+
+127 x= acb (complex float:t16=r16;4;0;), type 128/80/200, value 0/0/0
+
+128 x= ae6 (complex double:t17=r17;8;0;), type 128/80/200, value 0/0/0
+
+129 x= b02 (complex long double:t18=r18;12;0;), type 128/80/200, value 0/0/0
+
+130 x= b24 (void:t19=19), type 128/80/200, value 0/0/0
+
+131 x= b30 (reg_class:T20=eNO_REGS:0,AREG:1,DREG:2,\), type 128/80/200, value 0/0/0
+
+132 x= b59 (CREG:3,BREG:4,Q_REGS:5,SIREG:6,\), type 128/80/200, value 0/0/0
+
+133 x= b7a (DIREG:7,INDEX_REGS:8,GENERAL_REGS:9,\), type 128/80/200, value 0/0/0
+
+134 x= ba0 (FP_TOP_REG:10,FP_SECOND_REG:11,FLOAT_REGS:12,\), type 128/80/200, value 0/0/0
+
+135 x= bcf (ALL_REGS:13,LIM_REG_CLASSES:14,;), type 128/80/200, value 0/0/0
+
+136 x= bf0 (machine_mode:T21=eVOIDmode:0,QImode:1,HImode:2,\), type 128/80/200, value 0/0/0
+
+137 x= c21 (PSImode:3,SImode:4,PDImode:5,DImode:6,\), type 128/80/200, value 0/0/0
+
+138 x= c49 (TImode:7,OImode:8,QFmode:9,HFmode:10,\), type 128/80/200, value 0/0/0
+
+139 x= c70 (SFmode:11,DFmode:12,XFmode:13,TFmode:14,\), type 128/80/200, value 0/0/0
+
+140 x= c9a (SCmode:15,DCmode:16,XCmode:17,TCmode:18,\), type 128/80/200, value 0/0/0
+
+141 x= cc4 (CQImode:19,CHImode:20,CSImode:21,\), type 128/80/200, value 0/0/0
+
+142 x= ce7 (CDImode:22,CTImode:23,COImode:24,\), type 128/80/200, value 0/0/0
+
+143 x= d0a (BLKmode:25,CCmode:26,CCFPEQmode:27,\), type 128/80/200, value 0/0/0
+
+144 x= d2f (MAX_MACHINE_MODE:28,;), type 128/80/200, value 0/0/0
+
+145 x= d45 (mode_class:T22=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\), type 128/80/200, value 0/0/0
+
+146 x= d7d (MODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\), type 128/80/200, value 0/0/0
+
+147 x= daf (MODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;), type 128/80/200, value 0/0/0
+
+148 x= dd7 (ptrdiff_t:t1), type 128/80/200, value 0/0/0
+
+149 x= de4 (size_t:t4), type 128/80/200, value 0/0/0
+
+150 x= dee (wchar_t:t3), type 128/80/200, value 0/0/0
+
+151 x= df9 (UQItype:t11), type 128/80/200, value 0/0/0
+
+152 x= e05 (SItype:t1), type 128/80/200, value 0/0/0
+
+153 x= e0f (USItype:t4), type 128/80/200, value 0/0/0
+
+154 x= e1a (DItype:t6), type 128/80/200, value 0/0/0
+
+155 x= e24 (UDItype:t7), type 128/80/200, value 0/0/0
+
+156 x= e2f (SFtype:t12), type 128/80/200, value 0/0/0
+
+157 x= e3a (DFtype:t13), type 128/80/200, value 0/0/0
+
+158 x= e45 (XFtype:t14), type 128/80/200, value 0/0/0
+
+159 x= e50 (word_type:t1), type 128/80/200, value 0/0/0
+
+160 x= e5d (DIstruct:T23=s8low:1,0,32;high:1,32,32;;), type 128/80/200, value 0/0/0
+
+161 x= e86 (DIunion:t24=u8s:23,0,64;ll:6,0,64;;), type 128/80/200, value 0/0/0
+
+162 x= eaa (func_ptr:t25=*26=f19), type 128/80/200, value 0/0/0
+
+163 x= ebf (__do_global_dtors:F19), type 36/24/44, value 424/424/1a8
+ TEXT
+164 x= ed5 (_exit_dummy_ref:G27=*1), type 32/20/40, value 0/0/0
+
+165 x= eec (__do_global_ctors:F19), type 36/24/44, value 504/504/1f8
+ TEXT
+166 x= f02 (_initialized.6), type 6/6/6, value 4104/4104/1008
+ABS TEXT
+167 x= f11 (__main:F19), type 36/24/44, value 568/568/238
+ TEXT
+168 x= f1c (_exit.o), type 4/4/4, value 600/600/258
+ TEXT
+169 x= f24 (gcc2_compiled.), type 4/4/4, value 600/600/258
+ TEXT
+170 x= f33 (___gnu_compiled_c), type 4/4/4, value 600/600/258
+ TEXT
+171 x= f45 (/home/jalod/gnu/src/gcc-2.5.8/), type 100/64/144, value 600/600/258
+ TEXT
+172 x= f64 (./libgcc2.c), type 100/64/144, value 600/600/258
+ TEXT
+173 x= f70 (int:t1=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+174 x= f92 (char:t2=r2;0;127;), type 128/80/200, value 0/0/0
+
+175 x= fa4 (long int:t3=r1;-2147483648;2147483647;), type 128/80/200, value 0/0/0
+
+176 x= fcb (unsigned int:t4=r1;0;-1;), type 128/80/200, value 0/0/0
+
+177 x= fe4 (long unsigned int:t5=r1;0;-1;), type 128/80/200, value 0/0/0
+
+178 x= 1002 (long long int:t6=r1;01000000000000000000000;0777777777777777777777;), type 128/80/200, value 0/0/0
+
+179 x= 1046 (long long unsigned int:t7=r1;0000000000000;01777777777777777777777;), type 128/80/200, value 0/0/0
+
+180 x= 108a (short int:t8=r1;-32768;32767;), type 128/80/200, value 0/0/0
+
+181 x= 10a8 (short unsigned int:t9=r1;0;65535;), type 128/80/200, value 0/0/0
+
+182 x= 10ca (signed char:t10=r1;-128;127;), type 128/80/200, value 0/0/0
+
+183 x= 10e7 (unsigned char:t11=r1;0;255;), type 128/80/200, value 0/0/0
+
+184 x= 1103 (float:t12=r1;4;0;), type 128/80/200, value 0/0/0
+
+185 x= 1115 (double:t13=r1;8;0;), type 128/80/200, value 0/0/0
+
+186 x= 1128 (long double:t14=r1;12;0;), type 128/80/200, value 0/0/0
+
+187 x= 1141 (complex int:t15=s8real:1,0,32;imag:1,32,32;;), type 128/80/200, value 0/0/0
+
+188 x= 116e (complex float:t16=r16;4;0;), type 128/80/200, value 0/0/0
+
+189 x= 1189 (complex double:t17=r17;8;0;), type 128/80/200, value 0/0/0
+
+190 x= 11a5 (complex long double:t18=r18;12;0;), type 128/80/200, value 0/0/0
+
+191 x= 11c7 (void:t19=19), type 128/80/200, value 0/0/0
+
+192 x= 11d3 (reg_class:T20=eNO_REGS:0,AREG:1,DREG:2,\), type 128/80/200, value 0/0/0
+
+193 x= 11fc (CREG:3,BREG:4,Q_REGS:5,SIREG:6,\), type 128/80/200, value 0/0/0
+
+194 x= 121d (DIREG:7,INDEX_REGS:8,GENERAL_REGS:9,\), type 128/80/200, value 0/0/0
+
+195 x= 1243 (FP_TOP_REG:10,FP_SECOND_REG:11,FLOAT_REGS:12,\), type 128/80/200, value 0/0/0
+
+196 x= 1272 (ALL_REGS:13,LIM_REG_CLASSES:14,;), type 128/80/200, value 0/0/0
+
+197 x= 1293 (machine_mode:T21=eVOIDmode:0,QImode:1,HImode:2,\), type 128/80/200, value 0/0/0
+
+198 x= 12c4 (PSImode:3,SImode:4,PDImode:5,DImode:6,\), type 128/80/200, value 0/0/0
+
+199 x= 12ec (TImode:7,OImode:8,QFmode:9,HFmode:10,\), type 128/80/200, value 0/0/0
+
+200 x= 1313 (SFmode:11,DFmode:12,XFmode:13,TFmode:14,\), type 128/80/200, value 0/0/0
+
+201 x= 133d (SCmode:15,DCmode:16,XCmode:17,TCmode:18,\), type 128/80/200, value 0/0/0
+
+202 x= 1367 (CQImode:19,CHImode:20,CSImode:21,\), type 128/80/200, value 0/0/0
+
+203 x= 138a (CDImode:22,CTImode:23,COImode:24,\), type 128/80/200, value 0/0/0
+
+204 x= 13ad (BLKmode:25,CCmode:26,CCFPEQmode:27,\), type 128/80/200, value 0/0/0
+
+205 x= 13d2 (MAX_MACHINE_MODE:28,;), type 128/80/200, value 0/0/0
+
+206 x= 13e8 (mode_class:T22=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\), type 128/80/200, value 0/0/0
+
+207 x= 1420 (MODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\), type 128/80/200, value 0/0/0
+
+208 x= 1452 (MODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;), type 128/80/200, value 0/0/0
+
+209 x= 147a (ptrdiff_t:t1), type 128/80/200, value 0/0/0
+
+210 x= 1487 (size_t:t4), type 128/80/200, value 0/0/0
+
+211 x= 1491 (wchar_t:t3), type 128/80/200, value 0/0/0
+
+212 x= 149c (UQItype:t11), type 128/80/200, value 0/0/0
+
+213 x= 14a8 (SItype:t1), type 128/80/200, value 0/0/0
+
+214 x= 14b2 (USItype:t4), type 128/80/200, value 0/0/0
+
+215 x= 14bd (DItype:t6), type 128/80/200, value 0/0/0
+
+216 x= 14c7 (UDItype:t7), type 128/80/200, value 0/0/0
+
+217 x= 14d2 (SFtype:t12), type 128/80/200, value 0/0/0
+
+218 x= 14dd (DFtype:t13), type 128/80/200, value 0/0/0
+
+219 x= 14e8 (XFtype:t14), type 128/80/200, value 0/0/0
+
+220 x= 14f3 (word_type:t1), type 128/80/200, value 0/0/0
+
+221 x= 1500 (DIstruct:T23=s8low:1,0,32;high:1,32,32;;), type 128/80/200, value 0/0/0
+
+222 x= 1529 (DIunion:t24=u8s:23,0,64;ll:6,0,64;;), type 128/80/200, value 0/0/0
+
+223 x= 154d (func_ptr:t25=*26=f19), type 128/80/200, value 0/0/0
+
+224 x= 1562 (_exit_dummy_decl:G1), type 32/20/40, value 0/0/0
+
+225 x= 1576 (__U00010.o), type 4/4/4, value 600/600/258
+ TEXT
+226 x= 1581 (__T00051.o), type 4/4/4, value 600/600/258
+ TEXT
+227 x= 158c (__T00059.o), type 4/4/4, value 600/600/258
+ TEXT
+228 x= 1597 (__T00062.o), type 4/4/4, value 600/600/258
+ TEXT
+229 x= 15a2 (__T00122.o), type 4/4/4, value 600/600/258
+ TEXT
+230 x= 15ad (__T00275.o), type 4/4/4, value 600/600/258
+ TEXT
+231 x= 15b8 (__D00126.o), type 4/4/4, value 600/600/258
+ TEXT
+232 x= 15c3 (__fpu_control.o), type 4/4/4, value 600/600/258
+ TEXT
+233 x= 15d3 (__load.o), type 4/4/4, value 600/600/258
+ TEXT
+234 x= 15dc (__setfpucw.o), type 4/4/4, value 1168/1168/490
+ TEXT
+235 x= 15e9 (printf.o), type 4/4/4, value 1232/1232/4d0
+ TEXT
+236 x= 15f2 (gcc2_compiled.), type 4/4/4, value 1232/1232/4d0
+ TEXT
+237 x= 1601 (___gnu_compiled_c), type 4/4/4, value 1232/1232/4d0
+ TEXT
+238 x= 1613 (set-init.o), type 4/4/4, value 1232/1232/4d0
+ TEXT
+239 x= 161e (__libc.o), type 4/4/4, value 1292/1292/50c
+ TEXT
+240 x= 1627 (__libc_CONFLICT_LIST), type 6/6/6, value 4144/4144/1030
+ABS TEXT
+241 x= 163c (__GOT_SIZE), type 2/2/2, value 4096/4096/1000
+ABS
+242 x= 1647 (__PLT_SIZE), type 2/2/2, value 16384/16384/4000
+ABS
+243 x= 1652 (__LAST_DATA_ADDRESS), type 2/2/2, value 1611219276/1611219276/6009414c
+ABS
+244 x= 1666 (__T00320.o), type 4/4/4, value 1320/1320/528
+ TEXT
+245 x= 1671 (___fpu_control), type 7/7/7, value 4112/4112/1010
+ABS TEXT EXT
+246 x= 1680 (___SHARED_LIBRARIES__), type 29/1d/35, value 4148/4148/1034
+ TEXT EXT
+247 x= 1696 (_calloc), type 3/3/3, value 1610613232/1610613232/600001f0
+ABS EXT
+248 x= 169e (__exit_dummy_decl), type 7/7/7, value 4108/4108/100c
+ABS TEXT EXT
+249 x= 16b0 (___setfpucw), type 5/5/5, value 1168/1168/490
+ TEXT EXT
+250 x= 16bc (___do_global_dtors), type 5/5/5, value 424/424/1a8
+ TEXT EXT
+251 x= 16cf (___DTOR_LIST__), type 9/9/11, value 4216/4216/1078
+ BSS EXT
+252 x= 16de (__edata), type 7/7/7, value 4216/4216/1078
+ABS TEXT EXT
+253 x= 16e6 (___CTOR_LIST__), type 29/1d/35, value 4164/4164/1044
+ TEXT EXT
+254 x= 16f5 (__IO_printf), type 3/3/3, value 1610615296/1610615296/60000a00
+ABS EXT
+255 x= 1701 (___do_global_ctors), type 5/5/5, value 504/504/1f8
+ TEXT EXT
+256 x= 1714 (___new_exitfn), type 3/3/3, value 1610617256/1610617256/600011a8
+ABS EXT
+257 x= 1722 (_printf), type 3/3/3, value 1610615296/1610615296/60000a00
+ABS EXT
+258 x= 172a (___load_shared_libraries), type 5/5/5, value 888/888/378
+ TEXT EXT
+259 x= 1743 (__etext), type 5/5/5, value 4096/4096/1000
+ TEXT EXT
+260 x= 174b (___exit_funcs), type 3/3/3, value 1611206244/1611206244/60090e64
+ABS EXT
+261 x= 1759 (___brk), type 3/3/3, value 1610613208/1610613208/600001d8
+ABS EXT
+262 x= 1760 (____brk_addr), type 3/3/3, value 1611205468/1611205468/60090b5c
+ABS EXT
+263 x= 176d (__end), type 9/9/11, value 4232/4232/1088
+ BSS EXT
+264 x= 1773 (__SHARABLE_CONFLICTS__), type 29/1d/35, value 4176/4176/1050
+ TEXT EXT
+265 x= 178a (___libc_init), type 5/5/5, value 1232/1232/4d0
+ TEXT EXT
+266 x= 1797 (_malloc), type 3/3/3, value 1610614936/1610614936/60000898
+ABS EXT
+267 x= 179f (__exit_dummy_ref), type 7/7/7, value 4100/4100/1004
+ABS TEXT EXT
+268 x= 17b0 (___libc_4_521), type 7/7/7, value 4128/4128/1020
+ABS TEXT EXT
+269 x= 17be (___libc_subinit), type 9/9/11, value 4224/4224/1080
+ BSS EXT
+270 x= 17ce (_etext), type 5/5/5, value 4096/4096/1000
+ TEXT EXT
+271 x= 17d5 (_atexit), type 3/3/3, value 1610613144/1610613144/60000198
+ABS EXT
+272 x= 17dd (__NEEDS_SHRLIB_libc_4), type 7/7/7, value 4128/4128/1020
+ABS TEXT EXT
+273 x= 17f3 (_exit), type 3/3/3, value 1610613712/1610613712/600003d0
+ABS EXT
+274 x= 17f9 (_main), type 5/5/5, value 340/340/154
+ TEXT EXT
+275 x= 17ff (_free), type 3/3/3, value 1610613928/1610613928/600004a8
+ABS EXT
+276 x= 1805 (___environ), type 3/3/3, value 1611205428/1611205428/60090b34
+ABS EXT
+277 x= 1810 (_edata), type 7/7/7, value 4216/4216/1078
+ABS TEXT EXT
+278 x= 1817 (_end), type 9/9/11, value 4232/4232/1088
+ BSS EXT
+279 x= 181c (___main), type 5/5/5, value 568/568/238
+ TEXT EXT
+$ 

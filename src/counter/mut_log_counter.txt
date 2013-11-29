@@ -1,0 +1,8 @@
+			     -*- Text -*-
+
+.intro: template for mut_log_counter
+
+extern void
+mut_log_counter(mut_log * log, mut_counter c);
+
+  `mut_log_counter' logs `c' with `log'.

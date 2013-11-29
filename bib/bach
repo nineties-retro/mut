@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+.intro: 
+ The Design of the UNIX Operating System
+ Maurice J. Bach
+ Prentice Hall
+ 1986
+
+.ptrace: Section 11.1, pages 356-359 cover ptrace.
+ (XREF: <URI:mut/misc/bach-ptrace/README#intro>)

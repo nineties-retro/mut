@@ -1,0 +1,36 @@
+.acid: Implement an equivalent of the malloc debugging library
+ provided by the ACID debugger as described in <URI:mut/bib/winterbottom>.
+
+.free.unalloc: Report any use of free on a pointer that is not
+ allocated by malloc, calloc or realloc.
+
+.free.free: Report any use of free on a pointer that has already
+ been passed to free (and has not since been reallocated).
+
+.leak: Report any memory allocated by malloc, calloc and realloc
+ that has not been deallocated by free or cfree when the program
+ terminates.
+
+.leak.deliberate: Attempt not to report, or report separately,
+ memory that is deliberately not deallocated on program exit.
+
+.backtrace: When an error due to .free.unalloc,
+ .free.free or .leak is reported, include a backtrace so that
+ the user can better identify the source of the problem.
+
+.general: Generalise .idea to cover arbitrary resources.
+
+.general.files: For FILE *, fopen is an allocation, fclose is a
+ deallocation, for int, open is an allocation, close is a deallocation.
+
+.general.user: Allow user to define pairs (triples) of
+ allocation, (transformation) and deallocation routines including which
+ argument/result defines the resource.
+
+.xplatform: ACID allows cross-platform debugging by allowing the
+ /proc filesystem on one architecture to be mounted on a machine of
+ another architecture (e.g. debugging x86 on a MIPS).
+
+.plot: Produce enough tracing information to be able to plot 
+ allocation graphs such as time vs. space, time vs. allocation calls,
+ function(s) vs. space.

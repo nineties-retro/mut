@@ -1,0 +1,9 @@
+			     -*- Text -*-
+
+.intro: error logging system.
+
+At present there is only a tty based system, but the system should be
+flexible enough to cope with a GUI based system.  The interface is in
+mut_log.h
+
+

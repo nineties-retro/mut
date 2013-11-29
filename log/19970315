@@ -1,0 +1,66 @@
+			     -*- Text -*-
+
+17:39 - Start.
+
+        In a lunchbreak during an <proprietary-program> meeting
+        (sometime in February) discovered why MUT kept failing for a
+        dynamically linked SPARC/Solaris executable.  Unfortunately I
+        didn't keep a log, so the following is all from memory :-
+
+        The symptom was that the sparc.pc message was being output by
+  <URI:mut/src/proc/ptrace/arch/sparc/mut_process_arch.c#mut_process_read_pc>.
+        A bit of gdbing revealed that this was occuring when write(2)
+        was being called.  This had me puzzled until I disassembled
+        the code to find that the dynamic stub for write looked like :-
+
+        <write>:  sethi ..., %g1
+                  sethi ..., %g1
+                  jmp %g1 + ...
+        <malloc>: sethi ..., %g1
+                  sethi ..., %g1
+                  jmp %g1 + ...
+
+        The problem was that when write was being called, the
+        breakpoint on malloc would get hit since it sits in the delay
+        slot for the write jmp.  This triggers the sparc.pc message
+        because when the breakpoint is hit, PC is on <malloc> but NPC
+        is set to whatever %g1 + ... evaluates too.
+
+        At the time thought that this was the end of MUT for
+        dynamically linked SPARC/Solaris binaries.  However, that
+        night, thought that it might be worth trying the hack of
+        testing to see that if when the NPC != PC+4 fails the previous
+        instruction is a jmp %g1 + ... and if so ignoring the
+        breakpoint and continuting.  Tried it in the lunchbreak in the
+        next days meeting and it worked!
+
+17:50 - Didn't bring the code back, so now adding the same change to
+        the master copy.
+
+18:19 - Made what I believe are all the necessary changes.  Will have
+        to wait until I take this to work to test it though.
+
+        Tried compiling up a version that reads a.out in order to see
+        how much work it would take to get the a.out reader up to date
+        and hence allow a SPARC/SunOS version to be tested.
+
+18:26 - Updated <URI:mut/src/exec/aout/mut_exec.c#mut_exec_addr_name>.
+
+18:28 - Added <URI:mut/src/exec/aout/mut_exec.c#mut_exec_addr_{inc,lt,aligned}>.
+
+18:31 - Got as far as :-
+
+gcc mut.c ...
+mut.c: In function `mut_manage_action':
+mut.c:144: structure has no member named `flags'
+mut.c:146: structure has no member named `flags'
+mut.c: In function `mut_manage_actions':
+mut.c:179: warning: implicit declaration of function `mut_exec_functions_addr'
+mut.c: In function `mut_open':
+mut.c:220: warning: implicit declaration of function `mut_exec_has_backtrace_symbols'
+
+        Looks like the last thing to do is update the interface
+        between the exec and mut wrt to how function addresses are
+        found.
+
+18:32 - Shutdown.

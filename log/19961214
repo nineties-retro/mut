@@ -1,0 +1,228 @@
+			     -*- Text -*-
+
+14:19 - Start.
+
+        Installed the alpha Linux 2.0+ distribution yesterday, so my
+        machine is now a fully ELF.  Therefore, now updating the
+        ELF stuff I wrote before my machine temporarily reverted to a.out.
+
+14:29 - Added rld/src/exec/elfd/{rld_exec_addr.h,rld_log_exec_addr.h}.
+        The outstanding issue is rld_trace_read_reg.  Decided not to
+        fix this the easy way, but instead to reorganise so that
+        reading/writing PC is more abstract so it is possible to deal
+        with SPARC which has two PC registers that need to read/written.
+
+14:31 - Break.
+
+18:28 - Whilst changing the PC structure is the correct thing to do,
+        it is best to leave it until the ELF version is up and
+        running. 
+
+18:33 - Added a dummy definition of rld_exec_addr_name in rld/src/exec/elfd.
+
+18:43 - Now passes some of the rld/tests.
+
+18:47 - Cleaned up rld/misc/elfd so that it compiles.
+
+19:17 - Updated it so that it prints out the st_size field and noticed
+        that the size is not related to the amount of code and so isn't
+        of much use to rld.  Wrote a rld_exec_addr_name based on the
+        a.out one.  Unfortunately, it doesn't work :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd/rlk
+A
+B
+./main info process.exited 0
+./main error 0 RLK malloc 8 8049608 3  80484cf  804845b <?> 0
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd/cur
+A
+./main error 0 CUR free 10 3  8048507  804848b <?> 0
+B
+C
+./main info process.exited 0
+$ 
+
+20:10 - At first thought the problem was that the symbols are not
+        ordered by address as the above assumes.  So ordered them, 
+        but still didn't give the correct results.
+
+A
+./main error 0 CUR free 10 4 free 80484f6 free 804851c free 804848b <?> 0
+B
+C
+./main info process.exited 0
+Segmentation fault
+$ 
+
+20:12 - finally realised it is because all the necessary symbols are
+        not in the dynamic section.
+
+20:32 - After running rld/misc/elfd/ over /bin/cat realised that
+        stripped binaries also do not contain the necessary
+        information.  Therefore, temporarily abandoned looking at the
+        backtrace and locate the source of the seg. fault. -- I
+        suspect the ordered symbol table code I added.
+
+20:46 - restoring the saved version of rld_exec.c got rid of the
+        seg. fault. problem.  Not clear what the problem is though :-
+
+$ diff exec/elfd/rld_exec.c exec/elfd/rld_exec.c.safe
+5,9d4
+< **
+< ** According to <URI:bib/nohr> page 22, there is only one hash table
+< ** section header (SHT_HASH).  It points to its symbol table
+< ** (SHT_DYNSYM, <URI:bib/nor> page 24).  The symbol table in turn points
+< ** to the associated string table (SHT_STRTAB).
+17,20d11
+< #ifndef   rld_stdlib_h
+< #include "rld_stdlib.h"		/* qsort */
+< #define   rld_stdlib_h
+< #endif
+23c14
+< #include "rld_string.h"		/* strcmp, memcpy */
+---
+> #include "rld_string.h"		/* strcmp */
+317,400d307
+< 
+< rld_exec_private int
+< rld_exec_sym_cmp(const void *a, const void *b)
+< {
+<   Elf32_Sym const *as= a;
+<   Elf32_Sym const *bs= b;
+<   if (as->st_value < bs->st_value)
+<     return -1;
+<   if (as->st_value > bs->st_value)
+<     return 1;
+<   return 0;
+< }
+< 
+< 
+< /*
+< ** To simplify things, the whole symbol is kept.  However, all that
+< ** is necessary is the name (st_name) and address (st_value).
+< ** To further simplify things, an O(n) lookup method is used rather than
+< ** a O(log n) method.
+< */
+< 
+< rld_exec_private int
+< rld_exec_ordered_symtab_open(rld_exec *exec, rld_exec_reader * reader)
+< {
+< #if 0
+<   Elf32_Sym * syms= rld_mem_malloc(reader->symtab.sh_size);
+<   if (syms == (Elf32_Sym *)0) {
+<     rld_log_mem_full(reader->log, errno);
+<     return 0;
+<   }
+<   memcpy(syms, exec->symbols.elems, reader->symtab.sh_size);
+<   qsort(syms, exec->symbols.nelems, sizeof(Elf32_Sym), rld_exec_sym_cmp);
+<   exec->ordered_symbols.elems= syms;
+<   exec->ordered_symbols.nelems= exec->symbols.nelems;
+< #endif
+<   return 1;
+< }
+< 
+< 
+< 
+< rld_exec_private Elf32_Word
+< rld_exec_ordered_symtab_name(rld_exec * exec, rld_exec_addr addr)
+< {
+< #if 0
+<   size_t i;
+<   size_t nsyms= exec->ordered_symbols.nelems;
+<   Elf32_Sym * symbols= exec->ordered_symbols.elems;
+<   for (i= 1; i < nsyms; i+=1) {
+<     if (symbols[i-1].st_value < addr && symbols[i].st_value > addr)
+<       return symbols[i-1].st_name;
+<   }
+< #endif
+<   return 0;
+< }
+< 
+< 
+< #if 0
+< /*
+< ** rld_exec_dump_ordered_symtab is useful for debugging.  It displays the name
+< ** value and size of each element in the symbol table.
+< */
+< rld_exec_private void
+< rld_exec_dump_ordered_symtab(rld_exec * exec)
+< {
+<   size_t nelems= exec->ordered_symbols.nelems;
+<   size_t i;
+<   for (i= 0; i < nelems; i+= 1) {
+<     Elf32_Sym *s= &exec->ordered_symbols.elems[i];
+<     printf("name=%ld (%s) value=%lx size=%ld\n", s->st_name, &exec->strings.data[s->st_name], s->st_value, s->st_size);
+<   }
+< }
+< #endif
+< 
+< 
+< rld_exec_private void
+< rld_exec_ordered_symtab_close(rld_exec *exec)
+< {
+< #if 0
+<   rld_mem_free(exec->ordered_symbols.elems);
+< #endif
+< }
+< 
+< 
+< 
+467d373
+< 
+597,599d502
+<   if (!rld_exec_ordered_symtab_open(exec, &reader))
+<     goto could_not_open_ordered_symtab;
+< 
+611,612d513
+<   rld_exec_ordered_symtab_close(exec);
+<  could_not_open_ordered_symtab:
+678,682c579
+< #if 0
+<   Elf32_Word idx= rld_exec_ordered_symtab_name(exec, addr);
+<   return (idx == 0) ? "<?>" : rld_exec_strtab_lookup(exec, idx);
+< #endif
+<   return "<?>";
+---
+>   return "<undefined>";
+692d588
+<   rld_exec_ordered_symtab_close(exec);
+
+20:47 - Anyway, tried running rld on /bin/cat :-
+
+$ ./main /bin/cat README
+./main error 0 CUR free 4008a923 2 <undefined> 40086a97 <undefined> 0
+./main fatal 5 ptrace.peek.data 752f0047
+Segmentation fault
+$ 
+
+20:48 - The CUR is probably due to realloc not being dealt with yet.
+        The real issue is why the seg. fault.
+
+20:49 - The failure occurs in rld_process_function_backtrace when
+        trying to read the return address.
+
+21:05 - Fixed ownership of backtrace in rld_manager_do_producer.
+        Break.
+
+22:24 - 
+
+$ ./main /bin/cat README
+./main error 0 CUR free 4008a923 2 <undefined> 40086a97 <undefined> 0
+./main fatal 5 ptrace.peek.data 752f0047
+main: log/tty/rld_log.c:72: rld_log_error: Assertion `!log->fatal_error' failed.
+IOT trap/Abort
+$ 
+
+
+22:32 - The problem was due to the leak detection code running when
+        the resources were closed.  Fixed the problem by defining
+        rld_resources_close_on_error and rld_manager_close_on_error
+        and ensuring that these are called in the case of any error.
+
+$ ./main /bin/cat README
+./main error 0 CUR free 4008a923 2 <undefined> 40086a97 <undefined> 0
+./main fatal 5 ptrace.peek.data 752f0047
+$ 
+
+22:46 - Added README, Makefile and MANIFEST to rld/src/resources
+        rld/src/counter.

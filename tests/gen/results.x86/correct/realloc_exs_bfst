@@ -1,0 +1,10 @@
+mut info backtrace.off
+A
+mut info trace realloc 0 0 8 8049688
+B
+mut info trace realloc 8049688 8 16 8049688
+C
+mut info trace free 8049688 16
+D
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0

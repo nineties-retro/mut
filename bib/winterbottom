@@ -1,0 +1,11 @@
+			     -*- Text -*-
+
+.intro:
+ Acid: A debugger built from a language
+ P. Winterbottom
+ USENIX '94
+ 211--222
+
+The inspiration for MUT.
+
+XREF: <URI:mut/README#idea>

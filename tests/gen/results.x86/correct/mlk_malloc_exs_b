@@ -1,0 +1,5 @@
+mut info backtrace.off
+A
+B
+mut info process.exited 0
+mut error MLK malloc 8 8049608

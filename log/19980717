@@ -1,0 +1,18 @@
+			     -*- Text -*-
+
+10:09 - Start
+
+10:36 - Fixed a few typos in yesterday's version.  Managed to FFM to
+        display both its stack traces.  Still cannot deal with no
+        backtraces. 
+
+        Typed up yesterday's log and the above.
+
+10:57 - Fixed up WUM.  That appears to be all the errors dealt with, 
+        though only in the case where there is a backtrace.  Need to
+        decide whether the backend need to include more smarts to
+        distinguish the two cases or whether it it is easier to
+        include something in the output to make it easier for a
+        backend to work it out -- I'm leaning towards the latter.
+
+10:59 - Stop.

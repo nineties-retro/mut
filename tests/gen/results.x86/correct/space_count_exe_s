@@ -1,0 +1,2 @@
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 1100 11 alloc.max.space 1000 1 alloc.max.count 100 10 malloc 11 free 11 realloc 0 calloc 0 cfree 0

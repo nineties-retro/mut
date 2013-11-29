@@ -1,0 +1,20 @@
+			     -*- Text -*-
+
+.intro: MUT specific versions of various header files.
+
+Each directory contains at least a version which just pulls in the
+vendor supplied version on the header file.  These are for use on
+systems which have decent header files.  On systems which don't
+have decent header files (e.g. SunOS), then choose an alternative
+sub-directory which contains the required definitions.
+
+Note that only MUT wide include files go here.  Any option specific
+header files go in the same directory as the option.  For example, see
+<URI:mut/src/exec/elfd/elf> and <URI:mut/src/ptrace/ptrace>.
+
+The above was written on or before 19996-12-22.  As I write this in
+2001-01-03 machines with deficient header files are all but dead
+(difficult to find a SunOS machine anymore).  So if I was to start
+again and/or what to clean things up I'd remove this abstraction since
+it is no longer needed.
+

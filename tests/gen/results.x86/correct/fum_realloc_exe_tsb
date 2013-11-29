@@ -1,0 +1,10 @@
+A
+mut error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+mut info trace realloc 0 0 30 80496b8 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+B
+mut info trace malloc 8 80496e0 2 main 8048510 8048557 71 _start 8048460 80484bb 91
+C
+mut info trace free 80496e0 8
+mut info trace free 80496b8 30
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 38 2 alloc.max.space 38 2 alloc.max.count 38 2 malloc 1 free 2 realloc 2 calloc 0 cfree 0

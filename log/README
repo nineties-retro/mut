@@ -1,0 +1,16 @@
+			     -*- Text -*-
+
+.intro: Work log -- what was done and when.
+
+Each file in the directory corresponds to a day on which MUT was
+worked on.  All files are of the form YYYYMMDD.
+
+Didn't start this log until 19961129 so all entries before then were
+added at a later date and so are rather sparse.
+
+The best guess as to the project start date is whatever the earliest
+dated file is in this directory.  The actual start date has been lost
+since I didn't explicitly record it and all machine logs were lost
+when I had to do a reinstall from the MCC 1.0+ boot disks on 19961117
+due to a mistake I made when installing 2.0.18 which resulted in the
+a.out ld.so being removed :-<

@@ -1,0 +1,46 @@
+			     -*- Text -*-
+
+10:52 - Start.
+
+11:36 - Split the proc directory into proc-sysVr4 and proc-linux since
+        their interfaces are so different and added some documentation
+        to the Linux version.
+
+11:53 - Break.
+
+12:03 - Resume.
+
+13:29 - Slowly tidying up the code for realloc in preparation for
+        adding the zone checking code -- only the two realloc cases
+        left to add.
+
+13:32 - Break.
+
+16:39 - Restart.
+
+16:51 - Pulled the zone checking code out of the do_consumer routine so
+        that it can be shared by the realloc code.  Test still works ...
+
+$ ./main -cb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/wum_malloc.exs
+./main info backtrace.off
+A
+B
+./main error WUM free 804969c 80496a8 dead5a59 malloc
+$ 
+
+17:11 - Did a bit of work on mut.sh so that it recognizes WUM errors :-
+
+$ ./mut.sh < bob
+./main info not enough information available to provide a symbolic
+backtrace.
+
+./main error WUM: write to unallocated memory at address 80496a8 detected
+during free of 10 byte object at address 804969c allocated by malloc.
+
+$ 
+
+17:14 - Break.
+
+17:55 - Backup.
+
+18:08 - Shutdown

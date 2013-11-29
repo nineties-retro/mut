@@ -1,0 +1,124 @@
+			     -*- Text -*-
+
+INTRODUCTION
+   MUT - Memory Usage Tracker.
+
+   It works by running the leaking program as a child of the memory
+   usage tracker and having the latter insert breakpoints at calls to
+   malloc(3), free(3), ... etc., to track when memory is allocated and
+   freed.  By tracking the memory in a separate process, there is
+   nothing that the leaking program can do to corrupt the memory
+   tracking.
+
+HISTORY
+   During the early 1990s I was able to use Purify under Solaris to
+   track down memory related problems in legacy C dode.  When I no
+   longer had access to Purify then I switched to using a SPARC
+   emulator which had similar features except that it was much slower
+   due emulating every instruction.  With the switch from SPARC to x86
+   then it was either write an x86 emulator or try something
+   different.  Since bounds checking is hard without either object
+   code re-write (Purify), full emulation (SPARC emulator), or a
+   modified compiler (hack GCC or lcc?) then that left the much
+   simpler task of detecting memory leaks.
+
+   Linking against a debugging malloc that tracks the memory usage is
+   straightforward but a) requires either having the code or b) an
+   executable that was dynamically linked.  One or the other is
+   usually possible so that generally works.  However, there is the
+   odd exception e.g. all the executables in early Linux distributions
+   were generally statically linked and sporadic internet access meant
+   getting the source was not always quick or easy.  After re-reading
+   Winterbottom's paper on Acid (bib/winterbottom) in 1996 I thought
+   I'd have a go at using the idea of having a separate process track
+   the memory since that does not rely on either a) or b).
+
+   Acid was written on Plan which has a /proc file for process
+   control.  This program started life under Linux with a 0.99 kernel
+   which was a.out and had no /proc file for controlling a process,
+   only ptrace(2).  From there it was ported to SunOS (SPARC/a.out),
+   Solaris (SPARC/ELF), Linux(x86/ELF).  After a four year hiatus it
+   was ported to OpenBSD(x86/a.out) in 2002.  Roughly around that time
+   Valgrind was released so that the x86 had now caught up with SPARC
+   in terms of debugging buggy C code.  With distributions even
+   dynamically linking /sbin executable then the need to find leaks in
+   static executables has effectively disappeared and with it any last
+   possible rationale for MUT.  So MUT is really more for historical
+   reference than anything else.
+
+   For more details see doc/idea, doc/goal, doc/sol, doc/status and
+   doc/todo which all date from the 1990s.
+
+BUILD
+   There is no configure script, you'll have to tweak src/Makefile for
+   your system.  By default it should work for Linux.
+
+      $ make all
+
+   By default this will generate an executable in a directory that
+   depends on the exact combination of options that were used for the
+   build, e.g. by default :-
+
+      src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty
+
+RUN
+   The full command line options are described in the manual page :-
+
+      $ nroff -man doc/mut.1 | col -b
+
+   At its most basic, just given the name of the name of the possibly
+   leaking file.  I'll assume that :-
+
+      $ ln -s src/out/tty.x86.gcc.uint64.elf.on.tty.debug.off.linux.ptrace.struct.on/bin/mut_tty mut_tty
+
+   has been done to make it easier to type :-
+
+      $ ./mut_tty
+      ./mut_tty fatal 0 args.usage exec-file-name
+      $ 
+
+   For example, /bin/ls :-
+
+      $ ./mut_tty /bin/ls
+      LICENSE  Makefile  README  bib	doc  log  misc	src  tests
+      ./mut_tty info process.exited 0
+      ./mut_tty error MLK malloc 684 8BCC428
+      ./mut_tty error MLK malloc 108 8BCC2D8
+      ./mut_tty error MLK malloc 4 8BD4378
+      ./mut_tty error MLK malloc 6 8BD4368
+      ./mut_tty error MLK malloc 9 8BD4358
+      ./mut_tty error MLK malloc 7 8BD4348
+      ./mut_tty error MLK malloc 8 8BD4338
+      ./mut_tty error MLK malloc 5 8BD4328
+      ./mut_tty error MLK malloc 4 8BD4318
+      ./mut_tty error MLK malloc 4 8BD4308
+      ./mut_tty error MLK malloc 4 8BD42F8
+      ./mut_tty error MLK malloc 12800 8BC90A8
+      ./mut_tty error MLK malloc 48 8BC9070
+      ./mut_tty error MLK malloc 48 8BC9038
+      $
+
+    For slightly more readable output pipe it through a script ...
+
+      $ ./mut_tty /bin/ls |& grep "mut_tty" | src/mut.sh
+      ./mut_tty error MLK: 144 byte object allocated by _malloc_ at address 0x82492D8 has not been deallocated.
+      ./mut_tty error MLK: 4 byte object allocated by _malloc_ at address 0x82513A8 has not been deallocated.
+      ./mut_tty error MLK: 6 byte object allocated by _malloc_ at address 0x8251398 has not been deallocated.
+      ./mut_tty error MLK: 8 byte object allocated by _malloc_ at address 0x8251388 has not been deallocated.
+      ./mut_tty error MLK: 9 byte object allocated by _malloc_ at address 0x8251378 has not been deallocated.
+      ./mut_tty error MLK: 8 byte object allocated by _malloc_ at address 0x8251368 has not been deallocated.
+      ./mut_tty error MLK: 7 byte object allocated by _malloc_ at address 0x8251358 has not been deallocated.
+      ./mut_tty error MLK: 8 byte object allocated by _malloc_ at address 0x8251348 has not been deallocated.
+      ./mut_tty error MLK: 5 byte object allocated by _malloc_ at address 0x8251338 has not been deallocated.
+      ./mut_tty error MLK: 4 byte object allocated by _malloc_ at address 0x8251328 has not been deallocated.
+      ./mut_tty error MLK: 9 byte object allocated by _malloc_ at address 0x8251318 has not been deallocated.
+      ./mut_tty error MLK: 4 byte object allocated by _malloc_ at address 0x8251308 has not been deallocated.
+      ./mut_tty error MLK: 4 byte object allocated by _malloc_ at address 0x82512F8 has not been deallocated.
+      ./mut_tty error MLK: 12800 byte object allocated by _malloc_ at address 0x82460A8 has not been deallocated.
+      ./mut_tty error MLK: 48 byte object allocated by _malloc_ at address 0x8246070 has not been deallocated.
+      ./mut_tty error MLK: 48 byte object allocated by _malloc_ at address 0x8246038 has not been deallocated.
+
+AUTHOR
+   Ninetes Retro <nineties-retro@mail.com>
+
+   7ef551a9493b744f45f55b95da40da8852c17dac69ebbf9bd0188591d92c17f8

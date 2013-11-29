@@ -1,0 +1,16 @@
+			     -*- Text -*-
+
+.intro:
+ UNIX System V Release 4 Understanding ELF Object Files and Debugging Tools
+ Mary Lou Nohr
+ Prentice-Hall
+ 1994
+
+Describes ELF in detail and also the /proc file system.
+
+.sym2str: the sh_link field of a SHT_SYMTAB or SHT_DYNSYM section
+ header points to the associated symbol table.  See table 2-10 on page
+ 24.
+
+XREF: <URI:mut/src/exec/elf/README>
+XREF: <URI:mut/src/proc/proc/README>

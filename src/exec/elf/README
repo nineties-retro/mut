@@ -1,0 +1,24 @@
+			     -*- Text -*-
+
+.intro: An executable reader for ELF executables.
+
+Perhaps the easiest way to obtain the required information is to use
+the ELF library functions as described in chapter 4 of Nohr
+<URI:mut/bib/nohr>.  However, these are not used here.  This is
+primarily because the machine that mut was initially developed on
+was running a Linux 1.3.34 which didn't include a libelf.
+
+The logical option would be to implement the parts of the library that
+would be useful for mut so that when the library was available,
+nothing would need to be changed.  However, this was not done.
+Instead the required parts of the executable are extracted manually.
+
+The simplest way of extracting the required information from the
+executable is to read it (or rather mmap it) all into memory and then 
+just overlay the various structs as required.
+
+However, since only the symbol table and string table are needed this
+potentially wastes a lot of space (even VM costs!), especially for
+large programs (e.g. Motif executables).  Therefore, this version only
+reads in the relevant parts.  This is arguably a premature
+optimization!

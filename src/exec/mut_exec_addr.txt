@@ -1,0 +1,16 @@
+			     -*- Text -*-
+
+.intro: mut_exec_addr.h template
+
+typedef ... mut_exec_addr;
+
+  An address in an executable.
+
+extern int mut_exec_addr_to_int(mut_exec_addr);
+extern mut_exec_addr mut_exec_addr_from_ulong(unsigned long);
+extern mut_exec_addr mut_exec_addr_from_int(int);
+extern int mut_exec_addr_lt(mut_exec_addr, mut_exec_addr);
+
+  Most of the above was added well after the code was written with the
+  assumption that mut_exec_addr is an explicit integral value.  The
+  code needs cleaning up so that the interface is better defined.

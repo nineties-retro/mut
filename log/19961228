@@ -1,0 +1,54 @@
+			     -*- Text -*-
+
+12:07 - Start.
+
+16:21 - Finally have 64-bit division working.  The algorithm was
+        correct all along -- it was a mistake in the test harness
+        which meant that all the numbers were out by one :-<
+        See <URI:mut/misc/div/div_32_16.c> and <URI:mut/misc/div/div_64_16.c>.
+
+        Have ran a comparison test for all values in the range
+        [4294967296..4460642304]
+         
+18:06 - Have added a 64-bit division to
+        <URI:mut/src/uint64/struct/mut_uint64.c> to support 64-bit
+        output.  To avoid having to buffer the output, the numbers are
+        currently output backwards ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info stats alloc.now 0 0 alloc.total 1000882425 0005 alloc.max.space 6758401 1 alloc.max.count 6758401 1 malloc 0005 free 0005 realloc 0 calloc 0 cfree 0
+
+18:08 - Unfortunately, the above is 1 out for values > 2^32 ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main info stats alloc.now 0 0 alloc.total 5242880000 5000 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 5000 free 5000 realloc 0 calloc 0 cfree 0
+$ 
+
+
+18:24 - I suspect it isn't the output routine, rather it is the counter...
+
+18:32 - I was right.  There was a -1 missing from
+        <URI:mut/src/uint64/mut_uint64.c#mut_uint64_inc> ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info stats alloc.now 0 0 alloc.total 0000882425 0005 alloc.max.space 6758401 1 alloc.max.count 6758401 1 malloc 0005 free 0005 realloc 0 calloc 0 cfree 0
+$ 
+
+18:43 - Added a missing +1 to <URI:mut/src/uint64/mut_uint64.c#mut_uint64_dec>.
+
+18:59 - Added a buffer to <URI:mut/src/uint64/mut_uint64.c#mut_uint64_out>
+        so that the numbers are now output in the correct order ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info stats alloc.now 0 0 alloc.total 5242880000 5000 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 5000 free 5000 realloc 0 calloc 0 cfree 0
+$ 
+
+19:45 - Documented <URI:mut/src/counter> and <URI:mut/src/uint64>.
+
+19:53 - A bit more misc. cleanup.
+
+19:54 - Backup.

@@ -1,0 +1,9 @@
+A
+mut info trace free 10 0
+mut error FUM free 10 3 foo 80484e0 80484f6 22 main 8048500 804851c 28 _start 8048430 804848b 91
+B
+mut info trace malloc 8 8049688 2 main 8048500 8048534 52 _start 8048430 804848b 91
+C
+mut info trace free 8049688 8
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 8 1 alloc.max.space 8 1 alloc.max.count 8 1 malloc 1 free 2 realloc 0 calloc 0 cfree 0

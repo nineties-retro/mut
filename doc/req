@@ -1,0 +1,33 @@
+.min: .goal.min
+
+.min.free.unalloc: .idea.free.
+
+.min.leak: .idea.leak.
+
+.desired.free: .idea.free.free.
+
+.inter: The program should not be ethnocentric.  The amount of
+ work to produce a version that supports languages other than English
+ should consist of little more than translating any messages output by
+ the program into the target language.
+
+.platform: The program should work for Linux/ELF/x86/gcc, 
+ Linux/a.out/x86/gcc, Linux/a.out/x86/lcc, SunOS/a.out/SPARC/gcc, 
+ Solaris/ELF/SPARC/gcc, Irix/ELF/MIPS/gcc.
+
+.lib: The program should also be useable as a library which can be
+ linked with other code, for example a different user interface.
+
+.thread: The program should be useable in a threaded environment
+ without any chanages.
+
+.leak: The program should not leak memory, except deliberately if
+ necessary.
+
+.intertwined-alloc: The program should work correctly with malloc
+ libraries where one or more of the routines is written in terms of
+ another one.  For example, where realloc is written in terms of free
+ and malloc.
+
+.signals: The program should abort gracefully and free up any
+ claimed resources on receipt of a terminating signal.

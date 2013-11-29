@@ -1,0 +1,73 @@
+			     -*- Text -*-
+
+.intro:
+ MIPS RISC Architecture
+ Gerry Kane and Joe Heinrich
+ Prentice-Hall
+ 1992
+
+.breakpoint.instr: The breakpoint instruction is BREAK as described on
+ page A-39 and has the format :-
+
+  000000   code     001101
+  |  6 |     20     |  6 |
+
+ On the code field ...
+
+  The code field is available for use as software parameters, but is
+  retrieved by the exception handler only by loading the contents of
+  the contents of the memory word containing the instruction.
+
+ I don't believe that the code field is of interest to MUT, so the
+ breakpoint instruction should be 0x0000000d
+
+.breakpoint.handle: Page 6-51 describes what happens when a breakpoint
+ is handled ...
+
+  The EPC register points at the BREAK instruction -- unless it is in
+  a branch delay slot, in which case the EPC points at the preceding
+  branch instruction.
+
+  If the BREAK instruction is in a branch delay slot, the BD bit of
+  the Status register is set, otherwise the bit is cleared.
+
+ Without trying it out isn't clear to me if MUT has to worry about this.
+
+
+.arg: From Table D-1 on page D-2 :-
+
+   $4..$7      a0-a3   Used to pass the first 4 words of integer
+                       type actual arguments; their values are
+                       not preserved across procedure calls.
+
+XREF: <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c#mut_process_write_arg>
+XREF: <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c#mut_process_read_arg>
+XREF: <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c#mut_process_n_arg_regs>
+
+
+.result: From Table D-1 on page D-2 :-
+
+   $2..$3      v0-v1   Used for expression evaluations and for
+                       hold [sic] integer function results.
+
+
+XREF: <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c#mut_process_function_result>
+
+.sp: From Table D-1 on page D-2 :-
+
+   $29 or $sp  sp      Contains the stack pointer.
+
+
+.call/return: The only thing of interest is the value that is put in
+ the link register on a call.  The following is from page A-51 in the
+ description of jal :-
+
+  The address of the instruction after the delay slot is placed in the
+  link register, r31.
+
+ and the following is from page A-52 in the description of jalr
+
+  The address of the instruction after the delay slot is placed in
+  general register rd.
+
+XREF: <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c#mut_process_function_return_addr>

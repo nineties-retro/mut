@@ -1,0 +1,94 @@
+			     -*- Text -*-
+
+.intro: Test a how gdb does a backtrace on an x86 with no frame pointer.
+
+COMPILING
+
+$ gcc -o bt -fomit-frame-pointer -O2 bt.c
+
+$ gcc -o bt2 -fomit-frame-pointer -O2 bt2.c
+
+
+RUNNING
+
+$ gdb bt
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break c
+Breakpoint 1 at 0x8048480
+(gdb) run
+A
+B
+(no debugging symbols found)...(no debugging symbols found)...
+Breakpoint 1, 0x8048480 in c ()
+(gdb) bt
+#0  0x8048480 in c ()
+#1  0x80484b9 in b ()
+(gdb) 
+
+So it seems that gdb can manage to produce a limited amount of
+backtrace information in this case.
+
+$ gdb bt2
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) x/30i b
+0x80484a0 <b>:	subl   $0xcc,%esp
+0x80484a6 <b+6>:	pushl  %ebp
+0x80484a7 <b+7>:	pushl  %edi
+0x80484a8 <b+8>:	pushl  %esi
+0x80484a9 <b+9>:	pushl  %ebx
+0x80484aa <b+10>:	xorl   %edx,%edx
+0x80484ac <b+12>:	xorl   %ebp,%ebp
+0x80484ae <b+14>:	leal   (%esi),%esi
+0x80484b0 <b+16>:	xorl   %edi,%edi
+0x80484b2 <b+18>:	leal   (%esi),%esi
+0x80484b4 <b+20>:	xorl   %esi,%esi
+0x80484b6 <b+22>:	leal   (%esi),%esi
+0x80484b8 <b+24>:	xorl   %ebx,%ebx
+0x80484ba <b+26>:	leal   (%esi),%esi
+0x80484bc <b+28>:	pushl  $0x2
+0x80484be <b+30>:	pushl  $0x80485cb
+0x80484c3 <b+35>:	pushl  $0x1
+0x80484c5 <b+37>:	movl   %edx,0x1c(%esp,1)
+0x80484c9 <b+41>:	call   0x8048388 <write>
+0x80484ce <b+46>:	movl   0x1c(%esp,1),%edx
+0x80484d2 <b+50>:	movl   0xc0(%esp,%edx,4),%eax
+0x80484d9 <b+57>:	addl   0x98(%esp,%ebp,4),%eax
+0x80484e0 <b+64>:	addl   0x70(%esp,%edi,4),%eax
+0x80484e4 <b+68>:	addl   0x48(%esp,%esi,4),%eax
+0x80484e8 <b+72>:	addl   0x20(%esp,%ebx,4),%eax
+0x80484ec <b+76>:	pushl  %eax
+0x80484ed <b+77>:	call   0x8048480 <c>
+0x80484f2 <b+82>:	addl   $0x10,%esp
+0x80484f5 <b+85>:	incl   %ebx
+0x80484f6 <b+86>:	movl   0x10(%esp,1),%edx
+(gdb) x/10i a
+0x8048530 <a>:	pushl  %ebx
+0x8048531 <a+1>:	movl   0x8(%esp,1),%ebx
+0x8048535 <a+5>:	pushl  $0x2
+0x8048537 <a+7>:	pushl  $0x80485ce
+0x804853c <a+12>:	pushl  $0x1
+0x804853e <a+14>:	call   0x8048388 <write>
+0x8048543 <a+19>:	pushl  %ebx
+0x8048544 <a+20>:	call   0x80484a0 <b>
+0x8048549 <a+25>:	addl   $0x10,%esp
+0x804854c <a+28>:	popl   %ebx
+(gdb) break c
+Breakpoint 1 at 0x8048480
+(gdb) run
+A
+B
+(no debugging symbols found)...(no debugging symbols found)...
+Breakpoint 1, 0x8048480 in c ()
+(gdb) bt
+#0  0x8048480 in c ()
+(gdb) 
+
+In this case, it can produce even less of a backtrace.

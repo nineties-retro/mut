@@ -1,0 +1,20 @@
+			     -*- Text -*-
+
+        Tried installing Plan 9 one last time -- still failed on the 
+        second disk.
+
+17:40 - Finished reinstalling Linux 1.0+.
+
+        Created rld/misc.  Moved the ptrace code to rld/misc/ptrace,
+        created rld/misc/bach-ptrace to test out ptrace.
+
+        Since the work before this date had beed done with an ELF
+        version of 1.2.25, had to write an a.out reader.  See
+        rld/misc/aout and rld/src/exec/aout.
+
+        Also realised that RCS doesn't come as part of the Linux
+        distribution and so have no revision control available at the
+        moment -- that is just when there is some source that it worth
+        doing some revision control on!
+
+22:57 - Backup.

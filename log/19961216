@@ -1,0 +1,44 @@
+			     -*- Text -*-
+
+20:00 - Start.
+
+20:18 - Updated the tracing in rld/src/rld_manager.c so that more info. is
+        output :-
+
+$ ./main -t -c /usr/bin/tar -xMf /dev/fd0
+./main info trace realloc 80495f8 0 18
+./main info trace realloc 18 805d930
+./main info trace malloc 80493f8 40 805d948
+./main info trace malloc 80493f8 40 805d978
+./main info trace malloc 80493f8 102 805d9a8
+./main info trace realloc 80495f8 0 18
+./main info trace realloc 18 805da18
+./main info trace malloc 80493f8 133 805da30
+./main info trace free 8049848 805da30
+./main info trace malloc 80493f8 13 805da30
+./main info trace malloc 80493f8 1 805da48
+./main info trace malloc 80493f8 32 805da58
+./main info trace malloc 80493f8 84 805da80
+./main info trace malloc 80493f8 256 805dad8
+./main info trace malloc 80493f8 24 805dbe0
+./main info trace malloc 80493f8 260 805dc00
+./main info trace free 8049848 805da80
+./main info trace malloc 80493f8 32 805dd08
+./main info trace malloc 80493f8 20 805dd30
+./main info trace malloc 80493f8 84 805da80
+./main info trace malloc 80493f8 256 805dd48
+./main info trace free 8049848 805da80
+./main info trace malloc 80493f8 13 805de50
+./main info trace free 8049848 805de50
+./main info trace malloc 80493f8 13 805de50
+./main info trace free 8049848 805d458
+./main error 0 CUR free 805d458
+./main info process.signaled 11
+$ 
+
+20:20 - At the moment two traces are appearing for realloc because it
+        is a producer and consumer.  Need to rationalise this.
+
+20:26 - Finally removed rld_log_arg from rld/src/log/tty/rld_log.h
+
+20:27 - Backup.

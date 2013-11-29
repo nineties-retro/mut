@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: A simple ptrace harness for SPARC/Solaris.
+
+This is a cut&paste of the Linux version <URI:mut/misc/ptrace-x86>.
+I don't remember why I created it.

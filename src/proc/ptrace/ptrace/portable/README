@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+  $Id$
+
+.intro: portable prototype of ptrace.
+
+Use this version if your system doesn't have a prototype for ptrace,
+has one but in a different place (e.g. under Linux 1.0 it is not in
+<unistd.h>) or it has one that doesn't match that contained in
+./mut_ptrace.h (e.g. SunOS 4.1.X).

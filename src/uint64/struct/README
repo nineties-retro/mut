@@ -1,0 +1,4 @@
+			     -*- Text -*-
+
+.intro: mut_uint64 implemented as a struct containing two ints.
+

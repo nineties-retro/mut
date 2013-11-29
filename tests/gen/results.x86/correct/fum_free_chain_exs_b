@@ -1,0 +1,6 @@
+mut info backtrace.off
+A
+mut error FUM free 10
+B
+C
+mut info process.exited 0

@@ -1,0 +1,20 @@
+			     -*- Text -*-
+
+.intro: i386 instructions.
+
+(gdb) x/7i malloc
+0x590 <malloc>:	subl   $0x10,%esp
+0x593 <malloc+3>:	pushl  %ebp
+0x594 <malloc+4>:	pushl  %edi
+0x595 <malloc+5>:	pushl  %esi
+0x596 <malloc+6>:	pushl  %ebx
+0x597 <malloc+7>:	movl   0x24(%esp,1),%ebx
+0x59b <malloc+11>:	cmpl   $0x0,0x7494
+
+(gdb) x/7i free
+0x900 <free>:	subl   $0xc,%esp
+0x903 <free+3>:	pushl  %ebp
+0x904 <free+4>:	pushl  %edi
+0x905 <free+5>:	pushl  %esi
+0x906 <free+6>:	pushl  %ebx
+0x907 <free+7>:	cmpl   $0x0,0x20(%esp,1)

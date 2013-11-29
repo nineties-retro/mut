@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+.intro: mut_mem.h template
+
+Each mut_mem.h file must contain at least the following, all of which
+have the same semantics as as malloc, realloc and free respectively.
+
+extern void * mut_mem_malloc(size_t nbytes);
+extern void * mut_mem_realloc(void *p, size_t nbytes);
+extern void   mut_mem_free(void *p);

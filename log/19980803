@@ -1,0 +1,15 @@
+			     -*- Text -*-
+
+20:38 - Start.
+
+20:50 - Merged the src/exec/elf/mut_exec.c and src/misc/stabs work from
+        the slightly out of date version on my home machine into the
+        up to date mut that was stored at work.  The master version is
+        now on my home machine.
+
+21:29 - Added most of the code to read in the section header string
+        table to src/exec/elf/mut_exec.c as the first step towards
+        reading in the .stab and .stabstr sections in.
+
+21:30 - Shutdown.
+        

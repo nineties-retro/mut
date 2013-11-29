@@ -1,0 +1,32 @@
+                             -*- Text -*-
+
+09:27
+  Removed some of the debug statements so now get ...
+
+    $ ./main -tb ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/fum_free_chain.exe 
+    ./main -tb ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/fum_free_chain.exetic.aout.off.on/exe/fum_free_chain.exe                                        < 
+    A
+    ./main info trace free 10 0
+    ./main error FUM free 10 4 foo 1798 17AC 20 ? 0 main 17C0 17DF 31 ? 0 start 1020 1097 119 ? 0 edata 5200 FFFFFFFC 4294946300 ? 0
+    B
+    ./main info trace malloc 8 7030 3 main 17C0 17FD 61 ? 0 start 1020 1097 119 ? 0 edata 5200 FFFFFFFC 4294946300 ? 0
+    C
+    ./main info trace free 7030 8
+    ./main info process.exited 0
+    $ 
+
+10:28
+  Added support for a single usage point :-
+
+    % ./main -u -Uwrite ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+    ./main info mem.usage 0
+    A
+    ./main info mem.usage 1 malloc 7030 8
+    ./main info mem.usage 1 malloc 7030 8
+    B
+    ./main info process.exited 0
+    ./main error MLK malloc 8 7030
+    % 
+
+10:35
+  Stop

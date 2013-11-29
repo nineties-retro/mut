@@ -1,0 +1,517 @@
+			     -*- Text -*-
+
+.intro: Discover the .stab format.
+
+.stab2str: the sh_link field in a .stab entry points to the header of
+ the associated .stabstr header.  This was determined empirically by
+ using elf.c on elf compiled with -g, the relevant section being :-
+
+S18 sh_name= 145 (.stab)
+S18 sh_type= 1
+S18 sh_flags= 0
+S18 sh_addr= 0
+S18 sh_offset= 6640
+S18 sh_size= 7032
+S18 sh_link= 19
+S18 sh_info= 0
+S18 sh_addralign= 4
+S18 sh_entsize= 12
+S19 sh_name= 151 (.stabstr)
+S19 sh_type= 3
+S19 sh_flags= 0
+S19 sh_addr= 0
+S19 sh_offset= 13672
+S19 sh_size= 8559
+S19 sh_link= 0
+S19 sh_info= 0
+S19 sh_addralign= 1
+S19 sh_entsize= 0
+
+.stab.type: Empirically this has the value of SHT_PROGBITS == 0x1.
+
+.stab.entsize: The size in bytes of the stab entry.
+
+.stabstr.type: Empiricaly this has the value of SHT_STRTAB == 0x3.
+
+.fun.code: FUN has a value of 0x24.  See /usr/include/stab.def under
+ Linux 2.0.
+
+.sline.code: SLINE has a value of 0x44.  See /usr/include/stab.def
+ under Linux 2.0
+
+.sline.line.solaris: Under Solaris 2, the line number is relative to
+ the start of the function, not the file.  See /usr/include/stab.def
+ under Linux 2.0
+
+.so.code: SO has a value of 0x64.  See /usr/include/stab.def under Linux 2.0
+
+.so.first./: the first to contain a trailing / is the compilation directory.
+ See  /usr/include/stab.def in Linux 2.0.
+
+.so.first.no/: the first not to contain a trailing / is the source
+ file name which is relative to the compilation directory.
+ See  /usr/include/stab.def in Linux 2.0.
+
+.so.rest: Others (perhaps coming from Cfront) are ignored.
+ See  /usr/include/stab.def in Linux 2.0.
+
+.so.value.solaris: undefined.
+ See  /usr/include/stab.def in Linux 2.0.
+
+.so.value.linux: starting text address of the compilation.
+ See  /usr/include/stab.def in Linux 2.0.
+
+From the heading from objdump --stabs it is clear that there are five
+fields in a stab entry :-
+
+n_type n_othr n_desc n_value  n_strx
+
+.so.desc: The desc field of a SO entry indicates what the language is.
+ Based on /usr/include/stab.h in Linux 2.0, the mapping is
+
+ Assembler  1
+ C          2
+ Ansi C     3
+ C++        4
+ FORTRAN    5
+ Pascal     6
+
+Modified elf.c so that it found the start of the .stab section and
+then used gdb to poke around the structure :-
+
+Current directory is ~/mut/misc/stabs/
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+Breakpoint 1 at 0x8048f00: file elf.c, line 194.
+(gdb) run elf
+E type= 2 (executable)
+E phentsize= 32
+E phnum= 5
+E shentsize= 40
+E shnum= 25
+E shstrndx= 22
+P0 type=6 offset=52 vaddr=8048034 filesz=160 memsz=160 flags=5 align=4
+P1 type=3 offset=212 vaddr=80480d4 filesz=19 memsz=19 flags=4 align=1
+P2 type=1 offset=0 vaddr=8048000 filesz=6801 memsz=6801 flags=5 align=1000
+P3 type=1 offset=6808 vaddr=804aa98 filesz=232 memsz=352 flags=6 align=1000
+P4 type=2 offset=6904 vaddr=804aaf8 filesz=136 memsz=136 flags=6 align=4
+S1 sh_name= 27 (.interp)
+S1 sh_type= 1
+S1 sh_flags= 2
+S1 sh_addr= 80480d4
+S1 sh_offset= 212
+S1 sh_size= 19
+S1 sh_link= 0
+S1 sh_info= 0
+S1 sh_addralign= 1
+S1 sh_entsize= 0
+S2 sh_name= 35 (.hash)
+S2 sh_type= 5
+S2 sh_flags= 2
+S2 sh_addr= 80480e8
+S2 sh_offset= 232
+S2 sh_size= 196
+S2 sh_link= 3
+S2 sh_info= 0
+S2 sh_addralign= 4
+S2 sh_entsize= 4
+S3 sh_name= 41 (.dynsym)
+S3 sh_type= 11
+S3 sh_flags= 2
+S3 sh_addr= 80481ac
+S3 sh_offset= 428
+S3 sh_size= 480
+S3 sh_link= 4
+S3 sh_info= 1
+S3 sh_addralign= 4
+S3 sh_entsize= 16
+S4 sh_name= 49 (.dynstr)
+S4 sh_type= 3
+S4 sh_flags= 2
+S4 sh_addr= 804838c
+S4 sh_offset= 908
+S4 sh_size= 258
+S4 sh_link= 0
+S4 sh_info= 0
+S4 sh_addralign= 1
+S4 sh_entsize= 0
+S5 sh_name= 57 (.rel.bss)
+S5 sh_type= 9
+S5 sh_flags= 2
+S5 sh_addr= 8048490
+S5 sh_offset= 1168
+S5 sh_size= 24
+S5 sh_link= 3
+S5 sh_info= 17
+S5 sh_addralign= 4
+S5 sh_entsize= 8
+S6 sh_name= 66 (.rel.plt)
+S6 sh_type= 9
+S6 sh_flags= 2
+S6 sh_addr= 80484a8
+S6 sh_offset= 1192
+S6 sh_size= 120
+S6 sh_link= 3
+S6 sh_info= 8
+S6 sh_addralign= 4
+S6 sh_entsize= 8
+S7 sh_name= 75 (.init)
+S7 sh_type= 1
+S7 sh_flags= 6
+S7 sh_addr= 8048520
+S7 sh_offset= 1312
+S7 sh_size= 8
+S7 sh_link= 0
+S7 sh_info= 0
+S7 sh_addralign= 10
+S7 sh_entsize= 0
+S8 sh_name= 81 (.plt)
+S8 sh_type= 1
+S8 sh_flags= 6
+S8 sh_addr= 8048528
+S8 sh_offset= 1320
+S8 sh_size= 256
+S8 sh_link= 0
+S8 sh_info= 0
+S8 sh_addralign= 4
+S8 sh_entsize= 4
+S9 sh_name= 86 (.text)
+S9 sh_type= 1
+S9 sh_flags= 6
+S9 sh_addr= 8048630
+S9 sh_offset= 1584
+S9 sh_size= 4180
+S9 sh_link= 0
+S9 sh_info= 0
+S9 sh_addralign= 10
+S9 sh_entsize= 0
+S10 sh_name= 92 (.fini)
+S10 sh_type= 1
+S10 sh_flags= 6
+S10 sh_addr= 8049690
+S10 sh_offset= 5776
+S10 sh_size= 8
+S10 sh_link= 0
+S10 sh_info= 0
+S10 sh_addralign= 10
+S10 sh_entsize= 0
+S11 sh_name= 98 (.rodata)
+S11 sh_type= 1
+S11 sh_flags= 2
+S11 sh_addr= 8049698
+S11 sh_offset= 5784
+S11 sh_size= 1017
+S11 sh_link= 0
+S11 sh_info= 0
+S11 sh_addralign= 1
+S11 sh_entsize= 0
+S12 sh_name= 106 (.data)
+S12 sh_type= 1
+S12 sh_flags= 3
+S12 sh_addr= 804aa98
+S12 sh_offset= 6808
+S12 sh_size= 8
+S12 sh_link= 0
+S12 sh_info= 0
+S12 sh_addralign= 4
+S12 sh_entsize= 0
+S13 sh_name= 112 (.ctors)
+S13 sh_type= 1
+S13 sh_flags= 3
+S13 sh_addr= 804aaa0
+S13 sh_offset= 6816
+S13 sh_size= 8
+S13 sh_link= 0
+S13 sh_info= 0
+S13 sh_addralign= 4
+S13 sh_entsize= 0
+S14 sh_name= 119 (.dtors)
+S14 sh_type= 1
+S14 sh_flags= 3
+S14 sh_addr= 804aaa8
+S14 sh_offset= 6824
+S14 sh_size= 8
+S14 sh_link= 0
+S14 sh_info= 0
+S14 sh_addralign= 4
+S14 sh_entsize= 0
+S15 sh_name= 126 (.got)
+S15 sh_type= 1
+S15 sh_flags= 3
+S15 sh_addr= 804aab0
+S15 sh_offset= 6832
+S15 sh_size= 72
+S15 sh_link= 0
+S15 sh_info= 0
+S15 sh_addralign= 4
+S15 sh_entsize= 4
+S16 sh_name= 131 (.dynamic)
+S16 sh_type= 6
+S16 sh_flags= 3
+S16 sh_addr= 804aaf8
+S16 sh_offset= 6904
+S16 sh_size= 136
+S16 sh_link= 4
+S16 sh_info= 0
+S16 sh_addralign= 4
+S16 sh_entsize= 8
+S17 sh_name= 140 (.bss)
+S17 sh_type= 8
+S17 sh_flags= 3
+S17 sh_addr= 804ab80
+S17 sh_offset= 7040
+S17 sh_size= 120
+S17 sh_link= 0
+S17 sh_info= 0
+S17 sh_addralign= 8
+S17 sh_entsize= 0
+S18 sh_name= 145 (.stab)
+S18 sh_type= 1
+S18 sh_flags= 0
+S18 sh_addr= 0
+S18 sh_offset= 7040
+S18 sh_size= 7536
+S18 sh_link= 19
+S18 sh_info= 0
+S18 sh_addralign= 4
+S18 sh_entsize= 12
+S19 sh_name= 151 (.stabstr)
+S19 sh_type= 3
+S19 sh_flags= 0
+S19 sh_addr= 0
+S19 sh_offset= 14576
+S19 sh_size= 8629
+S19 sh_link= 0
+S19 sh_info= 0
+S19 sh_addralign= 1
+S19 sh_entsize= 0
+S20 sh_name= 160 (.comment)
+S20 sh_type= 1
+S20 sh_flags= 0
+S20 sh_addr= 0
+S20 sh_offset= 23205
+S20 sh_size= 60
+S20 sh_link= 0
+S20 sh_info= 0
+S20 sh_addralign= 1
+S20 sh_entsize= 0
+S21 sh_name= 169 (.note)
+S21 sh_type= 7
+S21 sh_flags= 0
+S21 sh_addr= 3c
+S21 sh_offset= 23265
+S21 sh_size= 60
+S21 sh_link= 0
+S21 sh_info= 0
+S21 sh_addralign= 1
+S21 sh_entsize= 0
+S22 sh_name= 17 (.shstrtab)
+S22 sh_type= 3
+S22 sh_flags= 0
+S22 sh_addr= 0
+S22 sh_offset= 23325
+S22 sh_size= 175
+S22 sh_link= 0
+S22 sh_info= 0
+S22 sh_addralign= 1
+S22 sh_entsize= 0
+S23 sh_name= 1 (.symtab)
+S23 sh_type= 2
+S23 sh_flags= 0
+S23 sh_addr= 0
+S23 sh_offset= 24500
+S23 sh_size= 1552
+S23 sh_link= 24
+S23 sh_info= 65
+S23 sh_addralign= 4
+S23 sh_entsize= 16
+S24 sh_name= 9 (.strtab)
+S24 sh_type= 3
+S24 sh_flags= 0
+S24 sh_addr= 0
+S24 sh_offset= 26052
+S24 sh_size= 810
+S24 sh_link= 0
+S24 sh_info= 0
+S24 sh_addralign= 1
+S24 sh_entsize= 0
+SYM1 (0x8050bb4) name=0 (), addr=0, shndx=0
+SYM2 (0x8050bc4) name=0 (), addr=0, shndx=1
+SYM3 (0x8050bd4) name=0 (), addr=0, shndx=2
+SYM4 (0x8050be4) name=0 (), addr=0, shndx=3
+SYM5 (0x8050bf4) name=0 (), addr=0, shndx=4
+SYM6 (0x8050c04) name=0 (), addr=0, shndx=5
+SYM7 (0x8050c14) name=0 (), addr=0, shndx=6
+SYM8 (0x8050c24) name=0 (), addr=0, shndx=7
+SYM9 (0x8050c34) name=0 (), addr=0, shndx=8
+SYM10 (0x8050c44) name=0 (), addr=0, shndx=9
+SYM11 (0x8050c54) name=0 (), addr=0, shndx=10
+SYM12 (0x8050c64) name=0 (), addr=0, shndx=11
+SYM13 (0x8050c74) name=0 (), addr=0, shndx=12
+SYM14 (0x8050c84) name=0 (), addr=0, shndx=13
+SYM15 (0x8050c94) name=0 (), addr=0, shndx=14
+SYM16 (0x8050ca4) name=0 (), addr=0, shndx=15
+SYM17 (0x8050cb4) name=0 (), addr=0, shndx=16
+SYM18 (0x8050cc4) name=0 (), addr=0, shndx=17
+SYM19 (0x8050cd4) name=0 (), addr=0, shndx=18
+SYM20 (0x8050ce4) name=0 (), addr=0, shndx=19
+SYM21 (0x8050cf4) name=0 (), addr=0, shndx=20
+SYM22 (0x8050d04) name=0 (), addr=0, shndx=21
+SYM23 (0x8050d14) name=0 (), addr=0, shndx=22
+SYM24 (0x8050d24) name=0 (), addr=0, shndx=23
+SYM25 (0x8050d34) name=0 (), addr=0, shndx=24
+SYM26 (0x8050d44) name=1 (crtstuff.c), addr=0, shndx=65521
+SYM27 (0x8050d54) name=12 (gcc2_compiled.), addr=8049660, shndx=9
+SYM28 (0x8050d64) name=27 (__do_global_ctors_aux), addr=8049660, shndx=9
+SYM29 (0x8050d74) name=49 (__CTOR_END__), addr=804aaa4, shndx=13
+SYM30 (0x8050d84) name=62 (init_dummy), addr=8049680, shndx=9
+SYM31 (0x8050d94) name=73 (force_to_data), addr=804aaa0, shndx=12
+SYM32 (0x8050da4) name=87 (__DTOR_END__), addr=804aaac, shndx=14
+SYM33 (0x8050db4) name=100 (crt0.S), addr=0, shndx=65521
+SYM34 (0x8050dc4) name=107 (done), addr=80486a0, shndx=9
+SYM35 (0x8050dd4) name=1 (crtstuff.c), addr=0, shndx=65521
+SYM36 (0x8050de4) name=12 (gcc2_compiled.), addr=80486b0, shndx=9
+SYM37 (0x8050df4) name=112 (__do_global_dtors_aux), addr=80486b0, shndx=9
+SYM38 (0x8050e04) name=134 (__DTOR_LIST__), addr=804aaa8, shndx=14
+SYM39 (0x8050e14) name=148 (fini_dummy), addr=80486d0, shndx=9
+SYM40 (0x8050e24) name=73 (force_to_data), addr=804aa9c, shndx=12
+SYM41 (0x8050e34) name=159 (__CTOR_LIST__), addr=804aaa0, shndx=13
+SYM42 (0x8050e44) name=173 (elf.c), addr=0, shndx=65521
+SYM43 (0x8050e54) name=179 (usage), addr=80486e0, shndx=9
+SYM44 (0x8050e64) name=185 (program_name), addr=804abe8, shndx=17
+SYM45 (0x8050e74) name=198 (display_type), addr=8048700, shndx=9
+SYM46 (0x8050e84) name=211 (locate_section_header_string), addr=80487f0, shndx=9
+SYM47 (0x8050e94) name=240 (file_contents), addr=804abf0, shndx=17
+SYM48 (0x8050ea4) name=254 (locate_symbol_table_header), addr=8048880, shndx=9
+SYM49 (0x8050eb4) name=281 (locate_stab_header), addr=8048920, shndx=9
+SYM50 (0x8050ec4) name=300 (locate_string_table), addr=80489f0, shndx=9
+SYM51 (0x8050ed4) name=320 (string_table.32), addr=804aa9c, shndx=12
+SYM52 (0x8050ee4) name=336 (string_table_size.33), addr=804abe0, shndx=17
+SYM53 (0x8050ef4) name=357 (locate_string), addr=8048b20, shndx=9
+SYM54 (0x8050f04) name=371 (elf_hash), addr=8048c60, shndx=9
+SYM55 (0x8050f14) name=380 (display_symbols), addr=8048ce0, shndx=9
+SYM56 (0x8050f24) name=396 (symbol_names), addr=804abf4, shndx=17
+SYM57 (0x8050f34) name=409 (display_symbol_table), addr=8048d90, shndx=9
+SYM58 (0x8050f44) name=430 (display_stabs), addr=8048eb0, shndx=9
+SYM59 (0x8050f54) name=444 (display_section_headers), addr=8048f30, shndx=9
+SYM60 (0x8050f64) name=468 (display_program_headers), addr=80490c0, shndx=9
+SYM61 (0x8050f74) name=492 (display_header), addr=80491e0, shndx=9
+SYM62 (0x8050f84) name=507 (debug), addr=80492a0, shndx=9
+SYM63 (0x8050f94) name=513 (elf_file_name), addr=804abec, shndx=17
+SYM64 (0x8050fa4) name=527 (fd), addr=804abe4, shndx=17
+SYM65 (0x8050fb4) name=530 (fstat), addr=8049630, shndx=9
+SYM66 (0x8050fc4) name=536 (printf), addr=8048538, shndx=0
+SYM67 (0x8050fd4) name=543 (strerror), addr=8048548, shndx=0
+SYM68 (0x8050fe4) name=552 (_DYNAMIC), addr=804aaf8, shndx=65521
+SYM69 (0x8050ff4) name=561 (errno), addr=804ab80, shndx=17
+SYM70 (0x8051004) name=567 (_etext), addr=8049684, shndx=65521
+SYM71 (0x8051014) name=574 (_IO_stderr_), addr=804ab88, shndx=17
+SYM72 (0x8051024) name=586 (malloc), addr=8048558, shndx=0
+SYM73 (0x8051034) name=593 (__environ), addr=804aa98, shndx=12
+SYM74 (0x8051044) name=603 (_init), addr=8048520, shndx=7
+SYM75 (0x8051054) name=609 (__libc_init), addr=8048568, shndx=0
+SYM76 (0x8051064) name=621 (environ), addr=804aa98, shndx=12
+SYM77 (0x8051074) name=629 (fprintf), addr=8048578, shndx=0
+SYM78 (0x8051084) name=637 (__fpu_control), addr=804abdc, shndx=17
+SYM79 (0x8051094) name=651 (_start), addr=8048630, shndx=9
+SYM80 (0x80510a4) name=658 (read), addr=8048588, shndx=0
+SYM81 (0x80510b4) name=663 (___crt_dummy__), addr=8048630, shndx=9
+SYM82 (0x80510c4) name=678 (__bss_start), addr=804ab80, shndx=65521
+SYM83 (0x80510d4) name=690 (main), addr=8049560, shndx=9
+SYM84 (0x80510e4) name=695 (__assert_fail), addr=8048598, shndx=0
+SYM85 (0x80510f4) name=709 (strcmp), addr=80485a8, shndx=0
+SYM86 (0x8051104) name=716 (_fini), addr=8049690, shndx=10
+SYM87 (0x8051114) name=722 (atexit), addr=80485b8, shndx=0
+SYM88 (0x8051124) name=729 (_edata), addr=804ab80, shndx=65521
+SYM89 (0x8051134) name=736 (_GLOBAL_OFFSET_TABLE_), addr=804aab0, shndx=65521
+SYM90 (0x8051144) name=758 (_end), addr=804abf8, shndx=65521
+SYM91 (0x8051154) name=763 (_fxstat), addr=80485c8, shndx=0
+SYM92 (0x8051164) name=771 (exit), addr=80485d8, shndx=0
+SYM93 (0x8051174) name=776 (_errno), addr=804ab80, shndx=17
+SYM94 (0x8051184) name=783 (__setfpucw), addr=80485e8, shndx=0
+SYM95 (0x8051194) name=794 (open), addr=80485f8, shndx=0
+SYM96 (0x80511a4) name=799 (close), addr=8048608, shndx=0
+SYM97 (0x80511b4) name=805 (free), addr=8048618, shndx=0
+
+Breakpoint 1, display_stabs () at elf.c:194
+(gdb) p stab_header
+$1 = (Elf32_Shdr *) 0x8050a9c
+(gdb) p *stab_header
+$2 = {sh_name = 145, sh_type = 1, sh_flags = 0, sh_addr = 0, sh_offset = 7040, 
+  sh_size = 7536, sh_link = 19, sh_info = 0, sh_addralign = 4, sh_entsize = 12}
+(gdb) n
+(gdb) x/3wx xxx
+0x804c780 <symbol_names+7052>:	0x00000000	0x00000064	0x080486e0
+(gdb) x/3wx xxx+12
+0x804c78c <symbol_names+7064>:	0x0000001c	0x00000064	0x080486e0
+(gdb) x/3wx xxx+24
+0x804c798 <symbol_names+7076>:	0x00000022	0x0000003c	0x00000000
+(gdb) x/3wx xxx+(12*268)
+0x804d410 <symbol_names+10268>:	0x00001e76	0x00000080	0x00000000
+(gdb) x/3wx xxx+(12*269)
+0x804d41c <symbol_names+10280>:	0x00001e89	0x00190024	0x080486e0
+(gdb) x/3wx xxx+(12*273)
+0x804d44c <symbol_names+10328>:	0x00001e94	0x001f0024	0x08048700
+(gdb) p 0x19
+$3 = 25
+(gdb) p 0x1f
+$4 = 31
+(gdb) p 0x1e94
+$5 = 7828
+(gdb) 
+
+Combined with the output of objdump :-
+
+$ objdump --stab elf | head -20
+
+elf:     file format elf32-i386
+
+Contents of .stab section:
+
+Symnum n_type n_othr n_desc n_value  n_strx String
+
+-1     SO     0      0      080486e0 0      misc/stabs/
+0      SO     0      0      080486e0 28     elf.c
+1      OPT    0      0      00000000 34     gcc2_compiled.
+2      LSYM   0      0      00000000 49     int:t1=r1;-2147483648;2147483647;
+3      LSYM   0      0      00000000 83     char:t2=r2;0;127;
+4      LSYM   0      0      00000000 101    long int:t3=r1;-2147483648;2147483647;
+5      LSYM   0      0      00000000 140    unsigned int:t4=r1;0;-1;
+6      LSYM   0      0      00000000 165    long unsigned int:t5=r1;0;-1;
+7      LSYM   0      0      00000000 195    long long int:t6=r1;01000000000000000000000;0777777777777777777777;
+8      LSYM   0      0      00000000 263    long long unsigned int:t7=r1;0000000000000;01777777777777777777777;
+9      LSYM   0      0      00000000 331    short int:t8=r1;-32768;32767;
+10     LSYM   0      0      00000000 361    short unsigned int:t9=r1;0;65535;
+11     LSYM   0      0      00000000 395    signed char:t10=r1;-128;127;
+$ objdump --stab elf | grep FUN
+268    FUN    0      25     080486e0 7817   usage:f19
+272    FUN    0      31     08048700 7828   display_type:f1
+295    FUN    0      62     080487f0 7859   locate_section_header_string:f73=*2
+315    FUN    0      75     08048880 7955   locate_symbol_table_header:f75
+337    FUN    0      90     08048920 8024   locate_stab_header:f75
+365    FUN    0      109    080489f0 8055   locate_string_table:f19
+392    FUN    0      127    08048b20 8105   locate_string:f73
+411    FUN    0      146    08048c60 8171   elf_hash:f5
+428    FUN    0      161    08048ce0 8204   display_symbols:f1
+443    FUN    0      171    08048d90 8230   display_symbol_table:f1
+463    FUN    0      190    08048eb0 8295   display_stabs:f1
+475    FUN    0      200    08048f30 8334   display_section_headers:f1
+508    FUN    0      227    080490c0 8361   display_program_headers:f1
+538    FUN    0      250    080491e0 8410   display_header:f1
+554    FUN    0      265    080492a0 8428   debug:f1
+594    FUN    0      331    08049560 8443   main:F1
+611    FUN    0      159    08049630 8472   fstat:f1
+$ 
+
+This was enough to discover that the format looks like :-
+
+typedef struct {
+  short other;
+  short string_index;
+  short line_offset;
+  short stab_type;
+  unsigned int value;  /* addr in FUN, addr offset in SLINE */
+} stab_entry;

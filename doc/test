@@ -1,0 +1,32 @@
+.dir: Testing is usually done from the ./src directory.
+
+.check: To check a version of MUT (generally a link called `main'
+ to the the real executable), do something like :-
+
+  $ tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current src/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+
+ This places the results of the current run in
+ <URI:tests/gen/results.x86/current> and compares them with the correct
+ results stored in <URI:tests/gen/results.x86/correct>.  Generally no
+ output appears unless there are any difference between the correct and
+ curent results.
+
+
+.correct.create: To create the correct test results, just use the
+ -r option to direct the results to the required directory.
+
+  $ tests/scripts/mut_test -r tests/gen/results.x86/correct src/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+
+
+.add: To add a new test, create the C file
+ <URI:mut/tests/README#.add> and then add as many calls to run_test as
+ necessary to <URI:mut/tests/scripts/mut_test>.
+
+.problems.versions: The simplest solution to the version problem
+ is to dump the output in the directory which is tagged with at least
+ as many tags are used to identify test.  However, there are a large
+ number of tests for which the output is architecture neutral which
+ would clog up this scheme.  Probably should to split the tests up so
+ that the results can be shared where possible.  This is not pressing
+ until MUT is being developed concurrently on more than one architecture.
+ 

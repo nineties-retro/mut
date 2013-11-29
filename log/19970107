@@ -1,0 +1,107 @@
+			     -*- Text -*-
+
+12:46 - Start.
+
+12:53 - Brought <URI:mut/src/arch/sparc> up to date.
+
+13:01 - Took until now to track down where NPC, O7, ... etc. are defined.
+        (/usr/include/sys/reg.h).
+
+13:22 - Lots of updating to <URI:mut/src/proc/ptrace/arch/sparc> done
+        and first succesful link.
+
+13:23 - Compiling tests ...
+
+13:24 - Failed when doing the strip version since Solaris strip
+        doesn't accept -o.  Anyway, have enough tests ...
+
+13:25 - First test run ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main fatal 0 ptrace.poke.text 20948
+$ 
+
+13:26 - Since skipping isn't likely to work correctly, add a -f
+
+$ gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main fatal 0 ptrace.poke.text 20948
+$ 
+
+13:27 - Oops again.   After some debugging, the problem occurs when
+        trying to write the initial breakpoint for malloc
+
+(gdb) run -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+Starting program: mut/src/xxx -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe
+mut/src/xxx fatal 0 ptrace.poke.text 20948
+
+Program exited with code 01.
+(gdb) break mut_run
+Breakpoint 1 at 0x1af18: file mut.c, line 1269.
+(gdb) run -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+Starting program: mut/src/xxx -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe
+mut/src/xxx fatal 0 ptrace.poke.text 20948
+
+Program exited with code 01.
+(gdb) break mut_open
+Breakpoint 2 at 0x17754: file mut.c, line 213.
+(gdb) run
+Starting program: mut/src/xxx -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe
+
+Breakpoint 2, mut_open (m=0xeffff9f0, argv=0xeffffb8c, l=0xeffff9d8, flags=mut_control_free) at mut.c:213
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) s
+mut_manage_actions (m=0xeffff9f0) at mut.c:174
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p function
+$1 = {{name = 0x1c650 "malloc", addr = 133448, flags = 1}, {name = 0x1c658 "calloc", addr = 4026529968, flags = 0}, {name = 0x1c660 "realloc", addr = 4026530292, flags = 0}, {name = 0x1c668 "free", addr = 133460, flags = 1}, {name = 0x1c670 "cfree", addr = 4026530264, flags = 0}}
+(gdb) p/x function
+$2 = {{name = 0x1c650, addr = 0x20948, flags = 0x1}, {name = 0x1c658, addr = 0xeffff8b0, flags = 0x0}, {name = 0x1c660, addr = 0xeffff9f4, flags = 0x0}, {name = 0x1c668, addr = 0x20954, flags = 0x1}, {name = 0x1c670, addr = 0xeffff9d8, flags = 0x0}}
+(gdb) n
+(gdb) s
+mut_manage_action (m=0xeffff9f0, action=0xeffffa24, function=0xeffff860) at mut.c:143
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) s
+mut_process_breakpoint (p=0xeffff9f4, pc=133448, instr=0xeffffa2c) at proc/ptrace/mut_process.c:191
+(gdb) n
+(gdb) n
+(gdb) p/x instr
+$3 = 0xeffffa2c
+(gdb) s
+mut_trace_write_text (p=0xeffff9fc, addr=133448, value=-1848631295) at proc/ptrace/mut_trace.c:144
+(gdb) n
+(gdb) p/x a
+$4 = 0x20948
+(gdb) n
+(gdb) 
+
+At this point we are in
+<URI:mut/src/proc/ptrace/mut_trace.c#mut_trace_write_text> and the
+ptrace call has failed (with an errno of 0!).
+
+13:36 - Need to look at the executable to see if the addresses are
+        right ... etc.
+
+13:37 - Break.
+

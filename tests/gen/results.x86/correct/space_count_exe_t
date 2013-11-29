@@ -1,0 +1,23 @@
+mut info trace malloc 10 80496e0
+mut info trace malloc 10 80496f0
+mut info trace malloc 10 8049700
+mut info trace malloc 10 8049710
+mut info trace malloc 10 8049720
+mut info trace malloc 10 8049730
+mut info trace malloc 10 8049740
+mut info trace malloc 10 8049750
+mut info trace malloc 10 8049760
+mut info trace malloc 10 8049770
+mut info trace free 80496e0 10
+mut info trace free 80496f0 10
+mut info trace free 8049700 10
+mut info trace free 8049710 10
+mut info trace free 8049720 10
+mut info trace free 8049730 10
+mut info trace free 8049740 10
+mut info trace free 8049750 10
+mut info trace free 8049760 10
+mut info trace free 8049770 10
+mut info trace malloc 1000 8049780
+mut info trace free 8049780 1000
+mut info process.exited 0

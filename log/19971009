@@ -1,0 +1,4 @@
+			     -*- Text -*-
+
+14:44 - Created misc/ptrace-mips in order to see what is where in a
+        MIPS user.pcb.

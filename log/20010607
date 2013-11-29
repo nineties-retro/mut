@@ -1,0 +1,1273 @@
+                             -*- Text -*-
+
+14:58
+  Patched the a.out stuff enough to load the executable and dump out
+  the symbols.  Notice that malloc is not in there :-
+
+    $ ./main ../tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe 
+    X__DYNAMICX
+    X_dlctlX
+    X_dlopenX
+    X__exit_dummy_declX
+    X_dlcloseX
+    X_dlerrorX
+    X___do_global_dtorsX
+    X___DTOR_LIST__X
+    X___CTOR_LIST__X
+    X___do_global_ctorsX
+    X___prognameX
+    XstartX
+    X__exit_dummy_refX
+    X_etextX
+    X_environX
+    X_errnoX
+    X_mainX
+    X_dlsymX
+    X_edataX
+    X_endX
+    X___mainX
+    X/usr/lib/crt0.oX
+    Xgen/gcc.x86.fp.dynamic.aout.off.on/obj/mlk_malloc.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xmut/tests/X
+    Xsrc/mlk_malloc.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    X_physadr:T20=s4r:21=ar1;0;0;1,0,32;;X
+    Xphysadr:t22=23=*20X
+    Xlabel_t:T24=s24val:25=ar1;0;5;1,0,192;;X
+    Xlabel_t:t26=24X
+    Xvm_offset_t:t27=5X
+    Xvm_size_t:t28=5X
+    Xvaddr_t:t29=5X
+    Xpaddr_t:t30=5X
+    Xvsize_t:t31=5X
+    Xpsize_t:t32=5X
+    Xint8_t:t33=10X
+    Xu_int8_t:t34=11X
+    Xuint8_t:t35=11X
+    Xint16_t:t36=8X
+    Xu_int16_t:t37=9X
+    Xuint16_t:t38=9X
+    Xint32_t:t39=1X
+    Xu_int32_t:t40=4X
+    Xuint32_t:t41=4X
+    Xint64_t:t42=6X
+    Xu_int64_t:t43=7X
+    Xuint64_t:t44=7X
+    Xregister_t:t45=39X
+    Xu_char:t46=11X
+    Xu_short:t47=9X
+    Xu_int:t48=4X
+    Xu_long:t49=5X
+    Xunchar:t50=11X
+    Xushort:t51=9X
+    Xuint:t52=4X
+    Xulong:t53=5X
+    Xu_quad_t:t54=43X
+    Xquad_t:t55=42X
+    Xqaddr_t:t56=57=*55X
+    Xcaddr_t:t58=59=*2X
+    Xdaddr_t:t60=39X
+    Xdev_t:t61=39X
+    Xfixpt_t:t62=40X
+    Xgid_t:t63=40X
+    Xino_t:t64=40X
+    Xkey_t:t65=3X
+    Xmode_t:t66=37X
+    Xnlink_t:t67=37X
+    Xpid_t:t68=39X
+    Xrlim_t:t69=55X
+    Xsegsz_t:t70=39X
+    Xswblk_t:t71=39X
+    Xuid_t:t72=40X
+    Xuseconds_t:t73=40X
+    Xsuseconds_t:t74=39X
+    Xin_addr_t:t75=40X
+    Xin_port_t:t76=37X
+    Xsa_family_t:t77=34X
+    Xsocklen_t:t78=40X
+    Xclock_t:t79=5X
+    Xsize_t:t80=4X
+    Xssize_t:t81=1X
+    Xtime_t:t82=1X
+    Xclockid_t:t83=1X
+    Xtimer_t:t84=1X
+    Xoff_t:t85=6X
+    Xfd_mask:t86=39X
+    Xfd_set:T87=s32fds_bits:88=ar1;0;7;86,0,256;;X
+    Xfd_set:t89=87X
+    Xwchar_t:t90=1X
+    Xdiv_t:t91=92=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t93=94=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t95=96=s16quot:55,0,64;rem:55,64,64;;X
+    Xtimeval:T97=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T98=s8tv_sec:82,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T99=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T100=s16it_interval:97,0,64;it_value:97,64,64;;X
+    Xclockinfo:T101=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T102=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:59,320,32;;X
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    Xmain:F1X
+    Xx:59X
+    XX
+    XX
+    X__main.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X_p.3X
+    X__do_global_dtors:F19X
+    X_exit_dummy_ref:G126=*1X
+    X__do_global_ctors:F19X
+    X_initialized.10X
+    X__main:F19X
+    X_ctors.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X__CTOR_LIST__:G126=ar1;0;1;123X
+    X__DTOR_LIST__:G126X
+    X_exit.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X_exit_dummy_decl:G1X
+    A
+    B
+    ./main info process.exited 0
+    $ 
+
+15:07
+  Thankfully they are there in the static version :-
+
+    $ ./main ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+    ./main ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+    X__DYNAMICX
+    X_issetugidX
+    X_dlctlX
+    X_abortX
+    X_openX
+    X__thread_sys_writeX
+    X_brkX
+    X_dlopenX
+    X___isthreadedX
+    X_getpidX
+    X_readlinkX
+    X___strerrorX
+    X___cleanupX
+    X__exit_dummy_declX
+    X_dlcloseX
+    X_getenvX
+    X_writevX
+    X_dlerrorX
+    X__thread_sys___syscallX
+    X__exitX
+    X___do_global_dtorsX
+    X___DTOR_LIST__X
+    X___CTOR_LIST__X
+    X_reallocX
+    X_strchrX
+    X___syscallX
+    X_sigprocmaskX
+    X___do_global_ctorsX
+    XcerrorX
+    X___prognameX
+    X__thread_sys_sigprocmaskX
+    X_strncpyX
+    XminbrkX
+    X__thread_sys_getpidX
+    X_sigactionX
+    X_strncatX
+    X_signalX
+    X__catgetsX
+    XstartX
+    X__catopenX
+    X__thread_sys_readlinkX
+    XcurbrkX
+    X__thread_sys_sigactionX
+    X__sys_errlistX
+    X__thread_sys__exitX
+    X__thread_sys_killX
+    X_exit.o.oX
+    X__thread_sys_openX
+    X__thread_sys_munmapX
+    X_strerrorX
+    X__catcloseX
+    X_writeX
+    X_mallocX
+    X__exit_dummy_refX
+    X_memsetX
+    X_memcpyX
+    X_malloc_optionsX
+    X__thread_sys_fstatX
+    X__thread_sys_writevX
+    X___atexitX
+    X_etextX
+    X_environX
+    X_atexitX
+    X___findenvX
+    X__sys_nerrX
+    X__thread_sys_closeX
+    X_sbrkX
+    X_errnoX
+    X_fstatX
+    X_mmapX
+    X_exitX
+    X_munmapX
+    X_mainX
+    X_freeX
+    X_closeX
+    X_dlsymX
+    X__thread_sys_issetugidX
+    X_killX
+    X_edataX
+    X___sigintrX
+    X_endX
+    X___mainX
+    X/usr/lib/crt0.oX
+    Xgen/gcc.x86.fp.static.aout.off.on/obj/mlk_malloc.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xmut/tests/X
+    Xsrc/mlk_malloc.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    X_physadr:T20=s4r:21=ar1;0;0;1,0,32;;X
+    Xphysadr:t22=23=*20X
+    Xlabel_t:T24=s24val:25=ar1;0;5;1,0,192;;X
+    Xlabel_t:t26=24X
+    Xvm_offset_t:t27=5X
+    Xvm_size_t:t28=5X
+    Xvaddr_t:t29=5X
+    Xpaddr_t:t30=5X
+    Xvsize_t:t31=5X
+    Xpsize_t:t32=5X
+    Xint8_t:t33=10X
+    Xu_int8_t:t34=11X
+    Xuint8_t:t35=11X
+    Xint16_t:t36=8X
+    Xu_int16_t:t37=9X
+    Xuint16_t:t38=9X
+    Xint32_t:t39=1X
+    Xu_int32_t:t40=4X
+    Xuint32_t:t41=4X
+    Xint64_t:t42=6X
+    Xu_int64_t:t43=7X
+    Xuint64_t:t44=7X
+    Xregister_t:t45=39X
+    Xu_char:t46=11X
+    Xu_short:t47=9X
+    Xu_int:t48=4X
+    Xu_long:t49=5X
+    Xunchar:t50=11X
+    Xushort:t51=9X
+    Xuint:t52=4X
+    Xulong:t53=5X
+    Xu_quad_t:t54=43X
+    Xquad_t:t55=42X
+    Xqaddr_t:t56=57=*55X
+    Xcaddr_t:t58=59=*2X
+    Xdaddr_t:t60=39X
+    Xdev_t:t61=39X
+    Xfixpt_t:t62=40X
+    Xgid_t:t63=40X
+    Xino_t:t64=40X
+    Xkey_t:t65=3X
+    Xmode_t:t66=37X
+    Xnlink_t:t67=37X
+    Xpid_t:t68=39X
+    Xrlim_t:t69=55X
+    Xsegsz_t:t70=39X
+    Xswblk_t:t71=39X
+    Xuid_t:t72=40X
+    Xuseconds_t:t73=40X
+    Xsuseconds_t:t74=39X
+    Xin_addr_t:t75=40X
+    Xin_port_t:t76=37X
+    Xsa_family_t:t77=34X
+    Xsocklen_t:t78=40X
+    Xclock_t:t79=5X
+    Xsize_t:t80=4X
+    Xssize_t:t81=1X
+    Xtime_t:t82=1X
+    Xclockid_t:t83=1X
+    Xtimer_t:t84=1X
+    Xoff_t:t85=6X
+    Xfd_mask:t86=39X
+    Xfd_set:T87=s32fds_bits:88=ar1;0;7;86,0,256;;X
+    Xfd_set:t89=87X
+    Xwchar_t:t90=1X
+    Xdiv_t:t91=92=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t93=94=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t95=96=s16quot:55,0,64;rem:55,64,64;;X
+    Xtimeval:T97=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T98=s8tv_sec:82,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T99=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T100=s16it_interval:97,0,64;it_value:97,64,64;;X
+    Xclockinfo:T101=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T102=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:59,320,32;;X
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    XX
+    Xmain:F1X
+    Xx:59X
+    XX
+    XX
+    X__main.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X_p.3X
+    X__do_global_dtors:F19X
+    X_exit_dummy_ref:G126=*1X
+    X__do_global_ctors:F19X
+    X_initialized.10X
+    X__main:F19X
+    X_ctors.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X__CTOR_LIST__:G126=ar1;0;1;123X
+    X__DTOR_LIST__:G126X
+    X_exit.oX
+    Xgcc2_compiled.X
+    X___gnu_compiled_cX
+    Xgcc-2.95.3/gcc/X
+    X./libgcc2.cX
+    Xint:t1=r1;0020000000000;0017777777777;X
+    Xchar:t2=r2;0;127;X
+    Xlong int:t3=r1;0020000000000;0017777777777;X
+    Xunsigned int:t4=r1;0000000000000;0037777777777;X
+    Xlong unsigned int:t5=r1;0000000000000;0037777777777;X
+    Xlong long int:t6=r1;01000000000000000000000;0777777777777777777777;X
+    Xlong long unsigned int:t7=r1;0000000000000;01777777777777777777777;X
+    Xshort int:t8=r8;-32768;32767;X
+    Xshort unsigned int:t9=r9;0;65535;X
+    Xsigned char:t10=r10;-128;127;X
+    Xunsigned char:t11=r11;0;255;X
+    Xfloat:t12=r1;4;0;X
+    Xdouble:t13=r1;8;0;X
+    Xlong double:t14=r1;12;0;X
+    Xcomplex int:t15=s8real:1,0,32;imag:1,32,32;;X
+    Xcomplex float:t16=r16;4;0;X
+    Xcomplex double:t17=r17;8;0;X
+    Xcomplex long double:t18=r18;12;0;X
+    Xvoid:t19=19X
+    Xprocessor_costs:T20=s28add:1,0,32;lea:1,32,32;\X
+    Xshift_var:1,64,32;shift_const:1,96,32;mult_init:1,128,32;\X
+    Xmult_bit:1,160,32;divide:1,192,32;;X
+    Xprocessor_type:T21=ePROCESSOR_I386:0,PROCESSOR_I486:1,\X
+    XPROCESSOR_PENTIUM:2,PROCESSOR_PENTIUMPRO:3,PROCESSOR_K6:4,;X
+    Xreg_class:T22=eNO_REGS:0,AREG:1,DREG:2,\X
+    XCREG:3,BREG:4,AD_REGS:5,Q_REGS:6,\X
+    XSIREG:7,DIREG:8,INDEX_REGS:9,GENERAL_REGS:10,\X
+    XFP_TOP_REG:11,FP_SECOND_REG:12,FLOAT_REGS:13,\X
+    XALL_REGS:14,LIM_REG_CLASSES:15,;X
+    Xi386_args:T23=s12words:1,0,32;nregs:1,32,32;\X
+    Xregno:1,64,32;;X
+    XCUMULATIVE_ARGS:t24=23X
+    X_physadr:T25=s4r:26=ar1;0;0;1,0,32;;X
+    Xphysadr:t27=28=*25X
+    Xlabel_t:T29=s24val:30=ar1;0;5;1,0,192;;X
+    Xlabel_t:t31=29X
+    Xvm_offset_t:t32=5X
+    Xvm_size_t:t33=5X
+    Xvaddr_t:t34=5X
+    Xpaddr_t:t35=5X
+    Xvsize_t:t36=5X
+    Xpsize_t:t37=5X
+    Xint8_t:t38=10X
+    Xu_int8_t:t39=11X
+    Xuint8_t:t40=11X
+    Xint16_t:t41=8X
+    Xu_int16_t:t42=9X
+    Xuint16_t:t43=9X
+    Xint32_t:t44=1X
+    Xu_int32_t:t45=4X
+    Xuint32_t:t46=4X
+    Xint64_t:t47=6X
+    Xu_int64_t:t48=7X
+    Xuint64_t:t49=7X
+    Xregister_t:t50=44X
+    Xu_char:t51=11X
+    Xu_short:t52=9X
+    Xu_int:t53=4X
+    Xu_long:t54=5X
+    Xunchar:t55=11X
+    Xushort:t56=9X
+    Xuint:t57=4X
+    Xulong:t58=5X
+    Xu_quad_t:t59=48X
+    Xquad_t:t60=47X
+    Xqaddr_t:t61=62=*60X
+    Xcaddr_t:t63=64=*2X
+    Xdaddr_t:t65=44X
+    Xdev_t:t66=44X
+    Xfixpt_t:t67=45X
+    Xgid_t:t68=45X
+    Xino_t:t69=45X
+    Xkey_t:t70=3X
+    Xmode_t:t71=42X
+    Xnlink_t:t72=42X
+    Xpid_t:t73=44X
+    Xrlim_t:t74=60X
+    Xsegsz_t:t75=44X
+    Xswblk_t:t76=44X
+    Xuid_t:t77=45X
+    Xuseconds_t:t78=45X
+    Xsuseconds_t:t79=44X
+    Xin_addr_t:t80=45X
+    Xin_port_t:t81=42X
+    Xsa_family_t:t82=39X
+    Xsocklen_t:t83=45X
+    Xclock_t:t84=5X
+    Xsize_t:t85=4X
+    Xssize_t:t86=1X
+    Xtime_t:t87=1X
+    Xclockid_t:t88=1X
+    Xtimer_t:t89=1X
+    Xoff_t:t90=6X
+    Xfd_mask:t91=44X
+    Xfd_set:T92=s32fds_bits:93=ar1;0;7;91,0,256;;X
+    Xfd_set:t94=92X
+    Xwchar_t:t95=1X
+    Xdiv_t:t96=97=s8quot:1,0,32;rem:1,32,32;;X
+    Xldiv_t:t98=99=s8quot:3,0,32;rem:3,32,32;;X
+    Xqdiv_t:t100=101=s16quot:60,0,64;rem:60,64,64;;X
+    Xtimeval:T102=s8tv_sec:3,0,32;tv_usec:3,32,32;;X
+    Xtimespec:T103=s8tv_sec:87,0,32;tv_nsec:3,32,32;;X
+    Xtimezone:T104=s8tz_minuteswest:1,0,32;tz_dsttime:1,32,32;;X
+    Xitimerval:T105=s16it_interval:102,0,64;it_value:102,64,64;;X
+    Xclockinfo:T106=s20hz:1,0,32;tick:1,32,32;\X
+    Xtickadj:1,64,32;stathz:1,96,32;profhz:1,128,32;;X
+    Xtm:T107=s44tm_sec:1,0,32;tm_min:1,32,32;\X
+    Xtm_hour:1,64,32;tm_mday:1,96,32;tm_mon:1,128,32;\X
+    Xtm_year:1,160,32;tm_wday:1,192,32;tm_yday:1,224,32;\X
+    Xtm_isdst:1,256,32;tm_gmtoff:3,288,32;tm_zone:64,320,32;;X
+    Xmachine_mode:T108=eVOIDmode:0,PQImode:1,QImode:2,\X
+    XPHImode:3,HImode:4,PSImode:5,SImode:6,\X
+    XPDImode:7,DImode:8,TImode:9,OImode:10,\X
+    XQFmode:11,HFmode:12,TQFmode:13,SFmode:14,\X
+    XDFmode:15,XFmode:16,TFmode:17,QCmode:18,\X
+    XHCmode:19,SCmode:20,DCmode:21,XCmode:22,\X
+    XTCmode:23,CQImode:24,CHImode:25,CSImode:26,\X
+    XCDImode:27,CTImode:28,COImode:29,\X
+    XBLKmode:30,CCmode:31,CCFPEQmode:32,\X
+    XMAX_MACHINE_MODE:33,;X
+    Xmode_class:T109=eMODE_RANDOM:0,MODE_INT:1,MODE_FLOAT:2,\X
+    XMODE_PARTIAL_INT:3,MODE_CC:4,MODE_COMPLEX_INT:5,\X
+    XMODE_COMPLEX_FLOAT:6,MAX_MODE_CLASS:7,;X
+    Xptrdiff_t:t110=1X
+    XUQItype:t111=11X
+    XSItype:t112=1X
+    XUSItype:t113=4X
+    XDItype:t114=6X
+    XUDItype:t115=7X
+    XSFtype:t116=12X
+    XDFtype:t117=13X
+    XXFtype:t118=14X
+    Xword_type:t119=1X
+    XDIstruct:T120=s8low:112,0,32;high:112,32,32;;X
+    XDIunion:t121=122=u8s:120,0,64;ll:114,0,64;;X
+    Xfunc_ptr:t123=124=*125=f19X
+    X_exit_dummy_decl:G1X
+    Xatexit.oX
+    Xstrerror.oX
+    X__strerror.oX
+    Xcatopen.oX
+    Xcatgets.oX
+    Xcatclose.oX
+    Xerrlist.oX
+    Xstrchr.oX
+    Xstrncpy.oX
+    Xstrncat.oX
+    Xopen.oX
+    Xfstat.oX
+    Xmalloc.oX
+    Xgetenv.oX
+    Xabort.oX
+    Xsignal.oX
+    Xwritev.oX
+    Xwrite.oX
+    Xsigaction.oX
+    Xreadlink.oX
+    Xmunmap.oX
+    Xkill.oX
+    Xissetugid.oX
+    Xgetpid.oX
+    Xclose.oX
+    Xmmap.oX
+    Xsigprocmask.oX
+    Xbrk.oX
+    Xmemcpy.oX
+    Xmemset.oX
+    Xexit.oX
+    X_exit.oX
+    X__syscall.oX
+    Xsbrk.oX
+    Xcerror.oX
+    A
+    B
+    ./main info process.exited 0
+    $ 
+
+15:59
+  Ok part of the problem is that OpenBSD doesn't seem to implement the
+  standard get regs as ptrace 3.  Aaargh!  Need to rewrite some of the
+  code.
+
+17:30
+  Did a quick re-write to use GET/SET REGS and first test passes :-
+
+$ ./main ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+./main ../tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+@@@: setting action malloc @ 0x3c74
+@@@: setting action realloc @ 0x3d4c
+@@@: setting action free @ 0x3cf4
+A
+@@@: looking for action @ 0x3c74
+B
+./main info process.exited 0
+./main error MLK malloc 8 7030
+$ 

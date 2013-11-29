@@ -1,0 +1,11 @@
+			     -*- Text -*-
+
+13:26 - Start.  Attempt SPARC/Solaris compile.
+
+13:32 - All compiled and lightly tested.
+
+14:22 - Reworked some of the AVL code but now pondering whether to try
+        adding a parent to each node to simplify the iterator
+        interface or making the iterator create a list on the fly to
+        keep its state.  Break.
+

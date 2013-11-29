@@ -1,0 +1,2 @@
+include make/cc.gcc.opt.on.$(arch)
+ACC_OPT= -O2 $(OPT_ARCH)

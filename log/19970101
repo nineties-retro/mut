@@ -1,0 +1,557 @@
+			     -*- Text -*-
+
+10:06 - Start.
+
+10:13 - The fm_exe_b failure is due to a difference in the output format :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FFM free 8049678 free 2 main 80484e0 804853b 91 _start 8048430 804848b 91 2 main 80484e0 804851e 62 _start 8048430 804848b 91
+./main info process.exited 0
+$ 
+
+$ cat ../tests/gen/results.x86/correct/ffm_exe_b
+A
+B
+C
+./main error FFM free 8049678 free 2 main 80484e0 804851e 62 _start 8048430 804848b 91
+./main info process.exited 0
+$ 
+
+
+10:16 - Not that keen on the above FFM format, changed it so that it
+is of the form new-consumer new-backtrace old-consumer old-backtrace :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FFM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91 free 2 main 80484e0 804851e 62 _start 8048430 804848b 91
+./main info process.exited 0
+$ 
+
+
+10:25 - Most of the other differences are due to the backtrace generally
+        now being taken before the call rather than after it and so some
+        of the addresses are 1 out.
+
+10:29 - The fum_realloc failure is not due to this though ...
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+B
+C
+./main info process.exited 0
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8053d58 32
+$ 
+
+11:02 - Spotted and fixed some errors in the realloc code wrt sharing
+        of backtraces, but this has not solved the leak problem.
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+B
+C
+./main info process.exited 0
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8053d48 32
+$ 
+
+11:03 - The usage information should be helpful enough to track down
+        this problem, but at the moment the line numbers are not
+        included which makes following the output a bit difficult ...
+
+11:04 - Just about to try and follow the above output when ...
+
+$ ./main -b gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+Segmentation fault
+$ 
+
+11:07 - GDB quickly located the problem as an attempt to dereference old_obj
+        after it has been deleted in <URI:mut/src/mut.c#mut_realloc_realloc>.
+        This would probably have lurked for a long time had I not done :-
+          old_obj= (mut_resource *)0;
+
+$ ./main -b gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main info process.signaled 11
+./main info process.exited 1
+$ 
+
+11:13 - 
+
+$ ./main -ub gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+./main info mem.usage 1 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 2 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 3 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 4 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 5 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 6 malloc 80534b8 1024 5 mut_exec_esymtab_open 8049f10 8049fe7 215 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 7 malloc 80538c0 1024 5 ? 4005f3d2 mut_exec_esymtab_open 8049f10 804a124 532 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 malloc 80534b8 1024 5 mut_exec_esymtab_open 8049f10 8049fe7 215 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 6 malloc 80534b8 1024 5 mut_exec_esymtab_open 8049f10 8049fe7 215 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 6 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 7 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80531c0 84 2 ? 4002d400 ? 73747365
+./main info mem.usage 6 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053400 178 5 mut_exec_dstrtab_open 804a2e0 804a4ef 527 mut_exec_dynamic_open 804b3a0 804b3ed 77 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+./main info mem.usage 5 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 80532b8 320 5 mut_exec_dsymtab_open 804a700 804a984 644 mut_exec_dynamic_open 804b3a0 804b3cd 45 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+./main info mem.usage 4 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053218 68 5 mut_exec_hash_open 804ab80 804ad96 534 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+./main info mem.usage 3 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 malloc 8053260 80 5 mut_exec_hash_open 804ab80 804ae66 742 mut_exec_dynamic_open 804b3a0 804b3b0 16 mut_exec_open 804b4c0 804b620 352 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+./main info mem.usage 2 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+A
+./main info mem.usage 3 malloc 8053f58 32 5 mut_backtrace_open 804ba70 804ba7e 14 mut_do_realloc 80504e0 8050582 162 mut_run 8050a60 8050be1 385 main 8051340 805140c 204 _start 8048840 804889b 91 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+./main info mem.usage 2 malloc 8053dd0 381 5 mut_exec_estrtab_open 8049a80 8049c8f 527 mut_exec_extra_open 804b440 804b47d 61 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main info process.signaled 11
+./main info mem.usage 1 realloc 8053cc8 256 5 mut_exec_esymtab_open 8049f10 804a1b4 676 mut_exec_extra_open 804b440 804b45a 26 mut_exec_open 804b4c0 804b646 390 mut_open 804dc60 804dc7c 28 main 8051340 80513f0 176
+./main info mem.usage 0
+./main info process.exited 1
+$ 
+
+11:38 - Fixed a backtrace ownership problem in
+        <URI:mut/src/mut.c#mut_realloc_malloc>, but this has not
+        removed the leak problem ...
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+B
+C
+./main info process.exited 0
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8053cf8 32
+$ 
+
+11:42 - The previous fix wasn't quite right.  It defined a consumer
+        backtrace in <URI:mut/src/mut.c#mut_realloc_malloc>, which is
+        obviously wrong since it only produces and does not consume.
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+B
+C
+./main info process.exited 0
+$ 
+
+11:44 - Run the tests again ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+afm_free_exe FAILED
+afm_free_exe_z FAILED
+afm_free_exs FAILED
+afm_free_exs_z FAILED
+calloc_exe FAILED
+calloc_exe_t FAILED
+calloc_exs FAILED
+calloc_exs_t FAILED
+calloc_exs_bt FAILED
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+fum_free_exe FAILED
+fum_free_exs FAILED
+fum_free_exs_b FAILED
+fum_free_exs_sb FAILED
+fum_free_exs_tsb FAILED
+fum_free_chain_exe FAILED
+fum_free_chain_exs FAILED
+fum_free_chain_exs_b FAILED
+fum_free_chain_exs_sb FAILED
+fum_free_chain_exs_tsb FAILED
+fum_realloc_exe FAILED
+fum_realloc_exe_tsb FAILED
+fum_realloc_exs FAILED
+fum_realloc_exs_b FAILED
+fum_realloc_exs_sb FAILED
+fum_realloc_exs_tsb FAILED
+malloc0_exe FAILED
+malloc0_exe_t FAILED
+malloc0_exs FAILED
+malloc0_exs_t FAILED
+malloc0_exs_bt FAILED
+malloc1_exe FAILED
+malloc1_exe_t FAILED
+malloc1_exs FAILED
+malloc1_exs_t FAILED
+malloc1_exs_bt FAILED
+mlk_realloc0_exe_b FAILED
+mlk_realloc0_exe_sbfzt FAILED
+mlk_realloc1_exe FAILED
+mlk_realloc1_exe_b FAILED
+mlk_realloc1_exe_s FAILED
+mlk_realloc1_exe_z FAILED
+mlk_realloc1_exe_t FAILED
+mlk_realloc1_exe_sbfzt FAILED
+mlk_realloc1_exs FAILED
+mlk_realloc1_exs_b FAILED
+mlk_realloc1_exs_s FAILED
+mlk_realloc1_exs_z FAILED
+mlk_realloc1_exs_t FAILED
+realloc_exe FAILED
+realloc_exe_t FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs FAILED
+realloc_exs_t FAILED
+realloc_exs_bt FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+space_count_exe FAILED
+space_count_exe_s FAILED
+space_count_exe_z FAILED
+space_count_exe_t FAILED
+space_count_exs FAILED
+space_count_exs_b FAILED
+space_count_exs_s FAILED
+space_count_exs_z FAILED
+space_count_exs_t FAILED
+$ 
+
+11:45 - Looks like I screwed up the non-backtrace case ...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/afm_free.exe
+A
+B
+C
+D
+Segmentation fault
+$ 
+
+11:50 - Easy to identify as being due to forgetting that
+        <URI:mut/src/resources/list/mut_backtrace.c#mut_resources_mark_as_free>
+        should not try to share a non-existent backtrace.
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/afm_free.exe
+A
+B
+C
+D
+E
+F
+G
+./main info process.exited 0
+$ 
+
+11:51 - Running the tests again fixes most of the problems ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe_b FAILED
+fum_realloc_exe_tsb FAILED
+mlk_realloc0_exe_b FAILED
+mlk_realloc0_exe_sbfzt FAILED
+mlk_realloc1_exe_b FAILED
+mlk_realloc1_exe_sbfzt FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+
+
+11:59 - Many of the differences are due to the backtrace change, but
+        the following is a real problem ...
+
+$ ./main -bfst ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/realloc.exe
+A
+./main info trace realloc 0 0 8 8049688 2 main 80484e0 8048500 32 _start 8048430 804848b 91
+B
+./main info trace realloc 8049688 8 16 8049688 2 main 80484e0 8048522 66 _start 8048430 804848b 91
+C
+./main info trace free 8049688 8
+D
+./main info process.exited 0
+./main info stats alloc.now 8 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+12:21 - The above was caused by not updating the object size in
+        <URI:mut/src/mut.c#mut_reallocN>.  Once done ...
+
+$ ./main -bfst ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/realloc.exe
+A
+./main info trace realloc 0 0 8 8049688 2 main 80484e0 8048500 32 _start 8048430 804848b 91
+B
+./main info trace realloc 8049688 8 16 8049688 2 main 80484e0 8048522 66 _start 8048430 804848b 91
+C
+./main info trace free 8049688 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+12:23 - Need to look hard at the allox.max counters in the case of a
+        realloc though.  Rerunning the tests gives ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe_b FAILED
+fum_realloc_exe_tsb FAILED
+mlk_realloc0_exe_b FAILED
+mlk_realloc0_exe_sbfzt FAILED
+mlk_realloc1_exe_b FAILED
+mlk_realloc1_exe_sbfzt FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+$ 
+
+12:28 - All of the above are due to the change in backtrace format.
+
+12:29 - Therefore, updated the correct answers ...
+
+$ ../tests/scripts/mut_test -r ../tests/gen/results.x86/correct ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+12:32 - Noticed that a) only malloc and calloc now take exit
+        backtraces and b) they will both leak a backtrace if the full
+        exit backtrace cannot be created.
+
+12:39 - Changed calloc to take an entry backtrace, fixed the potential
+        leak, and ensured that the changes work ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+calloc_exe_bt FAILED
+calloc_exe_bft FAILED
+calloc_exe_bfst FAILED
+$ diff ../tests/gen/results.x86/current/calloc_exe_bt ../tests/gen/results.x86/correct/calloc_exe_bt
+2c2
+< ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048500 32 _start 8048430 804848b 91
+---
+> ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+4c4
+< ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048520 64 _start 8048430 804848b 91
+---
+> ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048521 65 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/calloc_exe_bft ../tests/gen/results.x86/correct/calloc_exe_bft
+2c2
+< ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048500 32 _start 8048430 804848b 91
+---
+> ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+4c4
+< ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048520 64 _start 8048430 804848b 91
+---
+> ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048521 65 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/calloc_exe_bfst ../tests/gen/results.x86/correct/calloc_exe_bfst
+2c2
+< ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048500 32 _start 8048430 804848b 91
+---
+> ./main info trace calloc 8 8 80496a8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+4c4
+< ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048520 64 _start 8048430 804848b 91
+---
+> ./main info trace calloc 16 8 80496f0 2 main 80484e0 8048521 65 _start 8048430 804848b 91
+$ 
+
+12:40 - Update the test answers ...
+
+$ ../tests/scripts/mut_test -r ../tests/gen/results.x86/correct ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+12:41 - Start making the same change to malloc.
+
+12:47 - Change made, now test ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+fum_free_exe_tsb FAILED
+fum_free_chain_exe_tsb FAILED
+fum_realloc_exe_tsb FAILED
+malloc0_exe_bt FAILED
+malloc0_exe_bft FAILED
+malloc0_exe_bfst FAILED
+malloc1_exe_bt FAILED
+malloc1_exe_bft FAILED
+malloc1_exe_bfst FAILED
+mlk_malloc_exe_b FAILED
+mlk_malloc_exe_sbfzt FAILED
+space_count_exe_sbfzt FAILED
+$ 
+
+12:50 - Oops, forgot to change from an exit to entry backtrace ...
+
+$ diff ../tests/gen/results.x86/current/fum_free_exe_tsb ../tests/gen/results.x86/correct/fum_free_exe_tsb
+5c5
+< ./main info trace malloc 8 8049678 2 malloc 80483b8 80483b9 1 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 8049678 2 main 80484e0 8048523 67 _start 8048430 804848b 91
+$ 
+
+12:51 - Changed and redoing tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+fum_free_exe_tsb FAILED
+fum_free_chain_exe_tsb FAILED
+fum_realloc_exe_tsb FAILED
+malloc0_exe_bt FAILED
+malloc0_exe_bft FAILED
+malloc0_exe_bfst FAILED
+malloc1_exe_bt FAILED
+malloc1_exe_bft FAILED
+malloc1_exe_bfst FAILED
+mlk_malloc_exe_b FAILED
+mlk_malloc_exe_sbfzt FAILED
+space_count_exe_sbfzt FAILED
+$ 
+
+12:56 - Checked that the difference are only due to the backtrace change ...
+
+$ diff ../tests/gen/results.x86/current/fum_free_exe_tsb ../tests/gen/results.x86/correct/fum_free_exe_tsb
+5c5
+< ./main info trace malloc 8 8049678 2 main 80484e0 8048522 66 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 8049678 2 main 80484e0 8048523 67 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/fum_free_chain_exe_tsb ../tests/gen/results.x86/correct/fum_free_chain_exe_tsb
+5c5
+< ./main info trace malloc 8 8049688 2 main 8048500 8048534 52 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 8049688 2 main 8048500 8048535 53 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/fum_realloc_exe_tsb ../tests/gen/results.x86/correct/fum_realloc_exe_tsb
+5c5
+< ./main info trace malloc 8 80496e0 2 main 8048510 8048557 71 _start 8048460 80484bb 91
+---
+> ./main info trace malloc 8 80496e0 2 main 8048510 8048558 72 _start 8048460 80484bb 91
+$ diff ../tests/gen/results.x86/current/malloc0_exe_bt ../tests/gen/results.x86/correct/malloc0_exe_bt
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+4c4
+< ./main info trace malloc 16 80496b8 2 main 80484e0 804851c 60 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496b8 2 main 80484e0 804851d 61 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/malloc0_exe_bft ../tests/gen/results.x86/correct/malloc0_exe_bft
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+4c4
+< ./main info trace malloc 16 80496b8 2 main 80484e0 804851c 60 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496b8 2 main 80484e0 804851d 61 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/malloc0_exe_bfst ../tests/gen/results.x86/correct/malloc0_exe_bfst
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+4c4
+< ./main info trace malloc 16 80496b8 2 main 80484e0 804851c 60 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496b8 2 main 80484e0 804851d 61 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/malloc1_exe_bt ../tests/gen/results.x86/correct/malloc1_exe_bt
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+6c6
+< ./main info trace malloc 16 80496b8 2 main 80484e0 8048539 89 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496b8 2 main 80484e0 804853a 90 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/malloc1_exe_bft ../tests/gen/results.x86/correct/malloc1_exe_bft
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+6c6
+< ./main info trace malloc 16 80496a8 2 main 80484e0 8048539 89 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496a8 2 main 80484e0 804853a 90 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/malloc1_exe_bfst ../tests/gen/results.x86/correct/malloc1_exe_bfst
+2c2
+< ./main info trace malloc 8 80496a8 2 main 80484e0 80484fe 30 _start 8048430 804848b 91
+---
+> ./main info trace malloc 8 80496a8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+6c6
+< ./main info trace malloc 16 80496a8 2 main 80484e0 8048539 89 _start 8048430 804848b 91
+---
+> ./main info trace malloc 16 80496a8 2 main 80484e0 804853a 90 _start 8048430 804848b 91
+$ diff ../tests/gen/results.x86/current/mlk_malloc_exe_b ../tests/gen/results.x86/correct/mlk_malloc_exe_b
+4c4
+< ./main error MLK malloc 8 8049608 2 main 80484b0 80484ce 30 _start 8048400 804845b 91
+---
+> ./main error MLK malloc 8 8049608 2 main 80484b0 80484cf 31 _start 8048400 804845b 91
+$ diff ../tests/gen/results.x86/current/mlk_malloc_exe_sbfzt ../tests/gen/results.x86/correct/mlk_malloc_exe_sbfzt
+2c2
+< ./main info trace malloc 8 8049608 2 main 80484b0 80484ce 30 _start 8048400 804845b 91
+---
+> ./main info trace malloc 8 8049608 2 main 80484b0 80484cf 31 _start 8048400 804845b 91
+5c5
+< ./main error MLK malloc 8 8049608 2 main 80484b0 80484ce 30 _start 8048400 804845b 91
+---
+> ./main error MLK malloc 8 8049608 2 main 80484b0 80484cf 31 _start 8048400 804845b 91
+$ diff ../tests/gen/results.x86/current/space_count_exe_sbfzt ../tests/gen/results.x86/correct/space_count_exe_sbfzt
+1,10c1,10
+< ./main info trace malloc 10 80496e0 2 main 80484b0 80484bd 13 _start 8048400 804845b 91
+< ./main info trace malloc 10 80496f0 2 main 80484b0 80484ca 26 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049700 2 main 80484b0 80484d7 39 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049710 2 main 80484b0 80484e4 52 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049720 2 main 80484b0 80484f1 65 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049730 2 main 80484b0 80484fe 78 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049740 2 main 80484b0 804850b 91 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049750 2 main 80484b0 8048518 104 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049760 2 main 80484b0 8048525 117 _start 8048400 804845b 91
+< ./main info trace malloc 10 8049770 2 main 80484b0 8048532 130 _start 8048400 804845b 91
+---
+> ./main info trace malloc 10 80496e0 2 main 80484b0 80484be 14 _start 8048400 804845b 91
+> ./main info trace malloc 10 80496f0 2 main 80484b0 80484cb 27 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049700 2 main 80484b0 80484d8 40 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049710 2 main 80484b0 80484e5 53 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049720 2 main 80484b0 80484f2 66 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049730 2 main 80484b0 80484ff 79 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049740 2 main 80484b0 804850c 92 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049750 2 main 80484b0 8048519 105 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049760 2 main 80484b0 8048526 118 _start 8048400 804845b 91
+> ./main info trace malloc 10 8049770 2 main 80484b0 8048533 131 _start 8048400 804845b 91
+21c21
+< ./main info trace malloc 1000 80496e0 2 main 80484b0 80485ba 266 _start 8048400 804845b 91
+---
+> ./main info trace malloc 1000 80496e0 2 main 80484b0 80485bb 267 _start 8048400 804845b 91
+$ 
+
+12:57 - Updated correct results ...
+
+$ ../tests/scripts/mut_test -r ../tests/gen/results.x86/correct ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+
+12:58 - Backup.
+
+13:53 - Restart.  Can now remove the exit backtrace code.
+
+14:01 - Removed and all tests passed.
+        Preserved the previous version as 
+        <URI:mut/src/attic/mut_process_arch.c> in case the exit
+        backtrace code needs to be resurrected.
+
+14:18 - Added a note about backtraces to the -u and -t options in
+        <URI:mut/doc/mut.1>.
+
+14:19 - Break.
+
+15:51 - Restart.
+
+15:53 - Compiled with optimisation on and caught a possible
+        uninitialised use of a backtrace -- easy to fix.
+
+16:08 - Trying to remove some more of the abstraction busting code
+        surrounding resources.
+
+16:33 - Break.
+
+17:20 - Resume.
+
+17:35 - Have cleaned up most of the works resource abstraction breaks,
+        but still some lurking in <URI:mut/src/mut.c#mut_reallocN>.
+
+17:55 - <URI:mut/src/backtrace/fixed/mut_backtrace.c#mut_backtrace_close>
+        no longer accepts a NULL backtrace, it is up to the caller to check.
+
+        All tests still pass ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+18:01 - Backup.

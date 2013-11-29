@@ -1,0 +1,68 @@
+			     -*- Text -*-
+
+.intro: template for mut_process_arch.h
+
+The following lists all the functions that need to be implemented by
+mut_process_arch.[ch], but only describes the ones that are not
+already covered in <URI:mut/src/proc/mut_process.h>.
+
+
+extern int
+mut_process_read_pc(mut_process * p, mut_exec_addr * pc);
+
+ `mut_process_read_pc' reads the value of the program counter and
+ returns it in `pc'.  Note that on systems which have more than one
+ counter (such as PC/NPC on a SPARC), only one value is returned,
+ whichever most closely represents the program counter of the current
+ instruction.
+
+ `mut_process_read_pc' returns a positive value on success, zero if
+ the value of the program counter cannot be determined and a negative
+ value if a breakpoint has been hit that should not have been hit (see
+ <URI:mut/log/19970315> for more information on this case).
+
+ The value of `pc' is unspecified unless `mut_process_read_pc' returns
+ a positive value.
+
+
+extern int
+mut_process_write_pc(mut_process * p, mut_exec_addr pc);
+
+ `mut_process_write_pc' set the value of the program counter in `p'
+ to be `pc'.  On systems which have more than one program counter
+ (such as PC/NPC on a SPARC) both values are set: one is set to the
+ value of `pc' and the other with the appropriate value such that
+ execution can continue at the instruction at `pc'.
+
+ Note that on machines with branch delay slots there is no need to
+ take account of branch delay slots and their effect on program
+ counters.  This is because it is a pre-condition of
+ `mut_process_write_pc' that `pc' will not the address of an
+ instruction in a branch delay slot.  
+
+ As a consequence of the above, it means that on a SPARC PC can be set
+ to `pc' and NPC to `pc'+4.
+
+ `mut_process_write_pc' returns a non-zero value on success and zero if
+ the value of the program counter set.
+
+extern int
+mut_process_read_arg(mut_process *, size_t, mut_arg *);
+
+extern int
+mut_process_write_arg(mut_process *, size_t, mut_arg);
+
+extern int
+mut_process_function_return_addr(mut_process *, mut_exec_addr *);
+
+extern int
+mut_process_function_backtrace(mut_process *, mut_backtrace *);
+
+extern int
+mut_process_read_result(mut_process *, mut_arg *);
+
+extern int
+mut_process_write_result(mut_process *, mut_arg);
+
+extern int
+mut_process_skip_to(mut_process *, mut_exec_addr);

@@ -1,0 +1,17 @@
+			     -*- Text -*-
+
+.intro:
+ The SPARC Architecture Manual Version 9
+ David L. Weaver and Tom Germond
+ Prentice-Hall
+ 1994
+
+.instr.bp: Should really have worked out the hex address for a
+ breakpoint from here, but instead did it the easy way
+ (<URI:mut/misc/sparc_trap/README>)
+
+.arg: 6
+ XREF <URI:/mut/src/proc/ptrace/arch/sparc/mut_process_arch.c#mut_process_n_arg_regs>
+
+.call/return: XXX: quote the description of call/jumpl on the address
+ that is put in o7.

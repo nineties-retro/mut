@@ -1,0 +1,831 @@
+			     -*- Text -*-
+
+13:45 - Start.
+
+        Decided last night that the action structure which was
+        designed for RLD is probably over the top for MUT and so it
+        can be simplified ...
+
+14:04 - Ripped out actions.
+
+14:46 - Changed <URI:mut/src/Makefile> to use vpath.
+
+15:03 - Adding some more block comments to <URI:/mut/src/mut_action.h>
+        and <URI:mut/src/mut.c>.  Break.
+
+15:20 - Resume.  Carry on commenting.
+
+16:02 - Finished commenting <URI:mut/src/mut.c#mut_do_consumer>.
+
+16:04 - Enough tedium, now down to some juicy debugging.  Why is the
+        following failing ...
+
+$ ./main -s -t /usr/bin/du -s attic
+./main info trace realloc 0 0 18 804bc98
+./main info trace realloc 0 0 18 804bcb0
+./main info trace malloc 133 804bcc8
+./main info trace free 804bcc8 133
+./main info trace free 4008a923 0
+./main error FUM free 4008a923
+./main info trace malloc 24 804bd58
+./main info process.signaled 11
+./main info stats alloc.now 60 3 alloc.total 193 4 alloc.max.space 169 3 alloc.max.count 169 3 malloc 2 free 2 realloc 2 calloc 0 cfree 0
+./main error MLK malloc 24 804bd58 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+16:19 - From tracing through, it seems that after the first call to
+        free, PC is updated to the return address, but when the target
+        program is restarted, it restarts at the breakpoint instead.
+
+16:23 - Added a restore just before the process is resumed at the
+        return address, but this still resulted in a SEGV ...
+
+./main -s -t /usr/bin/du -s attic
+./main info trace realloc 0 0 18 804bc98
+./main info trace realloc 0 0 18 804bcb0
+./main info trace malloc 133 804bcc8
+./main info trace free 804bcc8 133
+./main info process.signaled 11
+./main info stats alloc.now 36 2 alloc.total 169 3 alloc.max.space 169 3 alloc.max.count 169 3 malloc 1 free 1 realloc 2 calloc 0 cfree 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+16:24 - Time to do the equivalent manually ...
+
+$ gdb /usr/bin/du
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break free
+Breakpoint 1 at 0x80489f8
+(gdb) run -s attic
+Starting program: /usr/bin/du -s attic
+(no debugging symbols found)...Breakpoint 1 at 0x40082fe0
+(no debugging symbols found)...
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) x/5i free
+0x40082fe0 <__libc_free>:	subl   $0x10,%esp
+0x40082fe3 <__libc_free+3>:	pushl  %ebp
+0x40082fe4 <__libc_free+4>:	pushl  %edi
+0x40082fe5 <__libc_free+5>:	pushl  %esi
+0x40082fe6 <__libc_free+6>:	pushl  %ebx
+(gdb) x/5i $eip
+0x40082fe0 <__libc_free>:	subl   $0x10,%esp
+0x40082fe3 <__libc_free+3>:	pushl  %ebp
+0x40082fe4 <__libc_free+4>:	pushl  %edi
+0x40082fe5 <__libc_free+5>:	pushl  %esi
+0x40082fe6 <__libc_free+6>:	pushl  %ebx
+(gdb) x/2wx $esp
+0xbffff858 <__ypbindlist+2146668684>:	0x40086a83	0x0804bcc8
+(gdb) 
+
+16:26 - The problem seems to be something to do with dynamic linking.
+        The breakpoint is set at 0x80489f8 but is actually activated
+        at 0x40082fe0.  This is because before the program starts,
+        free is ...
+
+$ gdb /usr/bin/du
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) x/5i free
+0x80489f8 <free>:	jmp    *0x804bad0
+0x80489fe <free+6>:	pushl  $0xf0
+0x8048a03 <free+11>:	jmp    0x8048808 <_init+8>
+0x8048a08 <free+16>:	Cannot access memory at address 0x8048a08.
+(gdb) 
+
+17:04 - My guess is that the first free needs to run to completion to
+        link up the free stub to __libc_free.  Not clear to me why the
+        problem doesn't occur with the test programs.  For example :-
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/malloc0.exe 
+A
+./main info trace malloc 8 80496a8
+B
+./main info trace malloc 16 80496b8
+C
+./main info trace free 80496b8 16
+D
+./main info trace free 80496a8 8
+E
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+$ 
+
+17:14 - Running under GDB, notice how the return addresses are different ...
+
+$ gdb ../tests/gen/gcc.x86.fp.dynamic.elfd/malloc0.exe 
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break free
+Breakpoint 1 at 0x8048418
+(gdb) run
+(no debugging symbols found)...Breakpoint 1 at 0x40082fe0
+A
+B
+C
+(no debugging symbols found)...
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) x/3wx $esp
+0xbffffcf4 <__ypbindlist+2146669864>:	0x0804853c	0x080496b8	0x080496b8
+(gdb) c
+Continuing.
+D
+
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) c
+Continuing.
+E
+
+Program exited normally.
+(gdb) q
+
+17:18 - Wondered if it had anything to do with frame pointers, so
+        compiled up the tests without a frame pointer and ...
+
+$ ./main -s -t ../tests/gen/gcc.x86.nfp.dynamic.elfd/malloc0.exe 
+A
+./main info trace malloc 8 80496a8
+B
+./main info trace malloc 16 80496b8
+C
+./main info trace free 80496b8 16
+D
+./main info trace free 80496b8 16
+./main error FFM free 80496b8 free
+E
+./main info process.signaled 11
+./main info stats alloc.now 8 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+./main error MLK malloc 8 80496a8 0
+$ 
+
+17:20 - Ok it fails, but in a different way.  Is it for the same
+        reason as /usr/bin/du?
+
+$ gdb ../tests/gen/gcc.x86.nfp.dynamic.elfd/malloc0.exe 
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break free
+Breakpoint 1 at 0x8048418
+(gdb) run
+(no debugging symbols found)...Breakpoint 1 at 0x40082fe0
+A
+B
+C
+(no debugging symbols found)...
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) x/3wx $esp
+0xbffffcf4 <__ypbindlist+2146669864>:	0x0804853d	0x080496b8	0xbffffd18
+(gdb) 
+
+17:21 - Inconclusive.  The addresses here look just like the fp case.
+
+17:28 - Backup.
+
+21:33 - Restart.  About that FFM problem ...
+
+$ ./main -s -t ../tests/gen/gcc.x86.nfp.dynamic.elfd/malloc0.exe 
+A
+./main info trace malloc 8 80496a8
+B
+./main info trace malloc 16 80496b8
+C
+./main info trace free 80496b8 16
+D
+./main info trace free 80496b8 16
+./main error FFM free 80496b8 free
+E
+./main info process.signaled 11
+./main info stats alloc.now 8 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+./main error MLK malloc 8 80496a8 0
+
+
+21:43 - While gdbing around inside 
+        <URI:mut/tests/gen/gcc.x86.nfp.dynamic.elfd/malloc0.exe>
+        wondered that if the free call is being skipped then it should
+        be necessary to adjust the stack to drop the return address on
+        an x86.
+
+21:56 - Replaced <URI:mut/src/proc/ptrace/mut_process.c#mut_process_resume_at>
+        with
+      <URI:mut/src/proc/ptrace/arch/x86/mut_process_arch.c#mut_process_skip_to>
+
+$ ./main -s -t ../tests/gen/gcc.x86.nfp.dynamic.elfd/malloc0.exe 
+A
+./main info trace malloc 8 80496a8
+B
+./main info trace malloc 16 80496b8
+C
+./main info trace free 80496b8 16
+D
+./main info trace free 80496a8 8
+E
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+$ 
+
+21:57 - Things are looking better.  Can now run the du test ...
+
+$ ./main -s -t /usr/bin/du -s attic
+./main info trace realloc 0 0 18 804bc98
+./main info trace realloc 0 0 18 804bcb0
+./main info trace malloc 133 804bcc8
+./main info trace free 804bcc8 133
+./main info trace malloc 420 804bd58
+./main info trace malloc 840 804bf00
+./main info trace malloc 12 804c250
+./main info trace malloc 101 804c260
+./main info trace malloc 32 804c2d0
+./main info trace malloc 4096 804c2f8
+./main info trace malloc 1024 804d300
+./main info trace free 804c2f8 4096
+./main info trace free 804c2d0 32
+./main info trace malloc 32 804d708
+./main info trace malloc 4096 804d730
+./main info trace malloc 1024 804e738
+./main info trace free 804d730 4096
+./main info trace free 804d708 32
+./main info trace malloc 32 804eb40
+./main info trace malloc 4096 804eb68
+./main info trace malloc 1024 804fb70
+./main info trace free 804eb68 4096
+./main info trace free 804eb40 32
+./main info trace malloc 32 804ff78
+./main info trace malloc 4096 804ffa0
+./main info trace malloc 1024 8050fa8
+./main info trace free 804ffa0 4096
+./main info trace free 804ff78 32
+./main info trace free 8050fa8 1024
+./main info trace malloc 32 80513b0
+./main info trace malloc 4096 80513d8
+./main info trace malloc 1024 80523e0
+./main info trace free 80513d8 4096
+./main info trace free 80513b0 32
+./main info trace free 80523e0 1024
+./main info trace free 804fb70 1024
+./main info trace free 804e738 1024
+./main info trace malloc 32 80527e8
+./main info trace malloc 4096 8052810
+./main info trace malloc 1024 8053818
+./main info trace free 8052810 4096
+./main info trace free 80527e8 32
+./main info trace free 8053818 1024
+./main info trace malloc 32 8053c20
+./main info trace malloc 4096 8053c48
+./main info trace malloc 1024 8054c50
+./main info trace free 8053c48 4096
+./main info trace free 8053c20 32
+./main info trace malloc 32 8055058
+./main info trace malloc 4096 8055080
+./main info trace malloc 1024 8056088
+./main info trace free 8055080 4096
+./main info trace free 8055058 32
+./main info trace free 8056088 1024
+./main info trace free 8054c50 1024
+./main info trace free 804d300 1024
+75	attic
+./main info process.exited 0
+./main info stats alloc.now 1409 6 alloc.total 42758 31 alloc.max.space 9633 12 alloc.max.count 9633 12 malloc 29 free 25 realloc 2 calloc 0 cfree 0
+./main error MLK malloc 101 804c260 0
+./main error MLK malloc 12 804c250 0
+./main error MLK malloc 840 804bf00 0
+./main error MLK malloc 420 804bd58 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+22:03 - Tried the tar test again.  With -f it fails :-
+
+$ ./main -s -t -f /usr/bin/tar -xMf /dev/fd0
+./main info trace realloc 0 0 18 805d930
+./main info trace malloc 40 805d948
+./main info trace malloc 40 805d978
+./main info trace malloc 102 805d9a8
+./main info trace realloc 0 0 18 805da18
+./main info trace malloc 133 805da30
+./main info trace free 805da30 133
+./main info trace malloc 13 805da30
+./main info trace malloc 1 805da48
+./main info trace malloc 32 805da58
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dad8
+./main info trace malloc 24 805dbe0
+./main info trace malloc 260 805dc00
+./main info trace free 805da80 84
+./main info trace malloc 32 805dd08
+./main info trace malloc 20 805dd30
+./main info trace malloc 84 805da80
+./main info trace malloc 256 805dd48
+./main info trace free 805da80 84
+./main info trace malloc 13 805de50
+./main info trace free 805de50 13
+./main info trace malloc 13 805de50
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info process.signaled 11
+$ 
+
+22:04 - But without -f the routine is correctly skipped and tar works ...
+
+$ ./main -s -t /usr/bin/tar -xMf /dev/fd0
+./main info trace realloc 0 0 18 805d930
+./main info trace malloc 40 805d948
+./main info trace malloc 40 805d978
+./main info trace malloc 102 805d9a8
+./main info trace realloc 0 0 18 805da18
+./main info trace malloc 133 805da30
+./main info trace free 805da30 133
+./main info trace malloc 13 805dac0
+./main info trace malloc 1 805dad8
+./main info trace malloc 32 805dae8
+./main info trace malloc 84 805db10
+./main info trace malloc 256 805db68
+./main info trace malloc 24 805dc70
+./main info trace malloc 260 805dc90
+./main info trace free 805db10 84
+./main info trace malloc 32 805dd98
+./main info trace malloc 20 805ddc0
+./main info trace malloc 84 805ddd8
+./main info trace malloc 256 805de30
+./main info trace free 805ddd8 84
+./main info trace malloc 13 805df38
+./main info trace free 805df38 13
+./main info trace malloc 13 805df50
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805df68
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805df80
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805df98
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805dfb0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805dfc8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 805dfe0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c08
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c20
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c38
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c50
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c68
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c80
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060c98
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060cb0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060cc8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ce0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060cf8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d10
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d28
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d40
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d58
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d70
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060d88
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060da0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060db8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060dd0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060de8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e00
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e18
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e30
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e48
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e60
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e78
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060e90
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ea8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ec0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ed8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ef0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f08
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f20
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f38
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f50
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f68
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f80
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060f98
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060fb0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060fc8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060fe0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8060ff8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061010
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061028
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061040
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061058
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061070
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061088
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80610a0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80610b8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80610d0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80610e8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061100
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061118
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061130
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061148
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061160
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061178
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061190
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80611a8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80611c0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80611d8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80611f0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061208
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061220
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061238
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061250
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061268
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061280
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061298
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80612b0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80612c8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80612e0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80612f8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061310
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061328
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061340
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061358
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061370
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061388
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80613a0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80613b8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80613d0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80613e8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061400
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061418
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061430
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061448
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061460
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061478
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061490
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80614a8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80614c0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80614d8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80614f0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061508
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061520
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061538
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061550
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061568
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061580
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061598
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80615b0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80615c8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80615e0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80615f8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061610
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061628
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061640
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061658
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061670
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061688
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80616a0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80616b8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80616d0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80616e8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061700
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061718
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061730
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061748
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061760
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061778
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061790
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80617a8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80617c0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80617d8
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80617f0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061808
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061820
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061838
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061850
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061868
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061880
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 8061898
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80618b0
+./main info trace free 805d458 0
+./main error FUM free 805d458
+./main info trace malloc 13 80618c8
+Prepare volume #2 for /dev/fd0 and hit return: 
+
+22:24 - Reduced the number of ptrace mut_process header files by
+        merging <URI:mut/src/proc/ptrace/mut_process_owner.h> and
+        <URI:mut/src/proc/ptrace/mut_process_user.h> into
+        <URI:mut/src/proc/ptrace/mut_process.h> now that
+        <URI:mut/src/mut.c> is now the sole user and owner of a process.
+
+23:16 - Fleshed out the documentation in <URI:mut/src/proc/mut_process.h>.
+        It is now almost up to date.
+
+23:26 - Finally moved <URI:mut/src/include/elf> to the ELF specific
+        exec directory, that is <URI:mut/src/exec/elfd/elf>.  That
+        means that the include directory is now free of option
+        specific includes -- added a comment to <URI:mut/src/include/README>
+        to explain that no such files should go in there again.
+
+23:36 - Finished adding READMEs to <URI:mut/src/include/elf>.
+
+23:39 - Really would be good to be able to deal with 
+        <URI:mut/README#idea.leak.deliberate> ...
+
+$ ./main -s /usr/bin/du -s attic
+75	attic
+./main info process.exited 0
+./main info stats alloc.now 1409 6 alloc.total 42758 31 alloc.max.space 9633 12 alloc.max.count 9633 12 malloc 29 free 25 realloc 2 calloc 0 cfree 0
+./main error MLK malloc 101 804c260 0
+./main error MLK malloc 12 804c250 0
+./main error MLK malloc 840 804bf00 0
+./main error MLK malloc 420 804bd58 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+23:41 - Backup.

@@ -1,0 +1,327 @@
+#! /bin/sh
+
+script="$0"
+results_dir=""
+log=""
+correct_results_dir=""
+overflow_tests=""
+
+while test $# -ne 0
+do
+  case $1 in
+    -r) results_dir="$2"; shift ;;
+    -c) correct_results_dir="$2"; shift ;;
+    -l) log=1 ;;
+    -v) overflow_tests=1 ;;
+    -*) echo "${script}: unknown option \`$1'" ; exit 1 ;;
+     *) break; 
+  esac
+  shift
+done
+
+if test $# -ne 2
+then
+  echo "${script}: [ -lv ] [ -c xxx ] [ -r xxx ] mut executables_dir"
+  exit 1;
+fi
+
+mut=$1
+exe_dir="$2"
+
+run_test () {
+  ${mut} $1 -nmut ${exe_dir}/$2 > ${results_dir}/$3 2>&1
+  if test -n "${correct_results_dir}"
+  then
+    if test -f ${correct_results_dir}/$3
+    then
+      if cmp -s ${results_dir}/$3 ${correct_results_dir}/$3
+      then 
+        test -z "${log}" || echo $3
+      else
+        echo $3 FAILED
+      fi
+    else
+      echo $3 MISSING
+    fi
+  else
+    test -z "${log}" || echo $3
+  fi
+}
+
+run_test "" afm_free.exe afm_free_exe
+run_test -z afm_free.exe afm_free_exe_z
+
+run_test "" afm_free.exs afm_free_exs
+run_test -z afm_free.exs afm_free_exs_z
+
+run_test "" calloc.exe calloc_exe
+run_test -t calloc.exe calloc_exe_t
+run_test -bt calloc.exe calloc_exe_bt
+run_test -bft calloc.exe calloc_exe_bft
+run_test -bfst calloc.exe calloc_exe_bfst
+
+run_test "" calloc.exs calloc_exs
+run_test -t calloc.exs calloc_exs_t
+run_test -bt calloc.exs calloc_exs_bt
+run_test -bft calloc.exs calloc_exs_bft
+run_test -bfst calloc.exs calloc_exs_bfst
+
+
+if test -n "${overflow_tests}"
+then
+  run_test "" callocn.exe callocn_exe
+  run_test -b callocn.exe callocn_exe_b
+  run_test -f callocn.exe callocn_exe_f
+  run_test -fb callocn.exe callocn_exe_fb
+
+  run_test "" callocn.exs callocn_exs
+  run_test -b callocn.exs callocn_exs_b
+  run_test -f callocn.exs callocn_exs_f
+  run_test -fb callocn.exs callocn_exs_fb
+
+  run_test "" callocv.exe callocv_exe
+  run_test -b callocv.exe callocv_exe_b
+  run_test -f callocv.exe callocv_exe_f
+  run_test -fb callocv.exe callocv_exe_fb
+
+  run_test "" callocv.exs callocv_exs
+  run_test -b callocv.exs callocv_exs_b
+  run_test -f callocv.exs callocv_exs_f
+  run_test -fb callocv.exs callocv_exs_fb
+
+  run_test -f count64.exe count64_exe_f
+  run_test -fs count64.exe count64_exe_fs
+
+  run_test -f count64.exs count64_exs
+  run_test -fs count64.exs count64_exs_fs
+fi
+
+
+
+run_test "" ffm.exe ffm_exe
+run_test -b ffm.exe ffm_exe_b
+run_test -f ffm.exe ffm_exe_f
+run_test -bf ffm.exe ffm_exe_bf
+
+run_test "" ffm.exs ffm_exs
+run_test -b ffm.exs ffm_exs_b
+run_test -f ffm.exs ffm_exs_f
+run_test -bf ffm.exs ffm_exs_bf
+
+
+run_test "" fum_free.exe fum_free_exe
+run_test -f fum_free.exe fum_free_exe_f
+run_test -b fum_free.exe fum_free_exe_b
+run_test -sb fum_free.exe fum_free_exe_sb 
+run_test -tsb fum_free.exe fum_free_exe_tsb 
+run_test -ftsb fum_free.exe fum_free_exe_ftsb 
+
+run_test ""    fum_free.exs fum_free_exs
+run_test -f    fum_free.exs fum_free_exs_f
+run_test -b    fum_free.exs fum_free_exs_b
+run_test -sb   fum_free.exs fum_free_exs_sb 
+run_test -tsb  fum_free.exs fum_free_exs_tsb 
+run_test -ftsb fum_free.exs fum_free_exs_ftsb 
+
+run_test ""    fum_free_chain.exe fum_free_chain_exe
+run_test -f    fum_free_chain.exe fum_free_chain_exe_f
+run_test -b    fum_free_chain.exe fum_free_chain_exe_b 
+run_test -sb   fum_free_chain.exe fum_free_chain_exe_sb 
+run_test -tsb  fum_free_chain.exe fum_free_chain_exe_tsb 
+run_test -ftsb fum_free_chain.exe fum_free_chain_exe_ftsb 
+
+run_test ""    fum_free_chain.exs fum_free_chain_exs
+run_test -f    fum_free_chain.exs fum_free_chain_exs_f
+run_test -b    fum_free_chain.exs fum_free_chain_exs_b
+run_test -sb   fum_free_chain.exs fum_free_chain_exs_sb 
+run_test -tsb  fum_free_chain.exs fum_free_chain_exs_tsb 
+run_test -ftsb fum_free_chain.exs fum_free_chain_exs_ftsb 
+
+
+run_test ""    fum_realloc.exe fum_realloc_exe
+run_test -f    fum_realloc.exe fum_realloc_exe_f
+run_test -b    fum_realloc.exe fum_realloc_exe_b
+run_test -sb   fum_realloc.exe fum_realloc_exe_sb 
+run_test -tsb  fum_realloc.exe fum_realloc_exe_tsb 
+run_test -ftsb fum_realloc.exe fum_realloc_exe_ftsb 
+
+run_test ""    fum_realloc.exs fum_realloc_exs
+run_test -f    fum_realloc.exs fum_realloc_exs_f
+run_test -b    fum_realloc.exs fum_realloc_exs_b
+run_test -sb   fum_realloc.exs fum_realloc_exs_sb 
+run_test -tsb  fum_realloc.exs fum_realloc_exs_tsb 
+run_test -ftsb fum_realloc.exs fum_realloc_exs_ftsb 
+
+
+run_test "" malloc0.exe malloc0_exe
+run_test -t malloc0.exe malloc0_exe_t
+run_test -bt malloc0.exe malloc0_exe_bt
+run_test -bft malloc0.exe malloc0_exe_bft
+run_test -bfst malloc0.exe malloc0_exe_bfst
+
+run_test "" malloc0.exs malloc0_exs
+run_test -t malloc0.exs malloc0_exs_t
+run_test -bt malloc0.exs malloc0_exs_bt
+run_test -bft malloc0.exs malloc0_exs_bft
+run_test -bfst malloc0.exs malloc0_exs_bfst
+
+
+run_test "" malloc1.exe malloc1_exe
+run_test -t malloc1.exe malloc1_exe_t
+run_test -bt malloc1.exe malloc1_exe_bt
+run_test -bft malloc1.exe malloc1_exe_bft
+run_test -bfst malloc1.exe malloc1_exe_bfst
+
+run_test "" malloc1.exs malloc1_exs
+run_test -t malloc1.exs malloc1_exs_t
+run_test -bt malloc1.exs malloc1_exs_bt
+run_test -bft malloc1.exs malloc1_exs_bft
+run_test -bfst malloc1.exs malloc1_exs_bfst
+
+if test -n "${overflow_tests}"
+then
+  run_test "" mallocn.exe mallocn_exe
+  run_test -t mallocn.exe mallocn_exe_t
+  run_test -bt mallocn.exe mallocn_exe_bt
+  run_test -bft mallocn.exe mallocn_exe_bft
+  run_test -bfst mallocn.exe mallocn_exe_bfst
+
+  run_test "" mallocn.exs mallocn_exs
+  run_test -t mallocn.exs mallocn_exs_t
+  run_test -bt mallocn.exs mallocn_exs_bt
+  run_test -bft mallocn.exs mallocn_exs_bft
+  run_test -bfst mallocn.exs mallocn_exs_bfst
+fi
+
+run_test "" mlk_malloc.exe mlk_malloc_exe
+run_test -b mlk_malloc.exe mlk_malloc_exe_b
+run_test -s mlk_malloc.exe mlk_malloc_exe_s
+run_test -f mlk_malloc.exe mlk_malloc_exe_f
+run_test -z mlk_malloc.exe mlk_malloc_exe_z
+run_test -t mlk_malloc.exe mlk_malloc_exe_t
+run_test -sbfzt mlk_malloc.exe mlk_malloc_exe_sbfzt
+
+run_test "" mlk_malloc.exs mlk_malloc_exs
+run_test -b mlk_malloc.exs mlk_malloc_exs_b
+run_test -s mlk_malloc.exs mlk_malloc_exs_s
+run_test -f mlk_malloc.exs mlk_malloc_exs_f
+run_test -z mlk_malloc.exs mlk_malloc_exs_z
+run_test -t mlk_malloc.exs mlk_malloc_exs_t
+run_test -sbfzt mlk_malloc.exs mlk_malloc_exs_sbfzt
+
+
+run_test "" mlk_realloc0.exe mlk_realloc0_exe
+run_test -b mlk_realloc0.exe mlk_realloc0_exe_b
+run_test -s mlk_realloc0.exe mlk_realloc0_exe_s
+run_test -f mlk_realloc0.exe mlk_realloc0_exe_f
+run_test -z mlk_realloc0.exe mlk_realloc0_exe_z
+run_test -t mlk_realloc0.exe mlk_realloc0_exe_t
+run_test -sbfzt mlk_realloc0.exe mlk_realloc0_exe_sbfzt
+
+
+run_test "" mlk_realloc0.exs mlk_realloc0_exs
+run_test -b mlk_realloc0.exs mlk_realloc0_exs_b
+run_test -s mlk_realloc0.exs mlk_realloc0_exs_s
+run_test -f mlk_realloc0.exs mlk_realloc0_exs_f
+run_test -z mlk_realloc0.exs mlk_realloc0_exs_z
+run_test -t mlk_realloc0.exs mlk_realloc0_exs_t
+run_test -sbfzt mlk_realloc0.exs mlk_realloc0_exs_sbfzt
+
+
+run_test "" mlk_realloc1.exe mlk_realloc1_exe
+run_test -b mlk_realloc1.exe mlk_realloc1_exe_b
+run_test -s mlk_realloc1.exe mlk_realloc1_exe_s
+run_test -f mlk_realloc1.exe mlk_realloc1_exe_f
+run_test -z mlk_realloc1.exe mlk_realloc1_exe_z
+run_test -t mlk_realloc1.exe mlk_realloc1_exe_t
+run_test -sbfzt mlk_realloc1.exe mlk_realloc1_exe_sbfzt
+
+
+run_test "" mlk_realloc1.exs mlk_realloc1_exs
+run_test -b mlk_realloc1.exs mlk_realloc1_exs_b
+run_test -s mlk_realloc1.exs mlk_realloc1_exs_s
+run_test -f mlk_realloc1.exs mlk_realloc1_exs_f
+run_test -z mlk_realloc1.exs mlk_realloc1_exs_z
+run_test -t mlk_realloc1.exs mlk_realloc1_exs_t
+run_test -sbfzt mlk_realloc1.exs mlk_realloc1_exs_sbfzt
+
+
+run_test "" realloc.exe realloc_exe
+run_test -t realloc.exe realloc_exe_t
+run_test -bt realloc.exe realloc_exe_bt
+run_test -bft realloc.exe realloc_exe_bft
+run_test -bfst realloc.exe realloc_exe_bfst
+
+run_test "" realloc.exs realloc_exs
+run_test -t realloc.exs realloc_exs_t
+run_test -bt realloc.exs realloc_exs_bt
+run_test -bft realloc.exs realloc_exs_bft
+run_test -bfst realloc.exs realloc_exs_bfst
+
+
+if test -n "${overflow_tests}"
+then
+  run_test "" reallocn.exe reallocn_exe
+  run_test -t reallocn.exe reallocn_exe_t
+  run_test -bt reallocn.exe reallocn_exe_bt
+  run_test -bft reallocn.exe reallocn_exe_bft
+  run_test -bfst reallocn.exe reallocn_exe_bfst
+
+  run_test "" reallocn.exs reallocn_exs
+  run_test -t reallocn.exs reallocn_exs_t
+  run_test -bt reallocn.exs reallocn_exs_bt
+  run_test -bft reallocn.exs reallocn_exs_bft
+  run_test -bfst reallocn.exs reallocn_exs_bfst
+fi
+
+
+run_test "" segv.exe segv_exe
+run_test -b segv.exe segv_exe_b
+run_test -s segv.exe segv_exe_s
+run_test -f segv.exe segv_exe_f
+run_test -z segv.exe segv_exe_z
+run_test -t segv.exe segv_exe_t
+run_test -sbfzt segv.exe segv_exe_sbfzt
+
+run_test "" segv.exs segv_exs
+run_test -b segv.exs segv_exs_b
+run_test -s segv.exs segv_exs_s
+run_test -f segv.exs segv_exs_f
+run_test -z segv.exs segv_exs_z
+run_test -t segv.exs segv_exs_t
+run_test -sbfzt segv.exs segv_exs_sbfzt
+
+
+run_test "" space_count.exe space_count_exe
+run_test -b space_count.exe space_count_exe_b
+run_test -s space_count.exe space_count_exe_s
+run_test -f space_count.exe space_count_exe_f
+run_test -z space_count.exe space_count_exe_z
+run_test -t space_count.exe space_count_exe_t
+run_test -sbfzt space_count.exe space_count_exe_sbfzt
+
+
+run_test "" space_count.exs space_count_exs
+run_test -b space_count.exs space_count_exs_b
+run_test -s space_count.exs space_count_exs_s
+run_test -f space_count.exs space_count_exs_f
+run_test -z space_count.exs space_count_exs_z
+run_test -t space_count.exs space_count_exs_t
+run_test -sbfzt space_count.exs space_count_exs_sbfzt
+
+
+run_test "" incest.exe incest_exe
+run_test -b incest.exe incest_exe_b
+run_test -s incest.exe incest_exe_s
+run_test -f incest.exe incest_exe_f
+run_test -z incest.exe incest_exe_z
+run_test -t incest.exe incest_exe_t
+run_test -sbfzt incest.exe incest_exe_sbfzt
+
+run_test "" incest.exs incest_exs
+run_test -b incest.exs incest_exs_b
+run_test -s incest.exs incest_exs_s
+run_test -f incest.exs incest_exs_f
+run_test -z incest.exs incest_exs_z
+run_test -t incest.exs incest_exs_t
+run_test -sbfzt incest.exs incest_exs_sbfzt

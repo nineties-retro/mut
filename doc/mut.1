@@ -1,0 +1,273 @@
+.\" a preliminary MUT manual page
+.TH MUT 1 "January 4, 2001"
+.UC 4
+.SH NAME
+mut \- a memory usage tracker
+.SH SYNOPSIS
+.B mut
+[
+.B \-bfstuz
+] [
+.B \-nname
+] [
+.B \-ofile
+]
+.I command ...
+.br
+.SH DESCRIPTION
+.B mut
+traces the usage of all memory managed by
+.BR malloc (3) ,
+.BR calloc (3) ,
+.BR realloc (3) ,
+.BR free (3)
+and
+.BR cfree (3)
+in the target
+.BR command
+.B mut
+additionally detects any memory leaks, freeing unallocated memory and
+optionally freeing already free memory.
+.B mut
+can work on any dynamically linked executable or unstripped
+statically linked executable.
+
+.SH OPTIONS
+
+.TP 1i
+.B \-b \" <URI:mut/src/ui/tty/mut_ui.c#b>
+Include a call backtrace on any trace or error output.  Note that a
+backtrace cannot not be generated, even if it is requested, for
+stripped files.
+.TP
+.B \-f \" <URI:mut/src/ui/tty/mut_ui.c#f>
+Ensure that any calls to
+.BR free (3) ,
+.BR cfree (3) 
+or
+.BR realloc (3)
+free the memory.  Without this option, the memory is not actually
+freed in order to allow FFM error to be detected.
+.TP
+.B \-nname \" <URI:mut/src/ui/tty/mut_ui.c#n>
+Ensure that the name at the start of every log message is
+.BR name .
+If this option is not used, then the name is set to the name of the
+executable.
+.TP
+.B \-ofile \" <URI:mut/src/ui/tty/mut_ui.c#f>
+Direct all output messages to
+.BR file .
+If this option is not used, then all output is directed to 
+.BR stderr .
+.TP
+.B \-s \" <URI:mut/src/ui/tty/mut_ui.c#s>
+Display some summary statistics about the amount of memory allocated,
+number of calls ... etc.
+.TP
+.B \-t \" <URI:mut/src/ui/tty/mut_ui.c#f>
+Trace the calls to the calls to
+.BR malloc (3) ,
+.BR calloc (3) ,
+.BR realloc (3) ,
+.BR free (3)
+and
+.BR cfree (3)
+and display the functions arguments and results.  The trace includes a
+backtrace if 
+.B \-b
+has also been specified.
+.TP
+.B \-u \" <URI:mut/src/ui/tty/mut_ui.c#u>
+Display all the allocated objects on each call to
+.BR malloc (3) ,
+.BR calloc (3) ,
+.BR realloc (3) ,
+.BR free (3)
+and
+.BR cfree (3) .
+The usage includes a full backtrace for each object if
+.B \-b
+has also been specified.
+.TP
+.B \-z \" <URI:mut/src/ui/tty/mut_ui.c#z>
+Zero out any memory freed by
+.BR realloc (3) ,
+.BR free (3)
+and
+.BR cfree (3) .
+This can help in discovering errors due to referencing freed memory.
+However, it can have a drastic negative effect on the performance of 
+a program if it contains a large number calls to 
+.BR realloc (3) ,
+.BR free (3)
+or
+.BR cfree (3) .
+.TP
+.B \-c \" <URI:mut/src/ui/tty/mut_ui.c#c>
+Allocates a safety zone on each side of every object allocated by
+.BR malloc (3) ,
+.BR calloc (3)
+and
+.BR realloc (3) ,
+and fills the zones with a known value.  When the object is passed to
+.BR realloc (3) ,
+.BR free (3)
+or
+.BR cfree (3) ,
+the zones are checked to ensure that they contain the value they were
+originally set to.  If either does not, this indicates that a value
+has been written to an area outside the allocated object and an WUM
+error is reported.  Using the option can result in 
+.BR calloc (3)
+and
+.BR malloc (3)
+producing different results from normal in the case where the
+requested size of the object is zero.  With this option an object
+containing two safety zones is returned whereas the result of this
+operation is normally implementation dependent.
+.TP
+.B \-xsuffix \" <URI:mut/src/ui/tty/mut_ui.c#x>
+Sometime between gcc 2.7 and gcc 2.96.2, the symbols that gcc/as/ld
+write out in reference to libc functions obtained a suffix of the form
+"@@GLIBC_2.0".  For example, if you reference "malloc" then a symbol
+enty of the form "malloc@@GLIBC_2.0" is added.  As default
+.B mut
+knows how to deal with this suffix.  However, should you find yourself
+using a compiler that produces a different suffix, or no suffix at
+all, then you can override the behaviour by giving the exact suffix.
+
+
+.SH DIAGNOSTICS
+
+The exit status is non-zero if there are any fatal errors.
+
+.SH EXAMPLES
+
+Consider the following simple program which clearly allocates 10 bytes
+of memory (using 
+.BR malloc (3)
+), but does not free it before exiting :-
+
+.nf
+  #include <stdlib.h>
+
+  int main(void)
+  {
+    char *foo= malloc(10);
+    return 0;
+  }
+.fi
+
+Further, assume it is compiled like so :-
+
+.nf
+  $ cc -o foo foo.c
+.fi
+
+.B mut
+can then be used to detect this leak :-
+
+.nf
+  $ mut foo
+  mut info process.exited 0
+  mut error MLK malloc 10 80495b0
+.fi
+
+For a more accurate diagnosis of the location of the error, a
+backtrace can be generated :-
+
+.nf
+  $ mut -b foo
+  mut info process.exited 0
+  mut error MLK malloc 10 80495b0 2 main 8048480 804848d 13 _start 80483d0 804842b 91
+.fi
+
+This indicates that 10 bytes (at address 0x80495b0) are leaked due to
+a call to 
+.BR malloc
+that occurs 13 bytes into the call to
+.BR main
+(which is at address 0x8048480) which itself is 91 bytes into the call
+to 
+.BR _start
+(which is at address 0x80483d0).
+
+The following is an example of running
+.B mut
+on the version of 
+.BR ps (1)
+that comes with the MCC 2.0+ Linux distribution.
+
+.nf
+  $ mut /bin/ps
+    PID TTY STAT  TIME COMMAND
+     85   1 S    0:00 -bash 
+  mut error FUM free 804cd20
+    106   1 S    1:22 emacs 
+  mut error FUM free 804d118
+    113  p0 S    0:00 /bin/bash -i 
+  mut error FUM free 804d248
+    541  p0 S    0:00 mut /bin/ps 
+  mut error FUM free 804d388
+    542  p0 R    0:00 /bin/ps 
+  mut error FUM free 804d4d0
+  mut info process.exited 0
+  mut error MLK malloc 260 804cfd8
+  mut error MLK malloc 24 804cfb8
+  mut error MLK malloc 256 804ceb0
+  mut error MLK malloc 32 804ce30
+  mut error MLK malloc 20 804ce18
+  mut error MLK malloc 1024 804c918
+  mut error MLK malloc 32 804c8f0
+  mut error MLK malloc 28 804c8d0
+.fi
+
+The above shows that
+.BR ps
+is freeing unallocated memory (FUM) and also leaks some memory (MLK).
+Now here is the ps from a RedHat 6.2
+
+.nf
+  $ /bin/ps --version
+  procps version 2.0.6
+  $ mut /bin/ps
+    PID TTY          TIME CMD
+    558 ttyp0    00:00:00 bash
+   2611 ttyp0    00:00:00 mut
+   2612 ttyp0    00:00:00 ps
+  mut info process.exited 0
+  mut error MLK malloc 4 81629F0
+  mut error MLK malloc 32 81629C8
+  mut error MLK malloc 4 81629B8
+  mut error MLK malloc 32 8162990
+  mut error MLK malloc 5 8162980
+  mut error MLK malloc 32 8162958
+  mut error MLK malloc 4 8162948
+  mut error MLK malloc 32 8162920
+  $ 
+.fi
+
+As you can see, it still leaks memory on exit (MLK) but it no longer
+frees unallocated memory.
+
+.SH AUTHOR
+
+Nineties-Retro <nineties-retro@mail.com>
+
+.SH COPYRIGHT
+
+Copyright (C) 1996-2013  Nineties Retro
+
+
+.SH SEE ALSO
+
+The idea for MUT comes from the malloc debugging library described in
+
+.nf
+  ACID: A Debugger Built From A Language
+  Phil Winterbottom
+  AT&T
+
+  http://research.att.com/dist/plan9man/
+.fi

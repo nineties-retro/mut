@@ -1,0 +1,17 @@
+			     -*- Text -*-
+
+12:40 - Created rld/src/proc/ptrace/arch/sparc/rld_process_arch.[ch]
+        by copying the x86 versions and doing minimal changes to get
+        it to compile.
+
+        Installed a cheap hack in rld/src/exec/aout/arch/sparc/rld_aout_mach.h
+        just to get the code to compile under SunOS.
+
+        Wrote rld/src/include/{stdio,stdlib,string}/portable/* to get
+        rld to compile under SunOS.
+
+13:30 - First run under SunOS.  It failed due to being unable to write
+        a value into the text area.  The failure was expected since
+        the code hasn't been updated to deal with PC/NPC, but the
+        manner of the failure wasn't expected.  Didn't bother to
+        persue the problem.  Backup.

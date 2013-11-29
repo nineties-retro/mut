@@ -1,0 +1,25 @@
+mut info backtrace.off
+mut info trace malloc 10 80496e0
+mut info trace malloc 10 80496f0
+mut info trace malloc 10 8049700
+mut info trace malloc 10 8049710
+mut info trace malloc 10 8049720
+mut info trace malloc 10 8049730
+mut info trace malloc 10 8049740
+mut info trace malloc 10 8049750
+mut info trace malloc 10 8049760
+mut info trace malloc 10 8049770
+mut info trace free 80496e0 10
+mut info trace free 80496f0 10
+mut info trace free 8049700 10
+mut info trace free 8049710 10
+mut info trace free 8049720 10
+mut info trace free 8049730 10
+mut info trace free 8049740 10
+mut info trace free 8049750 10
+mut info trace free 8049760 10
+mut info trace free 8049770 10
+mut info trace malloc 1000 80496e0
+mut info trace free 80496e0 1000
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 1100 11 alloc.max.space 1000 1 alloc.max.count 100 10 malloc 11 free 11 realloc 0 calloc 0 cfree 0

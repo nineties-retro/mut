@@ -1,0 +1,549 @@
+			     -*- Text -*-
+
+13:28 - Start.
+
+13:31 - Compiled up <URI:mut/misc/elfd/elf.c> and used it to look at a
+        SPARC version of <URI:mut/tests/src/malloc0.c>
+
+$ ./elf ../../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+E type= 2 (executable)
+E phentsize= 32
+E phnum= 5
+E shentsize= 40
+E shnum= 26
+E shstrndx= 23
+TYPE= 1
+HASHTAB= 2
+SYMTAB= 3
+STRTAB= 4
+P0 type=6 offset=52 vaddr=10034 filesz=160 memsz=160 flags=5 align=0
+P1 type=3 offset=212 vaddr=0 filesz=17 memsz=0 flags=4 align=0
+P2 type=1 offset=0 vaddr=10000 filesz=2131 memsz=2131 flags=5 align=10000
+P3 type=1 offset=2132 vaddr=20854 filesz=288 memsz=292 flags=7 align=10000
+P4 type=2 offset=2144 vaddr=20860 filesz=136 memsz=0 flags=7 align=0
+S1 sh_name= 1 (.interp)
+S1 sh_type= 1
+S1 sh_flags= 2
+S1 sh_addr= 100d4
+S1 sh_offset= 212
+S1 sh_size= 17
+S1 sh_link= 0
+S1 sh_info= 0
+S1 sh_addralign= 1
+S1 sh_entsize= 0
+S2 sh_name= 9 (.hash)
+S2 sh_type= 5
+S2 sh_flags= 2
+S2 sh_addr= 100e8
+S2 sh_offset= 232
+S2 sh_size= 312
+S2 sh_link= 3
+S2 sh_info= 0
+S2 sh_addralign= 4
+S2 sh_entsize= 4
+S3 sh_name= 15 (.dynsym)
+S3 sh_type= 11
+S3 sh_flags= 2
+S3 sh_addr= 10220
+S3 sh_offset= 544
+S3 sh_size= 720
+S3 sh_link= 4
+S3 sh_info= 26
+S3 sh_addralign= 4
+S3 sh_entsize= 16
+S4 sh_name= 23 (.dynstr)
+S4 sh_type= 3
+S4 sh_flags= 2
+S4 sh_addr= 104f0
+S4 sh_offset= 1264
+S4 sh_size= 177
+S4 sh_link= 0
+S4 sh_info= 0
+S4 sh_addralign= 1
+S4 sh_entsize= 0
+S5 sh_name= 31 (.rela.bss)
+S5 sh_type= 4
+S5 sh_flags= 2
+S5 sh_addr= 105a4
+S5 sh_offset= 1444
+S5 sh_size= 12
+S5 sh_link= 3
+S5 sh_info= 17
+S5 sh_addralign= 4
+S5 sh_entsize= 12
+S6 sh_name= 41 (.rela.plt)
+S6 sh_type= 4
+S6 sh_flags= 2
+S6 sh_addr= 105b0
+S6 sh_offset= 1456
+S6 sh_size= 72
+S6 sh_link= 3
+S6 sh_info= 13
+S6 sh_addralign= 4
+S6 sh_entsize= 12
+S7 sh_name= 51 (.text)
+S7 sh_type= 1
+S7 sh_flags= 6
+S7 sh_addr= 105f8
+S7 sh_offset= 1528
+S7 sh_size= 516
+S7 sh_link= 0
+S7 sh_info= 0
+S7 sh_addralign= 4
+S7 sh_entsize= 0
+S8 sh_name= 57 (.init)
+S8 sh_type= 1
+S8 sh_flags= 6
+S8 sh_addr= 107fc
+S8 sh_offset= 2044
+S8 sh_size= 20
+S8 sh_link= 0
+S8 sh_info= 0
+S8 sh_addralign= 4
+S8 sh_entsize= 0
+S9 sh_name= 63 (.fini)
+S9 sh_type= 1
+S9 sh_flags= 6
+S9 sh_addr= 10810
+S9 sh_offset= 2064
+S9 sh_size= 20
+S9 sh_link= 0
+S9 sh_info= 0
+S9 sh_addralign= 4
+S9 sh_entsize= 0
+S10 sh_name= 69 (.rodata)
+S10 sh_type= 1
+S10 sh_flags= 2
+S10 sh_addr= 10828
+S10 sh_offset= 2088
+S10 sh_size= 43
+S10 sh_link= 0
+S10 sh_info= 0
+S10 sh_addralign= 8
+S10 sh_entsize= 0
+S11 sh_name= 77 (.got)
+S11 sh_type= 1
+S11 sh_flags= 3
+S11 sh_addr= 20854
+S11 sh_offset= 2132
+S11 sh_size= 12
+S11 sh_link= 0
+S11 sh_info= 0
+S11 sh_addralign= 4
+S11 sh_entsize= 4
+S12 sh_name= 82 (.dynamic)
+S12 sh_type= 6
+S12 sh_flags= 3
+S12 sh_addr= 20860
+S12 sh_offset= 2144
+S12 sh_size= 136
+S12 sh_link= 4
+S12 sh_info= 0
+S12 sh_addralign= 4
+S12 sh_entsize= 8
+S13 sh_name= 91 (.plt)
+S13 sh_type= 1
+S13 sh_flags= 7
+S13 sh_addr= 208e8
+S13 sh_offset= 2280
+S13 sh_size= 124
+S13 sh_link= 0
+S13 sh_info= 0
+S13 sh_addralign= 4
+S13 sh_entsize= 12
+S14 sh_name= 96 (.data)
+S14 sh_type= 1
+S14 sh_flags= 3
+S14 sh_addr= 20964
+S14 sh_offset= 2404
+S14 sh_size= 0
+S14 sh_link= 0
+S14 sh_info= 0
+S14 sh_addralign= 1
+S14 sh_entsize= 0
+S15 sh_name= 102 (.ctors)
+S15 sh_type= 1
+S15 sh_flags= 3
+S15 sh_addr= 20964
+S15 sh_offset= 2404
+S15 sh_size= 8
+S15 sh_link= 0
+S15 sh_info= 0
+S15 sh_addralign= 4
+S15 sh_entsize= 0
+S16 sh_name= 109 (.dtors)
+S16 sh_type= 1
+S16 sh_flags= 3
+S16 sh_addr= 2096c
+S16 sh_offset= 2412
+S16 sh_size= 8
+S16 sh_link= 0
+S16 sh_info= 0
+S16 sh_addralign= 4
+S16 sh_entsize= 0
+S17 sh_name= 116 (.bss)
+S17 sh_type= 8
+S17 sh_flags= 3
+S17 sh_addr= 20974
+S17 sh_offset= 2420
+S17 sh_size= 4
+S17 sh_link= 0
+S17 sh_info= 0
+S17 sh_addralign= 4
+S17 sh_entsize= 0
+S18 sh_name= 121 (.symtab)
+S18 sh_type= 2
+S18 sh_flags= 0
+S18 sh_addr= 0
+S18 sh_offset= 2420
+S18 sh_size= 1024
+S18 sh_link= 19
+S18 sh_info= 45
+S18 sh_addralign= 4
+S18 sh_entsize= 16
+S19 sh_name= 129 (.strtab)
+S19 sh_type= 3
+S19 sh_flags= 0
+S19 sh_addr= 0
+S19 sh_offset= 3444
+S19 sh_size= 456
+S19 sh_link= 0
+S19 sh_info= 0
+S19 sh_addralign= 1
+S19 sh_entsize= 0
+S20 sh_name= 137 (.stab.index)
+S20 sh_type= 1
+S20 sh_flags= 0
+S20 sh_addr= 0
+S20 sh_offset= 3900
+S20 sh_size= 24
+S20 sh_link= 0
+S20 sh_info= 0
+S20 sh_addralign= 4
+S20 sh_entsize= 12
+S21 sh_name= 149 (.comment)
+S21 sh_type= 1
+S21 sh_flags= 0
+S21 sh_addr= 0
+S21 sh_offset= 3924
+S21 sh_size= 290
+S21 sh_link= 0
+S21 sh_info= 0
+S21 sh_addralign= 1
+S21 sh_entsize= 0
+S22 sh_name= 158 (.stab)
+S22 sh_type= 1
+S22 sh_flags= 0
+S22 sh_addr= 0
+S22 sh_offset= 4216
+S22 sh_size= 1464
+S22 sh_link= 0
+S22 sh_info= 0
+S22 sh_addralign= 4
+S22 sh_entsize= 12
+S23 sh_name= 164 (.shstrtab)
+S23 sh_type= 3
+S23 sh_flags= 0
+S23 sh_addr= 0
+S23 sh_offset= 5680
+S23 sh_size= 198
+S23 sh_link= 0
+S23 sh_info= 0
+S23 sh_addralign= 1
+S23 sh_entsize= 0
+S24 sh_name= 174 (.stab.indexstr)
+S24 sh_type= 3
+S24 sh_flags= 0
+S24 sh_addr= 0
+S24 sh_offset= 5878
+S24 sh_size= 24
+S24 sh_link= 0
+S24 sh_info= 0
+S24 sh_addralign= 1
+S24 sh_entsize= 0
+S25 sh_name= 189 (.stabstr)
+S25 sh_type= 3
+S25 sh_flags= 0
+S25 sh_addr= 0
+S25 sh_offset= 5902
+S25 sh_size= 2282
+S25 sh_link= 0
+S25 sh_info= 0
+S25 sh_addralign= 1
+S25 sh_entsize= 0
+SYMSIZE= 16, 10
+SYM1 (22538) name=0 (), addr=0, size=0, shndx=0
+SYM2 (22548) name=0 (), addr=100d4, size=0, shndx=1
+SYM3 (22558) name=0 (), addr=100e8, size=0, shndx=2
+SYM4 (22568) name=0 (), addr=10220, size=0, shndx=3
+SYM5 (22578) name=0 (), addr=104f0, size=0, shndx=4
+SYM6 (22588) name=0 (), addr=105a4, size=0, shndx=5
+SYM7 (22598) name=0 (), addr=105b0, size=0, shndx=6
+SYM8 (225a8) name=0 (), addr=105f8, size=0, shndx=7
+SYM9 (225b8) name=0 (), addr=107fc, size=0, shndx=8
+SYM10 (225c8) name=0 (), addr=10810, size=0, shndx=9
+SYM11 (225d8) name=0 (), addr=10828, size=0, shndx=10
+SYM12 (225e8) name=0 (), addr=20854, size=0, shndx=11
+SYM13 (225f8) name=0 (), addr=20860, size=0, shndx=12
+SYM14 (22608) name=0 (), addr=208e8, size=0, shndx=13
+SYM15 (22618) name=0 (), addr=20964, size=0, shndx=14
+SYM16 (22628) name=0 (), addr=20964, size=0, shndx=15
+SYM17 (22638) name=0 (), addr=2096c, size=0, shndx=16
+SYM18 (22648) name=0 (), addr=20974, size=0, shndx=17
+SYM19 (22658) name=0 (), addr=0, size=0, shndx=18
+SYM20 (22668) name=0 (), addr=0, size=0, shndx=19
+SYM21 (22678) name=0 (), addr=0, size=0, shndx=20
+SYM22 (22688) name=0 (), addr=0, size=0, shndx=21
+SYM23 (22698) name=0 (), addr=0, size=0, shndx=22
+SYM24 (226a8) name=0 (), addr=0, size=0, shndx=23
+SYM25 (226b8) name=0 (), addr=0, size=0, shndx=24
+SYM26 (226c8) name=0 (), addr=0, size=0, shndx=25
+SYM27 (226d8) name=1 (_start), addr=105f8, size=116, shndx=7
+SYM28 (226e8) name=8 (_environ), addr=20974, size=4, shndx=17
+SYM29 (226f8) name=17 (_end), addr=20978, size=0, shndx=17
+SYM30 (22708) name=22 (_GLOBAL_OFFSET_TABLE_), addr=20854, size=0, shndx=11
+SYM31 (22718) name=44 (atexit), addr=20918, size=0, shndx=0
+SYM32 (22728) name=51 (exit), addr=20924, size=0, shndx=0
+SYM33 (22738) name=56 (malloc), addr=20948, size=0, shndx=0
+SYM34 (22748) name=63 (_init), addr=107fc, size=20, shndx=8
+SYM35 (22758) name=69 (_DYNAMIC), addr=20860, size=0, shndx=12
+SYM36 (22768) name=78 (write), addr=2093c, size=0, shndx=0
+SYM37 (22778) name=84 (_exit), addr=20930, size=0, shndx=0
+SYM38 (22788) name=90 (environ), addr=20974, size=4, shndx=17
+SYM39 (22798) name=98 (free), addr=20954, size=0, shndx=0
+SYM40 (227a8) name=103 (_edata), addr=20974, size=0, shndx=16
+SYM41 (227b8) name=110 (_PROCEDURE_LINKAGE_TABLE_), addr=208e8, size=0, shndx=13
+SYM42 (227c8) name=136 (_etext), addr=10853, size=0, shndx=10
+SYM43 (227d8) name=143 (_lib_version), addr=10828, size=4, shndx=10
+SYM44 (227e8) name=156 (main), addr=106d0, size=200, shndx=7
+SYM45 (227f8) name=161 (_fini), addr=10810, size=20, shndx=9
+$ 
+
+13:32 - So malloc really is at 0x20948 which is the address that the
+        ptrace call fails for ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main fatal 0 ptrace.poke.text 20948
+$ 
+
+13:35 - Time to try some other ptrace tests ...
+
+13:41 - <URI:mut/misc/bach-ptrace> works fine.
+
+$ gdb gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.9, Copyright 1993 Free Software Foundation, Inc...
+(gdb) b malloc
+Function "malloc" not defined.
+(gdb) b main
+Breakpoint 1 at 0x106d4: file src/malloc0.c, line 13.
+(gdb) x/5i 0x20948
+0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>:	sethi  %hi(0x18000), %g1
+0x2094c <_PROCEDURE_LINKAGE_TABLE_+100>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+0x20950 <_PROCEDURE_LINKAGE_TABLE_+104>:	nop 
+0x20954 <_PROCEDURE_LINKAGE_TABLE_+108>:	sethi  %hi(0x1b000), %g1
+0x20958 <_PROCEDURE_LINKAGE_TABLE_+112>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+(gdb) stepi
+The program is not being run.
+(gdb) run
+Starting program: mut/tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+
+Breakpoint 1, main () at src/malloc0.c:13
+13	  write(1, "A\n", 2);
+(gdb) x/5i 0x20948
+0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>:	sethi  %hi(0x18000), %g1
+0x2094c <_PROCEDURE_LINKAGE_TABLE_+100>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+0x20950 <_PROCEDURE_LINKAGE_TABLE_+104>:	nop 
+0x20954 <_PROCEDURE_LINKAGE_TABLE_+108>:	sethi  %hi(0x1b000), %g1
+0x20958 <_PROCEDURE_LINKAGE_TABLE_+112>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+(gdb) b malloc
+Function "malloc" not defined.
+(gdb) n
+A
+14	  x= malloc(8);
+(gdb) x/5i 0x20948
+0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>:	sethi  %hi(0x18000), %g1
+0x2094c <_PROCEDURE_LINKAGE_TABLE_+100>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+0x20950 <_PROCEDURE_LINKAGE_TABLE_+104>:	nop 
+0x20954 <_PROCEDURE_LINKAGE_TABLE_+108>:	sethi  %hi(0x1b000), %g1
+0x20958 <_PROCEDURE_LINKAGE_TABLE_+112>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+(gdb) n
+15	  write(1, "B\n", 2);
+(gdb) x/5i malloc
+No symbol "malloc" in current context.
+(gdb) x/5i 0x20948
+0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>:	sethi  %hi(0x18000), %g1
+0x2094c <_PROCEDURE_LINKAGE_TABLE_+100>:	sethi  %hi(0xef74a000), %g1
+0x20950 <_PROCEDURE_LINKAGE_TABLE_+104>:	jmp  %g1 + 0x98	! 0xef74a098 <_end+-277702880>
+0x20954 <_PROCEDURE_LINKAGE_TABLE_+108>:	sethi  %hi(0x1b000), %g1
+0x20958 <_PROCEDURE_LINKAGE_TABLE_+112>:	b,a   0x208e8 <_PROCEDURE_LINKAGE_TABLE_>
+(gdb) n
+B
+16	  y= malloc(16);
+(gdb) display/i $pc
+1: x/i $pc  0x10714 <main+68>:	mov  0x10, %o0
+(gdb) stepi
+0x10718	16	  y= malloc(16);
+1: x/i $pc  0x10718 <main+72>:	call  0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>
+(gdb) x/5i $pc-2*4
+0x10710 <main+64>:	nop 
+0x10714 <main+68>:	mov  0x10, %o0
+0x10718 <main+72>:	call  0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>
+0x1071c <main+76>:	nop 
+0x10720 <main+80>:	st  %o0, [ %fp + -24 ]
+(gdb) stepi
+0x1071c	16	  y= malloc(16);
+1: x/i $pc  0x1071c <main+76>:	nop 
+(gdb) stepi
+0x20948 in _PROCEDURE_LINKAGE_TABLE_ ()
+1: x/i $pc  0x20948 <_PROCEDURE_LINKAGE_TABLE_+96>:	sethi  %hi(0x18000), %g1
+(gdb) stepi
+0x2094c in _PROCEDURE_LINKAGE_TABLE_ ()
+1: x/i $pc  0x2094c <_PROCEDURE_LINKAGE_TABLE_+100>:	sethi  %hi(0xef74a000), %g1
+(gdb) stepi
+0x20950 in _PROCEDURE_LINKAGE_TABLE_ ()
+1: x/i $pc  0x20950 <_PROCEDURE_LINKAGE_TABLE_+104>:	jmp  %g1 + 0x98	! 0xef74a098 <_end+-277702880>
+(gdb) stepi
+0x20954 in _PROCEDURE_LINKAGE_TABLE_ ()
+1: x/i $pc  0x20954 <_PROCEDURE_LINKAGE_TABLE_+108>:	sethi  %hi(0x1b000), %g1
+(gdb) stepi
+0xef74a098 in _end ()
+1: x/i $pc  0xef74a098 <_end+-277702880>:	save  %sp, -96, %sp
+(gdb) c
+Continuing.
+C
+D
+E
+
+Program exited normally.
+(gdb) 
+
+13:50 - Tried a statically linked version ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main fatal 0 ptrace.poke.text 1038c
+$ 
+
+$ gdb gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.9, Copyright 1993 Free Software Foundation, Inc...
+(gdb) x/5i malloc
+0x1038c <malloc>:	save  %sp, -96, %sp
+0x10390 <malloc+4>:	sethi  %hi(0x21800), %l0
+0x10394 <malloc+8>:	call  0x11758 <_mutex_lock>
+0x10398 <malloc+12>:	add  0x110, %l0, %o0
+0x1039c <malloc+16>:	call  0x103b8 <malloc+44>
+(gdb) 
+
+13:51 - On the evidence so far, there seems to be a problem with
+        writing to the text portion.
+
+13:56 - From reading /usr/include/sys/user.h it seems that ptrace is
+        no longer a system call under Solaris.  Instead it is a
+        library routine that is built on top of /proc.
+
+14:07 - Created <URI:mut/misc/ptrace-sparc> and tried it out ..
+
+$ ./ptrace
+./ptrace: executable
+$ ./ptrace ../../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+Parent: waiting for child ... 
+Extracting instr ...
+instr= 9de3bfa0
+Continuing ...
+$ 
+
+14:08 - Hm, it works, so why do I get an error in mut?
+
+14:12 - After looking at the sources of both I realised that the
+        ptrace demo only gives an error if errno is not 0, but it is
+        zero in the case where it fails in mut.  So had another look
+        at the Solaris ptrace manual page and realised it is not
+        returning what I expect ...
+
+            On success, the value written
+            into the address space of the child  is  returned  to
+            the  parent.   These two requests fail if addr is not
+            the start address of a word.  On failure a value of -
+            1  is returned to the parent process and the parent's
+            errno is set to EIO.
+
+        This is also what the Irix 5.3 manual page states too.
+
+14:16 - Made th necessary changes to
+        <URI:mut/src/proc/ptrace/mut_trace.c#mut_trace_write_data> 
+        <URI:mut/src/proc/ptrace/mut_trace.c#mut_trace_write_text> and
+        recompiled ...
+
+14:18 - 
+
+$ gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+gen/gcc.debug.tty.on.off.ptrace.sparc.uint64.struct.elf/main fatal 0 ptrace.poke.reg 1
+$ 
+
+
+$ gdb ./xxx
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.9, Copyright 1993 Free Software Foundation, Inc...
+(gdb) b mut_trace.c:173
+Breakpoint 1 at 0x15620: file proc/ptrace/mut_trace.c, line 173.
+(gdb) run -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+Starting program: mut/src/./xxx -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe
+
+Breakpoint 1, mut_trace_write_reg (p=0xeffff9fc, reg=1, value=-268436596) at proc/ptrace/mut_trace.c:173
+173	    mut_log_fatal(p->log, "ptrace.poke.reg", errno);
+(gdb) x/5i mut_trace_write_reg
+0x155e0 <mut_trace_write_reg>:	save  %sp, -112, %sp
+0x155e4 <mut_trace_write_reg+4>:	st  %i0, [ %fp + 0x44 ]
+0x155e8 <mut_trace_write_reg+8>:	st  %i1, [ %fp + 0x48 ]
+0x155ec <mut_trace_write_reg+12>:	st  %i2, [ %fp + 0x4c ]
+0x155f0 <mut_trace_write_reg+16>:	ld  [ %fp + 0x44 ], %o1
+(gdb) x/20i mut_trace_write_reg
+0x155e0 <mut_trace_write_reg>:	save  %sp, -112, %sp
+0x155e4 <mut_trace_write_reg+4>:	st  %i0, [ %fp + 0x44 ]
+0x155e8 <mut_trace_write_reg+8>:	st  %i1, [ %fp + 0x48 ]
+0x155ec <mut_trace_write_reg+12>:	st  %i2, [ %fp + 0x4c ]
+0x155f0 <mut_trace_write_reg+16>:	ld  [ %fp + 0x44 ], %o1
+0x155f4 <mut_trace_write_reg+20>:	ld  [ %fp + 0x48 ], %o0
+0x155f8 <mut_trace_write_reg+24>:	mov  %o0, %o3
+0x155fc <mut_trace_write_reg+28>:	sll  %o3, 2, %o2
+0x15600 <mut_trace_write_reg+32>:	mov  6, %o0
+0x15604 <mut_trace_write_reg+36>:	ld  [ %o1 ], %o1
+0x15608 <mut_trace_write_reg+40>:	ld  [ %fp + 0x4c ], %o3
+0x1560c <mut_trace_write_reg+44>:	call  0x2cabc <_PROCEDURE_LINKAGE_TABLE_+288>
+0x15610 <mut_trace_write_reg+48>:	nop 
+0x15614 <mut_trace_write_reg+52>:	cmp  %o0, 0
+0x15618 <mut_trace_write_reg+56>:	bge  0x15670 <mut_trace_write_reg+144>
+0x1561c <mut_trace_write_reg+60>:	nop 
+0x15620 <mut_trace_write_reg+64>:	ld  [ %fp + 0x44 ], %o0
+0x15624 <mut_trace_write_reg+68>:	sethi  %hi(0x2cc00), %o2
+0x15628 <mut_trace_write_reg+72>:	ld  [ %o0 + 4 ], %o0
+0x1562c <mut_trace_write_reg+76>:	sethi  %hi(0x1c000), %o3
+(gdb) info reg o0
+o0             0xeffffb8c	-268436596
+(gdb) p value
+$1 = -268436596
+(gdb) The program is running.  Quit anyway? (y or n) y
+binatone$ 
+
+14:21 - So it appears that write_reg needs updating too ...
+
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+./xxx info process.signaled 4
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+./xxx info process.signaled 4
+$ 
+
+14:23 - 4 = SIGILL.
+
+14:25 - After a little bit of gdbing, The SIGILL is being raised on
+        the first resumption in mut_run.  
+
+14:28 - No time to do any more debugging.  Break.
+

@@ -1,0 +1,5 @@
+A
+B
+C
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 0 0 alloc.max.space 0 0 alloc.max.count 0 0 malloc 0 free 0 realloc 0 calloc 0 cfree 0

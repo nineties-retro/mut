@@ -1,0 +1,1030 @@
+			     -*- Text -*-
+
+13:32 - Start.
+
+13:39 - Read over the symbols code with a view to seeing how the debug
+        information can be added.
+
+13:55 - Hunted for the avl code, but could not find it :-<
+
+16:14 - Finished rewrite of mut_exec.c and the creation of mut_exec_symtab.c
+
+16:44 - mut_exec_symtab.c compiles.
+
+16:53 - mut all compiles.  Should not run it because have not fixed up
+        setting end, but cannot resist seeing how it will fail :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe 
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+
+16:55 - In both cases I had to ^C them.
+
+$ gdb ./main
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+(gdb) run ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+
+Program received signal SIGINT, Interrupt.
+0x804a25b in mut_exec_symtab_add_fun (s=0xbffffbe0, n=0x80544b8 "_fini", 
+    a=134513968) at exec/elf/mut_exec_symtab.c:102
+102	    if (f->fun_name == n) {
+(gdb) up
+#1  0x804b001 in mut_exec_extract_symbols (exec=0xbffffbe0, reader=0xbffffa38)
+    at exec/elf/mut_exec.c:298
+298	      if (!mut_exec_symtab_add_fun(&exec->symtab, n, sa))
+(gdb) up
+#2  0x804bdaa in mut_exec_open (exec=0xbffffbe0, 
+    file_name=0xbffffde2 "../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe", log=0xbffffbb0) at exec/elf/mut_exec.c:602
+602	  if (!mut_exec_extract_symbols(exec, &reader))
+(gdb) down
+#1  0x804b001 in mut_exec_extract_symbols (exec=0xbffffbe0, reader=0xbffffa38)
+    at exec/elf/mut_exec.c:298
+298	      if (!mut_exec_symtab_add_fun(&exec->symtab, n, sa))
+(gdb) down
+#0  0x804a25b in mut_exec_symtab_add_fun (s=0xbffffbe0, n=0x80544b8 "_fini", 
+    a=134513968) at exec/elf/mut_exec_symtab.c:102
+102	    if (f->fun_name == n) {
+(gdb) cont
+Continuing.
+
+Program received signal SIGINT, Interrupt.
+mut_exec_symtab_add_fun (s=0xbffffbe0, n=0x80544b8 "_fini", a=134513968)
+    at exec/elf/mut_exec_symtab.c:104
+104	    } else if (a < f->fun_start_addr) {
+(gdb) n
+100	  for (fp= &s->head; *fp != 0; fp= &f->next) {
+(gdb) n
+101	    f= *fp;
+(gdb) n
+102	    if (f->fun_name == n) {
+(gdb) p f->fun_name
+$1 = 0x80543c6 "init_dummy"
+(gdb) p n
+$2 = 0x80544b8 "_fini"
+(gdb) n
+104	    } else if (a < f->fun_start_addr) {
+(gdb) n
+100	  for (fp= &s->head; *fp != 0; fp= &f->next) {
+(gdb) n
+101	    f= *fp;
+(gdb) n
+102	    if (f->fun_name == n) {
+(gdb) p f->fun_name
+$3 = 0x80543a3 "__do_global_ctors_aux"
+(gdb) n
+104	    } else if (a < f->fun_start_addr) {
+(gdb) n
+100	  for (fp= &s->head; *fp != 0; fp= &f->next) {
+(gdb) n
+101	    f= *fp;
+(gdb) n
+102	    if (f->fun_name == n) {
+(gdb) p f->fun_name
+$4 = 0x80543c6 "init_dummy"
+(gdb) n
+104	    } else if (a < f->fun_start_addr) {
+(gdb) n
+100	  for (fp= &s->head; *fp != 0; fp= &f->next) {
+(gdb) n
+101	    f= *fp;
+(gdb) n
+102	    if (f->fun_name == n) {
+(gdb) p f->fun_name
+$5 = 0x80543a3 "__do_global_ctors_aux"
+(gdb) p a
+$6 = 134513968
+(gdb) p/x a
+$7 = 0x8048530
+(gdb) p f->fun_start_addr
+$8 = 134513920
+(gdb) p/x fun_start_addr
+No symbol "fun_start_addr" in current context.
+(gdb) p/x f->fun_start_addr
+$9 = 0x8048500
+(gdb) 
+
+17:00 - Break.
+
+17:18 - Restart.  Added some diagnostics and it seems to go ok at the
+        start, but then it looks like the list is not right :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Adding __do_global_ctors_aux
+Adding init_dummy
+Comparing __do_global_ctors_aux
+Adding __do_global_dtors_aux
+Comparing __do_global_ctors_aux
+Adding fini_dummy
+Comparing __do_global_dtors_aux
+Comparing __do_global_ctors_aux
+Adding malloc
+Comparing __do_global_dtors_aux
+Adding _init
+Comparing malloc
+Adding __libc_init
+Comparing _init
+Comparing malloc
+Comparing __do_global_dtors_aux
+Adding write
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing __do_global_dtors_aux
+Adding _start
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing __do_global_dtors_aux
+Adding main
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing _start
+Comparing __do_global_dtors_aux
+Comparing fini_dummy
+Comparing __do_global_ctors_aux
+Adding _fini
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing _start
+Comparing __do_global_dtors_aux
+Comparing fini_dummy
+Comparing main
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Comparing __do_global_ctors_aux
+
+17:30 - Took out the part that compared the string name address -- it
+        was bogus and now it seems to do a lot better :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Adding __do_global_ctors_aux
+Adding init_dummy
+Comparing __do_global_ctors_aux
+Adding __do_global_dtors_aux
+Comparing __do_global_ctors_aux
+Found __do_global_ctors_aux
+Adding fini_dummy
+Comparing __do_global_dtors_aux
+Comparing __do_global_ctors_aux
+Found __do_global_ctors_aux
+Adding malloc
+Comparing __do_global_dtors_aux
+Found __do_global_dtors_aux
+Adding _init
+Comparing malloc
+Found malloc
+Adding __libc_init
+Comparing _init
+Comparing malloc
+Comparing __do_global_dtors_aux
+Found __do_global_dtors_aux
+Adding write
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing __do_global_dtors_aux
+Found __do_global_dtors_aux
+Adding _start
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing __do_global_dtors_aux
+Found __do_global_dtors_aux
+Adding main
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing _start
+Comparing __do_global_dtors_aux
+Comparing fini_dummy
+Comparing __do_global_ctors_aux
+Found __do_global_ctors_aux
+Adding _fini
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing _start
+Comparing __do_global_dtors_aux
+Comparing fini_dummy
+Comparing main
+Comparing __do_global_ctors_aux
+Comparing init_dummy
+Adding atexit
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing _start
+Found _start
+Adding exit
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing atexit
+Comparing _start
+Found _start
+Adding __setfpucw
+Comparing _init
+Comparing malloc
+Comparing __libc_init
+Comparing write
+Comparing atexit
+Comparing exit
+Comparing _start
+Found _start
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608
+$ 
+
+17:32 - Took out some of the diagnostics since that part seems to work
+        now :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608
+$ 
+
+17:33 - The backtrace still works :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+Registering FUN
+Registering LINE
+./main warning elf.xxx
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 _start 8048400 804845B 91
+$ 
+
+17:59 - Notice that no SO is being registered.  Have checked the code (0x64)
+        and it is right.  Time to check the object file.  Notice that
+        two FUNs are registered and only a couple of LINEs.
+
+
+$ objdump --stab ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe:     file format elf32-i386
+
+Contents of .stab section:
+
+Symnum n_type n_othr n_desc n_value  n_strx String
+
+-1     SO     0      0      080484b0 0      mut/tests/
+0      SO     0      0      080484b0 23     src/mlk_malloc.c
+1      OPT    0      0      00000000 40     gcc2_compiled.
+2      LSYM   0      0      00000000 55     int:t1=r1;-2147483648;2147483647;
+3      LSYM   0      0      00000000 89     char:t2=r2;0;127;
+4      LSYM   0      0      00000000 107    long int:t3=r1;-2147483648;2147483647;
+5      LSYM   0      0      00000000 146    unsigned int:t4=r1;0;-1;
+6      LSYM   0      0      00000000 171    long unsigned int:t5=r1;0;-1;
+7      LSYM   0      0      00000000 201    long long int:t6=r1;01000000000000000000000;0777777777777777777777;
+8      LSYM   0      0      00000000 269    long long unsigned int:t7=r1;0000000000000;01777777777777777777777;
+9      LSYM   0      0      00000000 337    short int:t8=r1;-32768;32767;
+10     LSYM   0      0      00000000 367    short unsigned int:t9=r1;0;65535;
+11     LSYM   0      0      00000000 401    signed char:t10=r1;-128;127;
+12     LSYM   0      0      00000000 430    unsigned char:t11=r1;0;255;
+13     LSYM   0      0      00000000 458    float:t12=r1;4;0;
+14     LSYM   0      0      00000000 476    double:t13=r1;8;0;
+15     LSYM   0      0      00000000 495    long double:t14=r1;12;0;
+16     LSYM   0      0      00000000 520    complex int:t15=s8real:1,0,32;imag:1,32,32;;
+17     LSYM   0      0      00000000 565    complex float:t16=r16;4;0;
+18     LSYM   0      0      00000000 592    complex double:t17=r17;8;0;
+19     LSYM   0      0      00000000 620    complex long double:t18=r18;12;0;
+20     LSYM   0      0      00000000 654    void:t19=19
+21     LSYM   0      118    00000000 666    __long_double_t:t14
+22     LSYM   0      166    00000000 686    size_t:t4
+23     LSYM   0      241    00000000 696    wchar_t:t3
+24     LSYM   0      51     00000000 707    div_t:t20=s8quot:1,0,32;rem:1,32,32;;
+25     LSYM   0      58     00000000 745    ldiv_t:t21=s8quot:3,0,32;rem:3,32,32;;
+26     LSYM   0      287    00000000 784    __compar_fn_t:t22=*23=f1
+27     LSYM   0      291    00000000 809    comparison_fn_t:t22
+28     LSYM   0      0      00000000 829    qelem:T24=s12q_forw:25=*24,0,32;q_back:25,32,32;\
+29     LSYM   0      0      00000000 879    q_data:26=ar1;0;0;2,64,8;;
+30     LSYM   0      25     00000000 906    __u_char:t11
+31     LSYM   0      26     00000000 919    __u_short:t9
+32     LSYM   0      27     00000000 932    __u_int:t4
+33     LSYM   0      28     00000000 943    __u_long:t5
+34     LSYM   0      32     00000000 955    __quad:t27=s8val:28=ar1;0;1;3,0,64;;
+35     LSYM   0      36     00000000 992    __u_quad:t29=s8val:30=ar1;0;1;5,0,64;;
+36     LSYM   0      39     00000000 1031   __dev_t:t9
+37     LSYM   0      40     00000000 1042   __gid_t:t9
+38     LSYM   0      41     00000000 1053   __uid_t:t9
+39     LSYM   0      42     00000000 1064   __mode_t:t9
+40     LSYM   0      43     00000000 1076   __daddr_t:t3
+41     LSYM   0      44     00000000 1089   __off_t:t3
+42     LSYM   0      46     00000000 1100   __loff_t:t6
+43     LSYM   0      48     00000000 1112   __ino_t:t5
+44     LSYM   0      49     00000000 1123   __nlink_t:t9
+45     LSYM   0      50     00000000 1136   __time_t:t3
+46     LSYM   0      63     00000000 1148   __pid_t:t1
+47     LSYM   0      64     00000000 1159   __ssize_t:t1
+48     LSYM   0      65     00000000 1172   __fsid_t:t27
+49     LSYM   0      68     00000000 1185   __caddr_t:t31=*2
+50     LSYM   0      69     00000000 1202   __swblk_t:t3
+51     LSYM   0      0      00000000 1215   fd_set:T32=s128fds_bits:33=ar1;0;31;5,0,1024;;
+52     LSYM   0      46     00000000 1262   __kernel_fd_set:t32
+53     LSYM   0      10     00000000 1282   __kernel_dev_t:t9
+54     LSYM   0      11     00000000 1300   __kernel_ino_t:t5
+55     LSYM   0      12     00000000 1318   __kernel_mode_t:t9
+56     LSYM   0      13     00000000 1337   __kernel_nlink_t:t9
+57     LSYM   0      14     00000000 1357   __kernel_off_t:t3
+58     LSYM   0      15     00000000 1375   __kernel_pid_t:t1
+59     LSYM   0      16     00000000 1393   __kernel_uid_t:t9
+60     LSYM   0      17     00000000 1411   __kernel_gid_t:t9
+61     LSYM   0      18     00000000 1429   __kernel_size_t:t4
+62     LSYM   0      19     00000000 1448   __kernel_ssize_t:t1
+63     LSYM   0      20     00000000 1468   __kernel_ptrdiff_t:t1
+64     LSYM   0      21     00000000 1490   __kernel_time_t:t3
+65     LSYM   0      22     00000000 1509   __kernel_clock_t:t3
+66     LSYM   0      23     00000000 1529   __kernel_daddr_t:t1
+67     LSYM   0      24     00000000 1549   __kernel_caddr_t:t31
+68     LSYM   0      27     00000000 1570   __kernel_loff_t:t6
+69     LSYM   0      36     00000000 1589   __kernel_fsid_t:t34=s8__val:35=ar1;0;1;1,0,64;;
+70     LSYM   0      0      00000000 1637   __fd_set:T36=s128fds_bits:33,0,1024;;
+71     LSYM   0      86     00000000 1675   __fd_set:t36
+72     LSYM   0      0      00000000 1688    :T37=e_PC_LINK_MAX:0,_PC_MAX_CANON:1,_PC_MAX_INPUT:2,\
+73     LSYM   0      0      00000000 1744   _PC_NAME_MAX:3,_PC_PATH_MAX:4,_PC_PIPE_BUF:5,\
+74     LSYM   0      0      00000000 1791   _PC_CHOWN_RESTRICTED:6,_PC_NO_TRUNC:7,_PC_VDISABLE:8,\
+75     LSYM   0      0      00000000 1846   _PC_ASYNC_IO:9,_PC_PRIO_IO:10,_PC_SYNC_IO:11,;
+76     LSYM   0      0      00000000 1893    :T38=e_SC_ARG_MAX:0,_SC_CHILD_MAX:1,_SC_CLK_TCK:2,\
+77     LSYM   0      0      00000000 1946   _SC_NGROUPS_MAX:3,_SC_OPEN_MAX:4,_SC_STREAM_MAX:5,\
+78     LSYM   0      0      00000000 1998   _SC_TZNAME_MAX:6,_SC_JOB_CONTROL:7,_SC_SAVED_IDS:8,\
+79     LSYM   0      0      00000000 2051   _SC_VERSION:9,_SC_PAGESIZE:10,_SC_BC_BASE_MAX:11,\
+80     LSYM   0      0      00000000 2102   _SC_BC_DIM_MAX:12,_SC_BC_SCALE_MAX:13,_SC_BC_STRING_MAX:14,\
+81     LSYM   0      0      00000000 2163   _SC_COLL_WEIGHTS_MAX:15,_SC_EQUIV_CLASS_MAX:16,_SC_EXPR_NEST_MAX:17,\
+82     LSYM   0      0      00000000 2233   _SC_LINE_MAX:18,_SC_RE_DUP_MAX:19,_SC_2_VERSION:20,\
+83     LSYM   0      0      00000000 2286   _SC_2_C_BIND:21,_SC_2_C_DEV:22,_SC_2_FORT_DEV:23,\
+84     LSYM   0      0      00000000 2337   _SC_2_FORT_RUN:24,_SC_2_SW_DEV:25,_SC_2_LOCALEDEF:26,\
+85     LSYM   0      0      00000000 2392   _SC_AIO_LISTIO_MAX:27,_SC_AIO_MAX:28,_SC_AIO_PRIO_DELTA_MAX:29,\
+86     LSYM   0      0      00000000 2457   _SC_DELAYTIMER_MAX:30,_SC_MQ_OPEN_MAX:31,_SC_MQ_PRIO_MAX:32,\
+87     LSYM   0      0      00000000 2519   _SC_RTSIG_MAX:33,_SC_SEM_NSEMS_MAX:34,_SC_SEM_VALUE_MAX:35,\
+88     LSYM   0      0      00000000 2580   _SC_SIGQUEUE_MAX:36,_SC_TIMER_MAX:37,_SC_ASYNCHRONOUS_IO:38,\
+89     LSYM   0      0      00000000 2642   _SC_FSYNC:39,_SC_MAPPED_FILES:40,_SC_MEMLOCK:41,\
+90     LSYM   0      0      00000000 2692   _SC_MEMLOCK_RANGE:42,_SC_MEMORY_PROTECTION:43,_SC_MESSAGE_PASSING:44,\
+91     LSYM   0      0      00000000 2763   _SC_PRIORITIZED_IO:45,_SC_PRIORITY_SCHEDULING:46,\
+92     LSYM   0      0      00000000 2814   _SC_REALTIME_SIGNALS:47,_SC_SEMAPHORES:48,_SC_SHARED_MEMORY_OBJECTS:49,\
+93     LSYM   0      0      00000000 2887   _SC_SYNCHRONIZED_IO:50,_SC_TIMERS:51,;
+94     LSYM   0      0      00000000 2926    :T39=e_CS_PATH:0,;
+95     LSYM   0      4      00000000 2946   umode_t:t9
+96     LSYM   0      11     00000000 2957   __s8:t10
+97     LSYM   0      12     00000000 2966   __u8:t11
+98     LSYM   0      14     00000000 2975   __s16:t8
+99     LSYM   0      15     00000000 2984   __u16:t9
+100    LSYM   0      17     00000000 2993   __s32:t1
+101    LSYM   0      18     00000000 3002   __u32:t4
+102    LSYM   0      21     00000000 3011   __s64:t6
+103    LSYM   0      22     00000000 3020   __u64:t7
+104    LSYM   0      9      00000000 3029   fd_set:t32
+105    LSYM   0      10     00000000 3040   dev_t:t9
+106    LSYM   0      11     00000000 3049   ino_t:t5
+107    LSYM   0      12     00000000 3058   mode_t:t9
+108    LSYM   0      13     00000000 3068   nlink_t:t9
+109    LSYM   0      14     00000000 3079   off_t:t3
+110    LSYM   0      15     00000000 3088   pid_t:t1
+111    LSYM   0      16     00000000 3097   uid_t:t9
+112    LSYM   0      17     00000000 3106   gid_t:t9
+113    LSYM   0      18     00000000 3115   daddr_t:t1
+114    LSYM   0      21     00000000 3126   loff_t:t6
+115    LSYM   0      40     00000000 3136   ptrdiff_t:t1
+116    LSYM   0      45     00000000 3149   time_t:t3
+117    LSYM   0      50     00000000 3159   clock_t:t3
+118    LSYM   0      55     00000000 3170   caddr_t:t31
+119    LSYM   0      59     00000000 3182   u_char:t11
+120    LSYM   0      60     00000000 3193   u_short:t9
+121    LSYM   0      61     00000000 3204   u_int:t4
+122    LSYM   0      62     00000000 3213   u_long:t5
+123    LSYM   0      65     00000000 3223   unchar:t11
+124    LSYM   0      66     00000000 3234   ushort:t9
+125    LSYM   0      67     00000000 3244   uint:t4
+126    LSYM   0      68     00000000 3252   ulong:t5
+127    LSYM   0      0      00000000 3261   ustat:T40=s20f_tfree:1,0,32;f_tinode:5,32,32;\
+128    LSYM   0      0      00000000 3308   f_fname:41=ar1;0;5;2,64,48;f_fpack:41,112,48;;
+129    LSYM   0      80     00000000 3355   int8_t:t2
+130    LSYM   0      81     00000000 3365   u_int8_t:t11
+131    LSYM   0      82     00000000 3378   int16_t:t8
+132    LSYM   0      83     00000000 3389   u_int16_t:t9
+133    LSYM   0      84     00000000 3402   int32_t:t1
+134    LSYM   0      85     00000000 3413   u_int32_t:t4
+135    LSYM   0      88     00000000 3426   int64_t:t6
+136    LSYM   0      89     00000000 3437   u_int64_t:t7
+137    LSYM   0      16     00000000 3450   fd_mask:t5
+138    FUN    0      10     080484b0 3461   main:F1
+139    SLINE  0      10     00000000 3469   
+140    SLINE  0      11     00000006 3469   
+141    SLINE  0      12     00000006 3469   
+142    SLINE  0      13     00000017 3469   
+143    SLINE  0      14     00000024 3469   
+144    SLINE  0      15     00000035 3469   
+145    SLINE  0      16     00000040 3469   
+146    SLINE  0      16     00000040 3469   
+147    LSYM   0      11     fffffffc 3470   x:31
+148    LBRAC  0      0      00000006 3469   
+149    RBRAC  0      0      00000040 3469   
+150    SO     0      0      080484f4 3469   
+
+$ 
+
+
+18:40 - Break.
+
+19:05 - Restart.
+
+20:02 - Now registering SO, FUN and LINE.  Should not run it since the
+        end thing has not been fixed, but could not resist :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering SO
+Registering SO
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+
+$ 
+
+        Had to ^C it at this point.
+
+20:04 - Commented out the cache, but it still fails :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering SO
+Registering SO
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+
+$ 
+
+20:16 - A bit of poking with the debugger shows that mut_exec_symtab_add_xxx
+        is constructing a circular list :-
+
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+Breakpoint 1 at 0x804b960: file exec/elf/mut_exec.c, line 497.
+(gdb) run  ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering SO
+Registering SO
+Registering FUN
+
+Breakpoint 1, mut_exec_extract_debug_info (exec=0xbffffbe0, reader=0xbffffa38)
+    at exec/elf/mut_exec.c:497
+(gdb) p/x base_addr
+$1 = 0x80484b0
+(gdb) p fn
+$2 = 0x8055b3f "src/mlk_malloc.c"
+(gdb) p dn
+$3 = 0x8055b28 "mut/tests/"
+(gdb) n
+(gdb) n
+(gdb) p offset
+$4 = 0
+(gdb) n
+(gdb) n
+(gdb) p l
+$5 = 10
+(gdb) n
+Registering LINE
+(gdb) s
+mut_exec_symtab_add_range (s=0xbffffbe0, a=134513840, l=10, 
+    fn=0x8055b3f "src/mlk_malloc.c") at exec/elf/mut_exec_symtab.c:169
+(gdb) n
+(gdb) p/x a
+$6 = 0x80484b0
+(gdb) p *f
+$7 = {next = 0x8055160, fun_name = 0x8054b9b "_init", 
+  fun_start_addr = 134513536, file_name = 0x0, dir_name = 0x0, fun_lines = 0x0}
+(gdb) p/x *f
+$8 = {next = 0x8055160, fun_name = 0x8054b9b, fun_start_addr = 0x8048380, 
+  file_name = 0x0, dir_name = 0x0, fun_lines = 0x0}
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p *f
+$9 = {next = 0x8055060, fun_name = 0x8054beb "main", 
+  fun_start_addr = 134513840, file_name = 0x0, dir_name = 0x0, fun_lines = 0x0}
+(gdb) p/x a
+$10 = 0x80484b0
+(gdb) p/x *f
+$11 = {next = 0x8055060, fun_name = 0x8054beb, fun_start_addr = 0x80484b0, 
+  file_name = 0x0, dir_name = 0x0, fun_lines = 0x0}
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p *f
+$12 = {next = 0x8055060, fun_name = 0x8054beb "main", 
+  fun_start_addr = 134513840, file_name = 0x8055b3f "src/mlk_malloc.c", 
+  dir_name = 0x0, fun_lines = 0x0}
+(gdb) s
+mut_exec_symtab_add_xxx (s=0xbffffbe0, a=134513840, l=10)
+    at exec/elf/mut_exec_symtab.c:137
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) s
+(gdb) s
+mut_exec_symtab_add_range (s=0xbffffbe0, a=134513840, l=10, 
+    fn=0x8055b3f "src/mlk_malloc.c") at exec/elf/mut_exec_symtab.c:186
+(gdb) c
+Continuing.
+
+Breakpoint 1, mut_exec_extract_debug_info (exec=0xbffffbe0, reader=0xbffffa38)
+    at exec/elf/mut_exec.c:497
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p/x a
+$13 = 0x80484b6
+(gdb) n
+(gdb) n
+Registering LINE
+(gdb) s
+mut_exec_symtab_add_range (s=0xbffffbe0, a=134513846, l=11, 
+    fn=0x8055b3f "src/mlk_malloc.c") at exec/elf/mut_exec_symtab.c:169
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p fn
+$14 = 0x8055b3f "src/mlk_malloc.c"
+(gdb) p *f
+$15 = {next = 0x8055060, fun_name = 0x8054beb "main", 
+  fun_start_addr = 134513840, file_name = 0x8055b3f "src/mlk_malloc.c", 
+  dir_name = 0x0, fun_lines = 0x80568e0}
+(gdb) p *f->fun_lines
+
+$16 = {next = 0x0, line_addr = 134513840, line_number = 10}
+(gdb) $17 = {next = 0x0, line_addr = 134513840, line_number = 10}
+(gdb) p/x *f->fun_lines
+$18 = {next = 0x0, line_addr = 0x80484b0, line_number = 0xa}
+(gdb) p l
+$19 = 11
+(gdb) p/x a
+$20 = 0x80484b6
+(gdb) n
+(gdb) s
+mut_exec_symtab_add_xxx (s=0xbffffbe0, a=134513846, l=11)
+    at exec/elf/mut_exec_symtab.c:137
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) n
+(gdb) p flp
+$21 = (struct mut_exec_symtab_fun_line **) 0x80568e0
+(gdb) p *flp
+$22 = (struct mut_exec_symtab_fun_line *) 0x0
+(gdb) n
+(gdb) n
+(gdb) up
+#1  0x804a4c3 in mut_exec_symtab_add_range (s=0xbffffbe0, a=134513846, l=11, 
+    fn=0x8055b3f "src/mlk_malloc.c") at exec/elf/mut_exec_symtab.c:180
+(gdb) p f->fun_lines
+$23 = (struct mut_exec_symtab_fun_line *) 0x80568e0
+(gdb) p *f->fun_lines
+$24 = {next = 0x8056910, line_addr = 134513840, line_number = 10}
+(gdb) p *f->fun_lines->next
+$25 = {next = 0x80568e0, line_addr = 134513846, line_number = 11}
+(gdb) p *f->fun_lines->next->next
+$26 = {next = 0x8056910, line_addr = 134513840, line_number = 10}
+(gdb) quit
+The program is running.  Quit anyway (and kill it)? (y or n) y
+
+Debugger finished
+
+20:18 - Now runs, but does not produce desired output :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering SO
+Registering SO
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering SO
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 ªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªªª 14 _start 8048400 804845B 91 (null) 0
+exec/elf/mut_exec_symtab.c 251 freeing_freed_memory exec/elf/mut_exec_symtab.c 251
+IOT trap/Abort
+$ 
+
+20:50 - The reason for the above was of course that the stab strings
+        were only kept around during the loading phase, but references
+        to them were being kept in the symbol table.  Simplest fix was
+        to hold the whole stabstr for the whole duration of the run.
+        The alternative would be to create copies of just those
+        strings that are of interest.  Might do that later.
+
+        Holding all the strings ...
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+Registering SO
+Registering SO
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering SO
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 (null) 0
+exec/elf/mut_exec_symtab.c 251 freeing_freed_memory exec/elf/mut_exec_symtab.c 251
+IOT trap/Abort
+$ 
+
+20:58 - Just out of interested tried a different test :-
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_free_chain.exe
+Registering SO
+Registering SO
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering FUN
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering LINE
+Registering SO
+A
+./main error FUM free 10 3 foo 80484E0 80484F6 22 src/fum_free_chain.c 13 main 8048500 804851C 28 src/fum_free_chain.c 20 _start 8048430 804848B 91 ? 0
+B
+C
+./main info process.exited 0
+exec/elf/mut_exec_symtab.c 251 freeing_freed_memory exec/elf/mut_exec_symtab.c 251
+IOT trap/Abort
+$ 
+
+20:58 - Now if it wasn't for the above error ...
+
+20:59 - Break.
+
+21:06 - Restart.
+
+21:11 - Ran it on itself :-
+
+$ ./main -b ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_free_chain.exe
+A
+./main error FUM free 10 3 foo 80484E0 80484F6 22 src/fum_free_chain.c 13 main 8048500 804851C 28 src/fum_free_chain.c 20 _start 8048430 804848B 91 ? 0
+B
+C
+./main info process.exited 0
+exec/elf/mut_exec_symtab.c 251 freeing_freed_memory exec/elf/mut_exec_symtab.c 251
+./main info process.signaled 6
+./main error MLK malloc 28 8056E20 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_consumer 8050410 80504AD 157 mut.c 830 mut_run 8051E10 8051F71 353 mut.c 1438
+./main error MLK malloc 32 8056DF8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_consumer 8050410 80504AD 157 mut.c 830 mut_run 8051E10 8051F71 353 mut.c 1438
+./main error MLK malloc 28 8056DD8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_resources_create_resource 804E700 804E72A 42 resources/list/mut_resources.c 170 mut_malloc_success 804F540 804F5D2 146 mut.c 399 mut_do_malloc 804F8A0 804FA55 437 mut.c 506 mut_run 8051E10 8051F31 289 mut.c 1434
+./main error MLK malloc 28 8056DB8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_resources_create_resource 804E700 804E72A 42 resources/list/mut_resources.c 170 mut_malloc_success 804F540 804F5D2 146 mut.c 399 mut_do_malloc 804F8A0 804FA55 437 mut.c 506 mut_run 8051E10 8051F31 289 mut.c 1434
+./main error MLK malloc 28 8056D98 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_malloc 804F8A0 804F8DD 61 mut.c 481 mut_run 8051E10 8051F31 289 mut.c 1434
+./main error MLK malloc 32 8056D70 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_malloc 804F8A0 804F8DD 61 mut.c 481 mut_run 8051E10 8051F31 289 mut.c 1434
+./main error MLK malloc 28 8056D50 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_consumer 8050410 80504AD 157 mut.c 830 mut_run 8051E10 8051F71 353 mut.c 1438
+./main error MLK malloc 32 8056D28 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_backtrace_open 804C710 804C724 20 backtrace/fixed/mut_backtrace.c 74 mut_produce_backtrace 804F740 804F765 37 mut.c 432 mut_do_consumer 8050410 80504AD 157 mut.c 830 mut_run 8051E10 8051F71 353 mut.c 1438
+./main error MLK malloc 28 8056D08 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056CF8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056CD8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056CC8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056CA8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056C98 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056C78 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056C68 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056C48 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056C38 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056C18 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056C08 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056BE8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056BD8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056BB8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056BA8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056B88 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056B78 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056B58 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056B48 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056B28 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056B18 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056AF8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056AE8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056AC8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056AB8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056A98 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056A88 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056A68 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056A58 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056A38 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 12 8056A28 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_line_open 804A2C0 804A2D4 20 exec/elf/mut_exec_symtab.c 121 mut_exec_symtab_add_xxx 804A350 804A3B5 101 exec/elf/mut_exec_symtab.c 146 mut_exec_symtab_add_range 804A3F0 804A483 147 exec/elf/mut_exec_symtab.c 168 mut_exec_extract_debug_info 804B8D0 804B9D3 259 exec/elf/mut_exec.c 516
+./main error MLK malloc 28 8056A08 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_extract_stabs 804B0C0 804B26C 428 exec/elf/mut_exec.c 368 mut_exec_extract_debug_info 804B8D0 804B8F5 37 exec/elf/mut_exec.c 503 mut_exec_open 804C2A0 804C4C0 544 exec/elf/mut_exec.c 771 mut_open 804EDB0 804EDCC 28 mut.c 209
+./main error MLK malloc 1968 8056250 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_extract_stabs 804B0C0 804B26C 428 exec/elf/mut_exec.c 368 mut_exec_extract_debug_info 804B8D0 804B8F5 37 exec/elf/mut_exec.c 503 mut_exec_open 804C2A0 804C4C0 544 exec/elf/mut_exec.c 771 mut_open 804EDB0 804EDCC 28 mut.c 209
+./main error MLK malloc 28 8056230 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_stabstr_open 804B4B0 804B6BC 524 exec/elf/mut_exec.c 436 mut_exec_open 804C2A0 804C496 502 exec/elf/mut_exec.c 769 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 3492 8055488 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_stabstr_open 804B4B0 804B6BC 524 exec/elf/mut_exec.c 436 mut_exec_open 804C2A0 804C496 502 exec/elf/mut_exec.c 769 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 28 8055468 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055448 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055428 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055408 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80553E8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 80553C8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80553A8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055388 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055368 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055348 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055328 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055308 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80552E8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 80552C8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80552A8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055288 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055268 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055248 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055228 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055208 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80551E8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 80551C8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80551A8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055188 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055168 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055148 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055128 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055108 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80550E8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 80550C8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 80550A8 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 24 8055088 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_symtab_fun_open 804A1A0 804A1B4 20 exec/elf/mut_exec_symtab.c 79 mut_exec_symtab_add_fun 804A230 804A285 85 exec/elf/mut_exec_symtab.c 106 mut_exec_extract_symbols 804AD50 804B041 753 exec/elf/mut_exec.c 328 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765
+./main error MLK malloc 28 8055068 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_extract_symbols 804AD50 804AE70 288 exec/elf/mut_exec.c 304 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 1024 8054C60 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_extract_symbols 804AD50 804AE70 288 exec/elf/mut_exec.c 304 mut_exec_open 804C2A0 804C46A 458 exec/elf/mut_exec.c 765 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 28 8054C40 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_strtab_open 804A920 804AB38 536 exec/elf/mut_exec.c 232 mut_exec_open 804C2A0 804C420 384 exec/elf/mut_exec.c 756 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 380 8054AC0 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_strtab_open 804A920 804AB38 536 exec/elf/mut_exec.c 232 mut_exec_open 804C2A0 804C420 384 exec/elf/mut_exec.c 756 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 28 8054AA0 5 mut_mem__malloc 8048920 8048957 55 mem/debug/mut_mem.c 97 mut_exec_shstrtab_open 804BB10 804BCAF 415 exec/elf/mut_exec.c 585 mut_exec_open 804C2A0 804C3DC 316 exec/elf/mut_exec.c 750 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+./main error MLK malloc 175 80549E8 5 mut_mem__malloc 8048920 804892F 15 mem/debug/mut_mem.c 94 mut_exec_shstrtab_open 804BB10 804BCAF 415 exec/elf/mut_exec.c 585 mut_exec_open 804C2A0 804C3DC 316 exec/elf/mut_exec.c 750 mut_open 804EDB0 804EDCC 28 mut.c 209 main 80527F0 80528CF 223 ui/tty/mut_ui.c 182
+exec/elf/mut_exec_symtab.c 251 freeing_freed_memory exec/elf/mut_exec_symtab.c 251
+IOT trap/Abort
+$   
+
+21:19 - Looking at mut_exec_symtab_close, it was quickly clear that
+        the error was that the free routine had "nfl= fl" instead of
+        "nfl= fl->next".  With that fix :-
+
+$ ./main -b ./mut.x86.vendor -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./mut.x86.vendor info process.exited 0
+./mut.x86.vendor error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 ? 0
+./main info process.exited 0
+./main error MLK malloc 3475 80545A8 5 mut_exec_stabstr_open 804AB80 804AD82 514 exec/elf/mut_exec.c 436 mut_exec_open 804B920 804BB16 502 exec/elf/mut_exec.c 769 mut_open 804E3F0 804E40C 28 mut.c 209 main 8051E30 8051F0F 223 ui/tty/mut_ui.c 182 _start 80487E0 804883B 91 ? 0
+exec/elf/mut_exec.c 435 memory_leak 0x80592b0 31083
+$ 
+
+21:25 - The leak was due to forgetting to close the stabstr at the
+        end.  With that in :-
+
+$ ./main -b ./mut.x86.vendor -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./mut.x86.vendor info process.exited 0
+./mut.x86.vendor error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 ? 0
+./main info process.exited 0
+$ ./main -b ./mut.x86.vendor -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./mut.x86.vendor info process.exited 0
+./mut.x86.vendor error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 ? 0
+./main info process.exited 0
+$ ./mut.x86.vendor -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./mut.x86.vendor info process.exited 0
+./mut.x86.vendor error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 ? 0
+$ ./mut.x86.vendor ./mut.x86.vendor -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./mut.x86.vendor info process.exited 0
+./mut.x86.vendor error MLK malloc 8 8049608 2 main 80484B0 80484CE 30 src/mlk_malloc.c 14 _start 8048400 804845B 91 ? 0
+./mut.x86.vendor info process.exited 0
+$ 
+
+21:25 - Need to do some cleanup, add the directory in and alter the
+        backtrace structure so that it is more regular and easier to
+        parse in Bourne Shell.
+
+21:26 - Shutdown.

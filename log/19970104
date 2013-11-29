@@ -1,0 +1,69 @@
+			     -*- Text -*-
+
+15:33 - Start.
+
+15:41 - From looking at various executables with
+        <URI:mut/misc/elfd/elf.c> and <URI:mut/misc/elfs/elf.c> it
+        would seem that if a static executable is stripped, then there
+        is no hope of mut working since there are no symbols left.
+
+15:54 - Changed from using a hashing lookup in 
+        <URI:mut/src/exec/elfd/mut_exec.c> to a simple linear search.
+        This is a first step to removing all the hashing code so that
+        the same code can be used for dynamic and static executables.
+
+        Still passes all the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+16:00 - Have now removed the hash stuff from <URI:mut/src/exec/elfd/mut_exec.h>
+        and the hash reader from <URI:mut/src/exec/elfd/mut_exec.c>.
+        Still passes all the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+
+16:01 - Break.
+
+16:54 - Resume.
+
+17:50 - Further simplified <URI:mut/src/exec/elfd/mut_exec.h>
+        and <URI:mut/src/exec/elfd/mut_exec.c> so that there is now
+        only one symbol table.  <URI:mut/src/exec/elfd/mut_exec.c> is
+        now half the size (13344) it was when I started the changes
+        today (27344).  Still passes the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+17:53 - Can now load statically linked files ...
+
+$ ./main ../tests/gen/gcc.x86.fp.static.elfd.off.on/exe/malloc0.exe
+./main info duplicate.addr cfree free 8048c40
+A
+B
+C
+D
+E
+./main info process.exited 0
+$ 
+
+17:54 - Hmm, running <URI:mut/misc/elfs/elf> on the file confirms that
+        cfree and free are one and the same :-
+
+$ ./elf ../../tests/gen/gcc.x86.fp.static.elfd.off.on/exe/malloc0.exe
+...
+SYM293 (0x8065844) name=3504 (cfree), addr=8048c40, shndx=2
+...
+SYM365 (0x8065cc4) name=4436 (free), addr=8048c40, shndx=2
+
+18:15 - Changed <URI:mut/src/exec/elfd> -> <URI:mut/src/exec/elf>.  
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+18:29 - Updated various other elfd -> elf references.
+
+18:29 - Backup.

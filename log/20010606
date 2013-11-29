@@ -1,0 +1,19 @@
+                             -*- Text -*-
+
+10:52
+  Start.
+
+11:25
+  Done some code-reformatting (to K&R II) and now trying to get it to
+  compile. 
+
+12:00
+  Stop
+
+13:30
+  Start
+
+15:22
+  Finished re-writing the Makefile so it follows my current thinking
+  on how to structure a Makefile.  This was partly done because I
+  couldn't get the program to link using the old file under OpenBSD.

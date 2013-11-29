@@ -1,0 +1,35 @@
+			     -*- Text -*-
+
+.intro: tests for MUT.
+
+
+COMPILING THE TESTS
+
+.compiling.flags:  The following is a list of the various flags which
+ control which variant of mut is actually compiled.
+
+  CC:		{gcc, lcc}
+  arch:		{x86, sparc}
+  fp:		{fp, nfp}
+  linkage:	{dynamic, static}
+  exec:		{aout, elf}
+
+.compiling.flags.alter:  To alter a value, you can either edit the
+ Makefile (<URI:rld/tests/Makefile>) or just pass the value as a comand
+ line option to make.  For example, to compile with lcc rather than gcc :-
+
+	$ make CC=lcc
+
+ Note that not all permutations are valid.
+
+ The results of compilation are stored in the gen subdirectory.
+
+
+ADDING A NEW TEST
+
+.add: How to add a new test file.
+
+.add.file: Each test should consist of a single C file.
+
+.add.make: Add the name of the file to the tests definition 
+ <URI:mut/tests/Makefile#tests>

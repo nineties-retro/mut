@@ -1,0 +1,34 @@
+			     -*- Text -*-
+
+.intro: A simple ptrace harness for Linux.
+
+.compile: Just type `make'.  This will build ptrace and breakpoint.
+
+.history: ptrace was written to test out how ptrace works under Linux.
+
+.exec: The following is a sample run of the program :-
+
+$ ./ptrace breakpoint
+Parent: waiting for child ... 
+Extracting EIP ...
+EIP= 0, instr= 303e8
+Continuing at 0...
+Parent: waiting for child ... 
+starting: ...
+Extracting EIP ...
+EIP= 11a, instr= ea68
+$ 
+
+0x104 <main>:	pushl  %ebp
+0x105 <main+1>:	movl   %esp,%ebp
+0x107 <main+3>:	call   0x1c8 <__main>
+0x10c <main+8>:	pushl  $0xdb
+0x111 <main+13>:	call   0x60000a00 <end+1610611064>
+0x116 <main+18>:	addl   $0x4,%esp
+0x119 <main+21>:	int3   
+0x11a <main+22>:	pushl  $0xea
+0x11f <main+27>:	call   0x60000a00 <end+1610611064>
+0x124 <main+32>:	addl   $0x4,%esp
+(gdb) x/4wx 0x116
+0x116 <main+18>:	0xcc04c483 0x0000ea68 0x08dce800 0xc4836000
+(gdb) 

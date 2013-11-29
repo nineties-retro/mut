@@ -1,0 +1,4 @@
+A
+mut error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+mut info trace realloc 10 30 0
+mut info process.signaled 11

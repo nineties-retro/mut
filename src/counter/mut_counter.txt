@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+.intro: template for mut_counter.h
+
+typedef ... mut_counter;
+
+extern mut_counter mut_counter_from_uint(mut_counter);
+extern mut_counter mut_counter_inc(mut_counter, int);
+extern mut_counter mut_counter_dec(mut_counter, int);
+extern int         mut_counter_lt(mut_counter, mut_counter);

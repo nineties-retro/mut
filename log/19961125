@@ -1,0 +1,13 @@
+			     -*- Text -*-
+
+19:14 - Start.
+
+        I think this is the day I cleaned up rld_log.
+
+        Also added a backtrace to the info stored.  So far only stores
+        frame addresses and is arbitrarily limited to a depth of 5 and
+        only works for x86 code with an explicit frame pointer (EBP).
+
+        Added rld/tests/cur_chain.c
+
+22:24 - Backup.

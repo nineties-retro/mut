@@ -1,0 +1,265 @@
+			     -*- Text -*-
+
+16:42 - Start
+
+        Added <URI:mut/doc/req/signals> and
+        <URI:mut/doc/req/intertwined-alloc>.
+
+16:54 - Added <URI:mut/bib/gilb>
+
+17:03 - Added a note to <URI:mut/bib/cactus#procfs> to the effect that
+        the Linux and SVR4.2 /proc file system interfaces aren't
+        particularly similar.
+
+17:06 - Updated some cross references in <URI:mut/bib/pentium>.
+
+17:09 - Fixed up some other out of date rld references in <URI:mut/bib>
+
+17:10 - Break.
+
+17:25 - Resume.  Create <URI:mit/misc/backtrace/bt2.c>
+
+17:40 - Wrote up <URI:mut/README#bad.trace>.
+
+17:46 - Added a test to <URI:mut/src/proc/ptrace/arch/x86/mut_process_arch.c#mut_process_function_backtrace>
+        the ensures that a backtrace is terminated if ebp is not > esp
+        and monitonically increasing thereafter.
+
+        Unfortunately, it doesn't fix the backtrace problem :-
+
+$ ./main -b /tmp/tar-1.11.8/src/tar -xMf /dev/fd0
+./main fatal 5 ptrace.peek.data 16
+$ 
+
+17:49 - It turns out the problem occurs in 
+        <URI:mut/src/proc/ptrace/arch/x86/mut_process_arch.c#mut_process_function_exit_backtrace>
+        since this passes in 0 as the address to check against :-<
+
+17:52 - Modified it to find esp and pass that in as the start point.
+        Unfortunately it sill failed in the same way ...
+
+$ ./main -b /tmp/tar-1.11.8/src/tar -xMf /dev/fd0
+./main fatal 5 ptrace.peek.data 16
+$ 
+
+17:53 - Aargh, got caught by the signed int comparison.  The esp
+        passed in is -1073742744 and so this is always less than 16!
+
+17:56 - That cured it!  Now get ...
+
+$ ./main -b /tmp/tar-1.11.8/src/tar -xMf /dev/fd0
+xmalloc: 40 = 0x805c450
+xmalloc: 40 = 0x805c480
+xmalloc: 102 = 0x805c4b0
+xmalloc: 13 = 0x805c5c8
+xmalloc: 1 = 0x805c5e0
+xmalloc: 13 = 0x805ca40
+xmalloc: 13 = 0x805ca58
+./main error FUM free 805bf60 5 assign_string 8052d08 extract_archive 804ed09 read_and 8050965 main 8054b8f _start 80498bb
+xmalloc: 13 = 0x805ca70
+./main error FUM free 805bf60 5 assign_string 8052d08 extract_archive 804ed09 read_and 8050965 main 8054b8f _start 80498bb
+xmalloc: 13 = 0x805ca88
+
+
+18:09 - Wrote up <URI:mut/README#sol.backtrace.x86.no-fp.inc>
+<URI:mut/README#sol.backtrace.x86.no-fp.inc.threads>
+<URI:mut/README#sol.backtrace.x86.no-fp.fake> and 
+<URI:mut/README#sol.backtrace.x86.no-fp.instr>.
+
+18:15 - Wrote <URI:mut/README#bad.xref>
+
+18:16 - Removed the TODO section from <URI:mut/README> and folded any
+relevant parts in with the STATUS section.
+
+18:29 - Decided to look at the problem with
+        <URI:mut/src/mem/debug/mut_mem.c#mut_mem__realloc> that causes
+        it to SEGV.
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/realloc.exe
+A
+B
+C
+D
+./main info process.exited 0
+Segmentation fault
+$ 
+
+18:35 - Having difficulty locating a test which causes a SEGV inside
+        the debugging realloc code.  All the ones tried so far result
+        in a problem in free when the process is terminating.  Removed
+        the realloc from exec and all is well again.  Also ran mut
+        under itself ...
+
+$ ./main -s -t -b ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/malloc0.exe
+./main info trace malloc 84 80522f0 2 <unknown> 4002d400 <unknown> 73747365
+./main info trace malloc 68 8052348 5 mut_mem__malloc 80488d0 mut_exec_hash_open 804af2f mut_exec_dynamic_open 804b560 mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 28 8052390 5 mut_mem__malloc 80488f8 mut_exec_hash_open 804af2f mut_exec_dynamic_open 804b560 mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 76 80523b0 5 mut_mem__malloc 80488d0 mut_exec_hash_open 804afff mut_exec_dynamic_open 804b560 mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 28 8052400 5 mut_mem__malloc 80488f8 mut_exec_hash_open 804afff mut_exec_dynamic_open 804b560 mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 304 8052420 5 mut_mem__malloc 80488d0 mut_exec_dsymtab_open 804ab0d mut_exec_dynamic_open 804b57d mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 28 8052558 5 mut_mem__malloc 80488f8 mut_exec_dsymtab_open 804ab0d mut_exec_dynamic_open 804b57d mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 170 8052578 5 mut_mem__malloc 80488d0 mut_exec_dstrtab_open 804a668 mut_exec_dynamic_open 804b59d mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 28 8052628 5 mut_mem__malloc 80488f8 mut_exec_dstrtab_open 804a668 mut_exec_dynamic_open 804b59d mut_exec_open 804b7d0 mut_open 804dac9
+./main info trace malloc 992 8052648 5 mut_mem__malloc 80488d0 mut_exec_esymtab_open 804a170 mut_exec_extra_open 804b60a mut_exec_open 804b7f6 mut_open 804dac9
+./main info trace malloc 28 8052a30 5 mut_mem__malloc 80488f8 mut_exec_esymtab_open 804a170 mut_exec_extra_open 804b60a mut_exec_open 804b7f6 mut_open 804dac9
+./main info trace malloc 369 8052a50 5 mut_mem__malloc 80488d0 mut_exec_estrtab_open 8049e08 mut_exec_extra_open 804b62d mut_exec_open 804b7f6 mut_open 804dac9
+./main info trace malloc 28 8052bc8 5 mut_mem__malloc 80488f8 mut_exec_estrtab_open 8049e08 mut_exec_extra_open 804b62d mut_exec_open 804b7f6 mut_open 804dac9
+./main info trace free 80522f0 84
+A
+./main info trace malloc 48 8052be8 5 mut_mem__malloc 80488d0 mut_resources_create_resource 804d566 mut_do_malloc 804e5c2 mut_run 804fd71 main 805043c
+./main info trace malloc 28 8052c20 5 mut_mem__malloc 80488f8 mut_resources_create_resource 804d566 mut_do_malloc 804e5c2 mut_run 804fd71 main 805043c
+B
+./main info trace malloc 48 8052c40 5 mut_mem__malloc 80488d0 mut_resources_create_resource 804d566 mut_do_malloc 804e5c2 mut_run 804fd71 main 805043c
+./main info trace malloc 28 8052c78 5 mut_mem__malloc 80488f8 mut_resources_create_resource 804d566 mut_do_malloc 804e5c2 mut_run 804fd71 main 805043c
+C
+D
+E
+./main info process.exited 0
+./main info trace free 80523b0 76
+./main info trace free 8052400 28
+./main info trace free 8052348 68
+./main info trace free 8052390 28
+./main info trace free 8052420 304
+./main info trace free 8052558 28
+./main info trace free 8052578 170
+./main info trace free 8052628 28
+./main info trace free 8052648 992
+./main info trace free 8052a30 28
+./main info trace free 8052a50 369
+./main info trace free 8052bc8 28
+./main info trace free 8052be8 48
+./main info trace free 8052c20 28
+./main info trace free 8052c40 48
+./main info trace free 8052c78 28
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 2383 17 alloc.max.space 2299 16 alloc.max.count 2299 16 malloc 17 free 17 realloc 0 calloc 0 cfree 0
+$ 
+
+18:41 - Try to use the known to be working version to try and locate
+        the fault with the realloc version ...
+
+
+$ ./mut -s -t -b ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/malloc0.exe
+./mut info trace malloc 84 8052340 2 <unknown> 4002d400 <unknown> 73747365
+./mut info trace malloc 68 8052398 5 mut_mem__malloc 8048910 mut_exec_hash_open 804af7f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 28 80523e0 5 mut_mem__malloc 8048938 mut_exec_hash_open 804af7f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 76 8052400 5 mut_mem__malloc 8048910 mut_exec_hash_open 804b04f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 28 8052450 5 mut_mem__malloc 8048938 mut_exec_hash_open 804b04f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 304 8052470 5 mut_mem__malloc 8048910 mut_exec_dsymtab_open 804ab5d mut_exec_dynamic_open 804b5cd mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 28 80525a8 5 mut_mem__malloc 8048938 mut_exec_dsymtab_open 804ab5d mut_exec_dynamic_open 804b5cd mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 170 80525c8 5 mut_mem__malloc 8048910 mut_exec_dstrtab_open 804a6b8 mut_exec_dynamic_open 804b5ed mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 28 8052678 5 mut_mem__malloc 8048938 mut_exec_dstrtab_open 804a6b8 mut_exec_dynamic_open 804b5ed mut_exec_open 804b820 mut_open 804db19
+./mut info trace malloc 992 8052698 5 mut_mem__malloc 8048910 mut_exec_esymtab_open 804a1b0 mut_exec_extra_open 804b65a mut_exec_open 804b846 mut_open 804db19
+./mut info trace malloc 28 8052a80 5 mut_mem__malloc 8048938 mut_exec_esymtab_open 804a1b0 mut_exec_extra_open 804b65a mut_exec_open 804b846 mut_open 804db19
+./mut info trace realloc 8052698 992 15 8052aa0 5 mut_exec_esymtab_open 804a37e mut_exec_extra_open 804b65a mut_exec_open 804b846 mut_open 804db19 main 8050471
+./mut info trace malloc 369 8052ab8 5 mut_mem__malloc 8048910 mut_exec_estrtab_open 8049e48 mut_exec_extra_open 804b67d mut_exec_open 804b846 mut_open 804db19
+./mut info trace malloc 28 8052c30 5 mut_mem__malloc 8048938 mut_exec_estrtab_open 8049e48 mut_exec_extra_open 804b67d mut_exec_open 804b846 mut_open 804db19
+./mut info trace free 8052340 84
+A
+./mut info trace malloc 48 8052c50 5 mut_mem__malloc 8048910 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut info trace malloc 28 8052c88 5 mut_mem__malloc 8048938 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+B
+./mut info trace malloc 48 8052ca8 5 mut_mem__malloc 8048910 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut info trace malloc 28 8052ce0 5 mut_mem__malloc 8048938 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+C
+D
+E
+./main info process.exited 0
+exec/elfd/mut_exec.c 414 freeing_unallocated_memory 0x8052aa0
+./mut info process.signaled 6
+./mut info stats alloc.now 1322 16 alloc.total 2398 18 alloc.max.space 1834 11 alloc.max.count 1322 16 malloc 17 free 1 realloc 1 calloc 0 cfree 0
+./mut error MLK malloc 28 8052ce0 5 mut_mem__malloc 8048938 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut error MLK malloc 48 8052ca8 5 mut_mem__malloc 8048910 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut error MLK malloc 28 8052c88 5 mut_mem__malloc 8048938 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut error MLK malloc 48 8052c50 5 mut_mem__malloc 8048910 mut_resources_create_resource 804d5b6 mut_do_malloc 804e612 mut_run 804fdc1 main 805048c
+./mut error MLK malloc 28 8052c30 5 mut_mem__malloc 8048938 mut_exec_estrtab_open 8049e48 mut_exec_extra_open 804b67d mut_exec_open 804b846 mut_open 804db19
+./mut error MLK malloc 369 8052ab8 5 mut_mem__malloc 8048910 mut_exec_estrtab_open 8049e48 mut_exec_extra_open 804b67d mut_exec_open 804b846 mut_open 804db19
+./mut error MLK realloc 15 8052aa0 5 mut_exec_esymtab_open 804a37e mut_exec_extra_open 804b65a mut_exec_open 804b846 mut_open 804db19 main 8050471
+./mut error MLK malloc 28 8052a80 5 mut_mem__malloc 8048938 mut_exec_esymtab_open 804a1b0 mut_exec_extra_open 804b65a mut_exec_open 804b846 mut_open 804db19
+./mut error MLK malloc 28 8052678 5 mut_mem__malloc 8048938 mut_exec_dstrtab_open 804a6b8 mut_exec_dynamic_open 804b5ed mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 170 80525c8 5 mut_mem__malloc 8048910 mut_exec_dstrtab_open 804a6b8 mut_exec_dynamic_open 804b5ed mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 28 80525a8 5 mut_mem__malloc 8048938 mut_exec_dsymtab_open 804ab5d mut_exec_dynamic_open 804b5cd mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 304 8052470 5 mut_mem__malloc 8048910 mut_exec_dsymtab_open 804ab5d mut_exec_dynamic_open 804b5cd mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 28 8052450 5 mut_mem__malloc 8048938 mut_exec_hash_open 804b04f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 76 8052400 5 mut_mem__malloc 8048910 mut_exec_hash_open 804b04f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 28 80523e0 5 mut_mem__malloc 8048938 mut_exec_hash_open 804af7f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+./mut error MLK malloc 68 8052398 5 mut_mem__malloc 8048910 mut_exec_hash_open 804af7f mut_exec_dynamic_open 804b5b0 mut_exec_open 804b820 mut_open 804db19
+$ 
+
+19:07 - Taken me until now to realise that size argument needed to be
+        multiplied by sizeof(Elf32_Sym).  Now I get the out of memory
+        error I got a few days ago ...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/malloc0.exe
+./main fatal 0 mem.full
+Segmentation fault
+$ 
+
+19:15 - The problem was with the memcpy in the following ...
+
+      new_addr= mut_mem__malloc(n_bytes, line, file_name);
+      if (new_addr != 0) {
+	(void)memcpy(new_addr, addr, n->n_bytes);
+	(void)memset(addr, 0x1, n->n_bytes);
+	store.n_malloc -= 1;
+      }
+
+        from <URI:mut/src/mem/debug/mut_mem.c#mut_mem__realloc>.
+
+        The problem had laid dormant until now because the realloc 
+        <URI:mut/src/exec/elfd/mut_exec.c#mut_exec_esymtab_open> was
+        the first time I've used realloc to shrink a block.  Changing
+        the line to the following cured the problem :-
+
+	(void)memcpy(new_addr, addr, (n->n_bytes < n_bytes) ? n->n_bytes : n_bytes);
+
+19:21 - Modified <URI:mut/src/mut.c#mut_realloc_malloc> so that it
+        takes into account shrinking memory blocks.
+
+19:47 - Did a simple implementation of a 64 bit counter using long
+        long, but realised that the logger needs to know about the
+        type too so the implementation needs to be done independently
+        of the counter.
+
+19:48 - Break.
+
+20:19 - Created <URI:mut/src/uin64> ...
+
+20:50 - Implemented <URI:mut/src/uin64/longlong>, renamed 
+        <URI:mut/src/counter/ulonglong> to <URI:mut/src/counter/uint64>
+        and reimplemented it in terms of <URI:mut/src/uin64>.
+
+21:07 - Created <URI:mut/tests/mallocn.c> and tested it with the
+        uint64 as a longlong version :-
+
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.longlong/main info stats alloc.now 0 0 alloc.total 5242880000 5000 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 5000 free 5000 realloc 0 calloc 0 cfree 0
+$ 
+
+
+21:10 - Tried the 32-bit version to show that it gives the wrong answer :-
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.ulong.longlong/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.ulong.longlong/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.ulong.longlong/main info stats alloc.now 0 0 alloc.total 947912704 5000 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 5000 free 5000 realloc 0 calloc 0 cfree 0
+$ 
+
+21:25 - Break.
+
+22:20 - Resume.  Carry on working on <URI:mut/src/uint64/struct/mut_uint64.c>
+
+22:56 - Have written all except the output routine (currently casts to
+        long long) of <URI:mut/src/uint64/struct/mut_uint64.c> and
+        tested out on <URI:mut/tests/mallocn.c>.  It seems to
+        produce the correct results ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -f -s ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info stats alloc.now 0 0 alloc.total 5242880000 5000 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 5000 free 5000 realloc 0 calloc 0 cfree 0
+$ 
+
+23:11 - Spent a few minutes searching around trying to find the /10
+        code I wrote a while ago.  Found the Ada and converted it to C.
+
+23:18 - Backup.

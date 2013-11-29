@@ -1,0 +1,53 @@
+			     -*- Text -*-
+
+13:05 - Start.
+
+13:38 - All the producers now log a complete backtrace if -b and -t
+        are defined.  The only reason that consumers haven't been done
+        is that it doesn't come for free, a slight change in the code
+        is necessary.
+
+14:31 - Part of the way through revision of
+        <URI:mut/src/exec/elfd/mut_exec.c> so that it loads the
+        unstripped symbol table if it exists.  So far so good.
+
+14:32 - Break.
+
+14:48 - Resume.
+
+16:48 - Now has symbolic backtrace if the symbols are available :-
+
+$ ./main -t -b ../tests/gen/gcc.x86.fp.dynamic.elfd/fum_free_chain.exe
+A
+./main info trace free 10 0
+./main error FUM free 10 4 foo 80484f6 main 804851c _start 804848b <unknown> 0
+B
+./main info trace malloc 8 8049688 3 main 8048535 _start 804848b <unknown> 0
+C
+./main info trace free 8049688 8
+./main info process.exited 0
+$ 
+
+
+16:49 - If the symbols have been stripped away but a backtrace is
+        requested, then some info is output ...
+
+$ ./main -t -b ../tests/gen/gcc.x86.fp.dynamic.elfd/fum_free_chain.exs
+./main info backtrace.off
+A
+./main info trace free 10 0
+./main error FUM free 10
+B
+./main info trace malloc 8 8049688
+C
+./main info trace free 8049688 8
+./main info process.exited 0
+$ 
+
+16:53 - Perhaps, it should only output the raw info if there is no
+        symbolic output available?
+
+17:07 - Wrote a skeleton shell-script pretty printing wrapper for the
+        tty version of MUT <URI:mut/src/mut.sh>.
+
+17:08 - Backup.

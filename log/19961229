@@ -1,0 +1,383 @@
+			     -*- Text -*-
+
+15:20 - Start.
+
+15:36 - Cleaned up <URI:mut/misc/div>, expanded the README ... etc.
+        Break.
+
+16:02 - Restart.  Finished off the above.
+
+16:10 - Tidied up <URI:mut/misc/backtrace>.
+
+16:13 - If the mallocn test is run without calling -f, then the
+        failure isn't particularly good ...
+
+$ gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+Out of memory: malloc failed, (null)
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main error MLK malloc 1048576 0 0
+$ 
+
+16:22 - The (null) comes from a missing argument to the fprintf call.
+        Fixed this ...
+
+$ gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe: malloc failed: Out of memory
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main error MLK malloc 1048576 0 0
+$ 
+
+16:59 - Added a test for a zero malloc and a new warning MR0.
+        Unfortunately, it doesn't seem to be activated ...
+
+$ gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe: malloc failed: Out of memory
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.on.ptrace.x86.uint64.struct/main error MLK malloc 1048576 0 0
+
+        Tried it out under gdb and the test is never being fired.
+
+17:05 - Aargh, it helps if you run the right executable ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main warning MR0 malloc 1048576
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe: malloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+$ 
+
+17:06 - Or with a backtrace ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main warning MR0 malloc 1048576 2 <unknown> 100000 _start 804852b
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe: malloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+$ 
+
+17:07 - The <unknown> is worrying.
+
+17:14 - Pulled the tail of <URI:mut/src/mut.c#mut_do_malloc> and
+        created <URI:mut/src/mut.c#mut_malloc_failure> and 
+        <URI:mut/src/mut.c#mut_malloc_success>.
+
+17:40 - Created <URI:mut/src/tests/callocn.c> ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main error FUM free d949a90 1 <unknown> 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe: calloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main error MLK calloc 1048576 0 2 main 80485ad _start 804852b
+$ 
+
+17:41 - What is the FUM error all about?  Added a check for calloc
+        returning 0 and now get ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main warning CR0 calloc 16 65536 2 <unknown> 10 _start 804852b
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main error FUM free d949a90 1 <unknown> 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe: calloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+$ 
+
+17:45 - At least now we know that the FUM is occurring after the
+        calloc 0.
+
+17:52 - Cured the <unknown> problem in the [CM]R0 backtrace.  It was
+        due to calling the entry backtrace instead of the exit
+        backtrace ...
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main warning MR0 malloc 1048576 2 main 80485ab _start 804852b
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/mallocn.exe: malloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+$ 
+
+$ gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main warning CR0 calloc 16 65536 2 main 80485ad _start 804852b
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main error FUM free d949a90 1 <unknown> 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off/callocn.exe: calloc failed: Out of memory
+gen/gcc.debug.tty.on.off.ptrace.x86.uint64.struct/main info process.exited 0
+$ 
+
+18:03 - Stepped through with gdb and the free is definitely being called.
+        The question is why?
+
+18:22 - Cleaned up <URI:mut/tests> a bit whilst thinking about the above.
+
+18:23 - Break.
+
+18:44 - Resume.  Created <URI:mut/tests/callocv.c> to see what happens
+        on an explicit overflow ...
+
+$ gdb callocv
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+(gdb) break free
+Function "free" not defined.
+(gdb) break main
+Breakpoint 1 at 0x80485b6: file callocv.c, line 20.
+(gdb) run
+
+Breakpoint 1, main (argc=1, argv=0xbffffd74) at callocv.c:20
+20	  for (i= 0; i < 5000; i += 1) {
+(gdb) break free
+Breakpoint 2 at 0x40082fe0
+(gdb) c
+Continuing.
+0
+1
+2
+3
+4
+5
+6
+7
+
+Breakpoint 2, 0x40082fe0 in __libc_free ()
+(gdb) bt
+#0  0x40082fe0 in __libc_free ()
+#1  0x40086a83 in catopen ()
+(gdb) x/3wx $esp
+0xbffff898 <__ypbindlist+2146668748>:	0x40086a83	0x08049818	0x40093768
+(gdb) c
+Continuing.
+
+Program exited normally.
+(gdb) 
+
+        So free is called after the calloc failure.  Trying this
+        through MUT ...
+
+18:54 - 
+
+$ ./main
+./main fatal 0 args.usage exec-file-name
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocv.exe 
+0
+1
+2
+3
+4
+5
+6
+7
+8
+./main warning CR0 calloc 2 1048576 2 main 80485ee _start 804855b
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocv.exe: calloc failed: Out of memory
+./main info process.exited 0
+./main error MLK calloc 2097152 40ecf008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 40cce008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 40acd008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 408cc008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 406cb008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 404ca008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 402c9008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 400c8008 2 main 80485ee _start 804855b
+$ 
+
+18:55 - The leaks are correctly detected but what about free? 
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocv.exe 
+0
+1
+2
+3
+4
+5
+6
+7
+8
+./main warning CR0 calloc 2 1048576 2 main 80485ee _start 804855b
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocv.exe: calloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 18874368 9 alloc.total 18874368 9 alloc.max.space 18874368 9 alloc.max.count 18874368 9 malloc 0 free 0 realloc 0 calloc 18 cfree 0
+./main error MLK calloc 2097152 40ecf008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 40cce008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 40acd008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 408cc008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 406cb008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 404ca008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 402c9008 2 main 80485ee _start 804855b
+./main error MLK calloc 2097152 400c8008 2 main 80485ee _start 804855b
+$ 
+
+18:57 - The call to free is not registered :-<
+
+19:03 - Fed up with the backtrace not including an offset, so adding
+        that capability ...
+
+19:05 - Break.
+
+19:25 - Resume.
+
+19:50 - The backtrace now logs the address of the function, the
+        address of the call and the difference (in bytes) between the
+        two ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/fum_free.exe
+A
+./main error FUM free 10 2 main 80484e0 8048507 39 _start 8048430 804848b 91
+B
+C
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 8 1 alloc.max.space 8 1 alloc.max.count 8 1 malloc 1 free 2 realloc 0 calloc 0 cfree 0
+$ 
+
+19:55 - Rerun the callocn test ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocn.exe
+./main warning CR0 calloc 16 65536 2 main 8048580 80485ad 45 _start 80484d0 804852b 91
+./main error FUM free d849a88 1 ? 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocn.exe: calloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 1048576 1 alloc.total 160432128 153 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 0 free 153 realloc 0 calloc 306 cfree 0
+$ 
+
+19:57 - Noticed that the calloc count is 2* what it should be ...
+
+19:58 - That was due to not having removed the following when the
+
+           calloc->hits= mut_counter_inc(calloc->hits, 1);
+
+        when the call to <URI:mut/src/mut.c#mut_collect_producer_stats>
+        was added to <URI:mut/src/mut.c#mut_do_calloc>.
+
+
+20:00 - Once removed the count is correct ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocn.exe
+./main warning CR0 calloc 16 65536 2 main 8048580 80485ad 45 _start 80484d0 804852b 91
+./main error FUM free d849a88 1 ? 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocn.exe: calloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 1048576 1 alloc.total 160432128 153 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 0 free 153 realloc 0 calloc 153 cfree 0
+$ 
+
+20:09 - Notice that the alloc.now values are wrong due the the
+        counters being incremented before it is known that the call
+        has succeeded.  The values for malloc are also wrong ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/mallocn.exe
+./main warning MR0 malloc 1048576 2 main 8048580 80485ab 43 _start 80484d0 804852b 91
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/mallocn.exe: malloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 1048576 1 alloc.total 1006633093 961 alloc.max.space 1048709 2 alloc.max.count 1048709 2 malloc 961 free 960 realloc 0 calloc 0 cfree 0
+$ 
+
+20:13 - Hopefully fixed this by moving the call to the stats collector
+        to after the call has completed successfully ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/mallocn.exe
+./main warning MR0 malloc 1048576 2 main 8048580 80485ab 43 _start 80484d0 804852b 91
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/mallocn.exe: malloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 1005584517 960 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 961 free 960 realloc 0 calloc 0 cfree 0
+$ 
+
+20:25 - Reorganized <URI:mut/src/mut.c#mut_do_calloc> along the lines
+        of the mut_do_malloc reorganization done earlier.
+
+20:32 - Ensured that the return value of mut_log_end is ignored in the
+        when logging info in <URI:mut/src/mut.c> (still need to do
+        other files).  This is because I decided that logging
+        info should not be construed as a serious error, it is better
+        to encode this failure in the return value.
+
+20:58 - Updated realloc so that it also tests for a 0 return value.
+        Here's the first run on the new <URI:mut/src/reallocn.c> test ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/reallocn.exe
+./main warning RR0 realloc 0 0 1048576 2 main 8048580 80485af 47 _start 80484d0 804852b 91
+./main error FUM free 3ff4b3d0 1 ? 40086a83
+../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/reallocn.exe: realloc failed: Out of memory
+./main info process.exited 0
+./main info stats alloc.now 18 1 alloc.total 1005584402 960 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 0 free 961 realloc 961 calloc 0 cfree 0
+./main error MLK realloc 18 3ff4b3b8 1 ? 40070868
+$ 
+
+21:15 - Whilst wondering why the FUM and especially the MLK call
+        occurs, realised that the problem is not to do with MUT but to
+        do with the tests <URI:mut/tests/mallocn.c>, <URI:mut/tests/callocn.c>
+        and <URI:mut/tests/reallocn.c>.  They all had a line like the
+        following ...
+
+    if ((x= malloc(1<<20)) == 0) {
+      fprintf(stderr, "%s: malloc failed: %s\n", argv[0], strerror(errno));
+      return 0;
+    }
+
+        Which produces unusual results if the above fprintf call is
+        the first one since it attempts to create a buffer.  Changed
+        the test to ...
+
+    if ((x= malloc(1<<20)) == 0) {
+      write(1, "X\n", 2);
+      return 0;
+    }
+
+21:19 - Now the FUMs go away ...
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/mallocn.exe
+./main warning MR0 malloc 1048576 2 main 80484e0 804850b 43 _start 8048430 804848b 91
+X
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 1005584384 959 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 960 free 959 realloc 0 calloc 0 cfree 0
+$ 
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocn.exe
+./main warning CR0 calloc 16 65536 2 main 80484e0 804850d 45 _start 8048430 804848b 91
+X
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 158334976 151 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 0 free 151 realloc 0 calloc 152 cfree 0
+$ 
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/reallocn.exe
+./main warning RR0 realloc 0 0 1048576 2 main 80484e0 804850f 47 _start 8048430 804848b 91
+X
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 1005584384 959 alloc.max.space 1048576 1 alloc.max.count 1048576 1 malloc 0 free 960 realloc 960 calloc 0 cfree 0
+$ 
+
+21:23 - Also fixed up <URI:mut/tests/callocv.c>
+
+$ ./main -s -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/callocv.exe
+0
+1
+2
+3
+4
+5
+6
+7
+8
+./main warning CR0 calloc 2 1048576 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+X
+./main info process.exited 0
+./main info stats alloc.now 16777216 8 alloc.total 16777216 8 alloc.max.space 16777216 8 alloc.max.count 16777216 8 malloc 0 free 0 realloc 0 calloc 9 cfree 0
+./main error MLK calloc 2097152 40ecf008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 40cce008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 40acd008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 408cc008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 406cb008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 404ca008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 402c9008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+./main error MLK calloc 2097152 400c8008 2 main 8048510 804854e 62 _start 8048460 80484bb 91
+$ 
+
+21:42 - Cleaning up <URI:mut/tests>.  So far have updated the block
+        comments in various files and also created <URI:mut/tests/src>
+        and moved all the test files there.  This is in preparation
+        for creating one or more scripts for managing regression tests.
+
+
+22:10 - Created the skeleton of a regression test script
+        <URI:mut/tests/scripts/test_mut>.  Before more can be done
+        really need to work on the generating consistent error codes
+        and also the ability to redirect the log messages so that they
+        don't mingle with the output from the target program.
+
+22:41 - Have added -l option.  It needs more work.  Have to stop now.
+
+22:42 - Backup.

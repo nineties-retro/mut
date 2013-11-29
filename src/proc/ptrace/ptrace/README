@@ -1,0 +1,12 @@
+			     -*- Text -*-
+
+.intro: A wrapper for the system ptrace header file.
+
+This is necessary because some systems have dodgy ptrace prototypes or
+don't have a prototype at all.  For example, under SunOS 4.1.X, the
+ptrace prototype is given as :-
+
+  int ptrace(int cmd, int pid, char *addr, int data);
+
+
+XREF: <URI:mut/src/include/README>

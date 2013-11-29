@@ -1,0 +1,215 @@
+			     -*- Text -*-
+
+13:17 - Start
+
+13:36 - Used the gdb to alter the status value to a SIGTRAP so that
+        the PC would be retrieved in the following from
+        <URI:mut/src/proc/ptrace/mut_process.c#mut_process_wait>
+
+    if (WSTOPSIG(status) == SIGTRAP) {
+      p->status= mut_process_status_stopped;
+      if (!mut_process_read_pc(p, &p->pc))
+	return 0;
+      *pc= p->pc= mut_pc_adjust(p->pc);
+      return 1;
+    } else {
+
+        The value returned was 0xeffffba0 which looks remarkable like
+        a stack address not a PC.
+
+13:49 - From calling ptrace explicitly, it seems that the values of PC
+        an nPC are at least consistent :-
+
+(gdb) call ptrace(3, 23396, 4, 0)
+$14 = -268436580
+(gdb) call ptrace(3, 23396, 8, 0)
+$15 = -268436576
+(gdb) p/x $14
+$16 = 0xeffffb9c
+(gdb) p/x $15
+$17 = 0xeffffba0
+(gdb) 
+
+14:06 - At least on the SPARC/Solaris it seems that even when using ptrace it
+        is possible to #define _KMEMUSER to get access to the real user
+        struct rather than have to suffer the fake one that ptrace
+        makes available as default.
+
+14:11 - Extracted the u_code and u_addr from ...
+
+typedef	struct	user {
+	gregset_t	u_reg;		/* user's saved registers */
+	greg_t *	u_ar0;		/* address of user's saved R0 */
+	char	u_psargs[PSARGSZ];	/* arguments from exec */
+	void	(*u_signal[MAXSIG])();	/* Disposition of signals */
+	int		u_code;		/* fault code on trap */
+	caddr_t		u_addr;		/* fault PC on trap */
+} user_t;
+
+ 
+        to see if it was any different, it wasn't ...
+
+(gdb) call ptrace(3, 23396, 19*4 + 80 + 44*4 + 4, 0)
+$30 = 1
+(gdb) call ptrace(3, 23396, 19*4 + 80 + 44*4 + 8, 0)
+$31 = -268436580
+(gdb) p/x $31
+$32 = 0xeffffb9c
+
+14:26 - Found it!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Wondered whether the PC was being set correctly when the
+        process starts, so single stepped it to the point where pc is
+        set in <URI:mut/src/proc/ptrace/mut_process.c#mut_process_resume>
+        and followed it down to
+ <URI:mut/src/proc/ptrace/arch/sparc/mut_process_arch.c#mut_process_write_pc>
+        and noticed that just before the call to trace_write_reg that
+        the value of pc was 0xeffffb9c!  At first thought this was due
+        to some funny sign extension problem, but then realised that
+        the problem was due the following ...
+
+          mut_process_arch_public int
+          mut_process_write_pc(mut_process * p, mut_exec_addr addr)
+          {
+            int pc= mut_exec_addr_to_int(pc);
+            ...
+          }
+
+        Which presumably happened when the code was changed from x86
+        to SPARC and some changes had to be made to the names how that
+        pc means the SPARC value rather than the generic value.
+        Changing the above to 
+
+          mut_process_arch_public int
+          mut_process_write_pc(mut_process * p, mut_exec_addr addr)
+          {
+            int pc= mut_exec_addr_to_int(addr);
+            ...
+          }
+
+        cured this particular problem.  Now on to ...
+
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+A
+B
+C
+./xxx fatal 0 action.addr malloc 11158 1016c
+$ 
+
+14:32 - This is failing because after the malloc call the expected
+        return address is 11158 but the PC is at 1016c.
+
+14:48 - Fixed the problem in the static case.  This is how ...
+
+       Decided to look at the static binary in gdb to see what the
+       addresses were ...
+
+$ gdb gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.9, Copyright 1993 Free Software Foundation, Inc...
+(gdb) x/50i main
+0x1014c <main>:	save  %sp, -120, %sp
+0x10150 <main+4>:	mov  1, %o0
+0x10154 <main+8>:	sethi  %hi(0x11800), %o2
+0x10158 <main+12>:	or  0xa0, %o2, %o1
+0x1015c <main+16>:	mov  2, %o2
+0x10160 <main+20>:	call  0x1172c <write>
+0x10164 <main+24>:	nop 
+0x10168 <main+28>:	mov  8, %o0
+0x1016c <main+32>:	call  0x1038c <malloc>
+0x10170 <main+36>:	nop 
+0x10174 <main+40>:	st  %o0, [ %fp + -20 ]
+0x10178 <main+44>:	mov  1, %o0
+0x1017c <main+48>:	sethi  %hi(0x11800), %o2
+0x10180 <main+52>:	or  0xa8, %o2, %o1
+0x10184 <main+56>:	mov  2, %o2
+0x10188 <main+60>:	call  0x1172c <write>
+0x1018c <main+64>:	nop 
+0x10190 <main+68>:	mov  0x10, %o0
+0x10194 <main+72>:	call  0x1038c <malloc>
+0x10198 <main+76>:	nop 
+0x1019c <main+80>:	st  %o0, [ %fp + -24 ]
+0x101a0 <main+84>:	mov  1, %o0
+0x101a4 <main+88>:	sethi  %hi(0x11800), %o2
+0x101a8 <main+92>:	or  0xb0, %o2, %o1
+0x101ac <main+96>:	mov  2, %o2
+0x101b0 <main+100>:	call  0x1172c <write>
+0x101b4 <main+104>:	nop 
+0x101b8 <main+108>:	ld  [ %fp + -24 ], %o0
+0x101bc <main+112>:	call  0x11158 <free>
+0x101c0 <main+116>:	nop 
+0x101c4 <main+120>:	mov  1, %o0
+0x101c8 <main+124>:	sethi  %hi(0x11800), %o2
+0x101cc <main+128>:	or  0xb8, %o2, %o1
+0x101d0 <main+132>:	mov  2, %o2
+0x101d4 <main+136>:	call  0x1172c <write>
+0x101d8 <main+140>:	nop 
+0x101dc <main+144>:	ld  [ %fp + -20 ], %o0
+0x101e0 <main+148>:	call  0x11158 <free>
+0x101e4 <main+152>:	nop 
+0x101e8 <main+156>:	mov  1, %o0
+0x101ec <main+160>:	sethi  %hi(0x11800), %o2
+0x101f0 <main+164>:	or  0xc0, %o2, %o1
+0x101f4 <main+168>:	mov  2, %o2
+0x101f8 <main+172>:	call  0x1172c <write>
+0x101fc <main+176>:	nop 
+0x10200 <main+180>:	clr  %i0
+0x10204 <main+184>:	b  0x1020c <main+192>
+0x10208 <main+188>:	nop 
+0x1020c <main+192>:	ret 
+0x10210 <main+196>:	restore 
+(gdb) 
+$ 
+
+14:49 - Immediately noticed that the calculated return address 
+        was that of the call itself (0x1016c) i.e. forgot that the 
+        return address needs to be adjusted by 8.  Added the necessary
+        +8 to <URI:mut/src/proc/ptrace/arch/sparc/mut_process_arch.c#mut_process_function_return_addr>
+        and the static case now works ...
+
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/malloc0.exe 
+A
+B
+C
+D
+E
+./xxx info process.exited 0
+$ 
+
+14:52 - The dynamic case no longer works, suspect this is to do with
+        some fiddling which means that the correct value is not 8 in
+        all cases ...
+
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.dynamic.elfd.off.on/exe/malloc0.exe 
+A
+./xxx info sparc.pc 20948 ef738644
+./xxx info sparc.pc 20954 ef74a098
+./xxx fatal 0 action.addr malloc 20954 10714
+$ 
+
+14:47 - Various other misc. tests seem to work ok for statically
+       linked executables ...
+
+$ ./xxx -f ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/fum_realloc.exe 
+A
+./xxx error FUM realloc 10
+./xxx info process.signaled 11
+$ ./xxx ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/fum_realloc.exe 
+A
+./xxx error FUM realloc 10
+B
+C
+./xxx info process.exited 0
+$ ./xxx ../tests/gen/gcc.sparc.fp.static.elfd.off.on/exe/fum_free_chain.exe 
+A
+./xxx error FUM free 10
+B
+C
+./xxx info process.exited 0
+$ 
+
+15:00 - Tried out main-static and it failed in a realloc do_action due
+        to the return address and pc not being the same.
+
+15:01 - Stop.

@@ -1,0 +1,30 @@
+			     -*- Text -*-
+
+.intro: mut_mem_ctrl.h template.
+
+Each mut_mem_ctrl.h file should contain at least the following :-
+
+extern void mut_mem_init(void);
+
+ `mut_mem_init' initialises the memory manager.
+ `mut_mem_init' must be called before any other mut_mem routine.
+
+
+extern void mut_mem_open(void);
+
+ `mut_mem_open' opens the memory manager.
+ `mut_mem_open' must be called after `mut_mem_init' but before any
+ other mut_mem routine.  The reason for having `mut_mem_init' and
+ `mut_mem_open' is historical and they could easily be combined.
+
+
+extern FILE *mut_mem_log(FILE *);
+extern FILE *mut_mem_report(FILE *);
+
+extern int mut_mem_close(void);
+
+ `mut_mem_close' initialises the memory manager.
+ `mut_mem_close' must be called before the program terminates.
+ `mut_mem_close' returns XXX.
+
+ 

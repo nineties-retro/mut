@@ -1,0 +1,12 @@
+			     -*- Text -*-
+.intro:
+ Pentium Processor Family Developer's Manual Volume 3: Architecture and Programming Manual
+ Intel
+ 1995
+
+.breakpoint.instr: The breakpoint instruction on an i386 is INT 3,
+ code 0xCC.  See page 25-173.  (XREF: <URI:mut/src/arch/x86/mut_instr.h>)
+
+.breakpoint.eip: After a trap EIP points at the instruction after the trap.
+ Therefore the instruction that trapped is at EIP-1.  See section 14.9
+ and 14.9.3 on pages 14-14 and 14-15. (XREF: <URI:mut/src/arch/x86/mut_pc.h>)

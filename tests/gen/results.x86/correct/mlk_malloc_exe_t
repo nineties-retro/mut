@@ -1,0 +1,5 @@
+A
+mut info trace malloc 8 8049608
+B
+mut info process.exited 0
+mut error MLK malloc 8 8049608

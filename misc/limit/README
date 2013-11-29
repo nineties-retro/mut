@@ -1,0 +1,13 @@
+			     -*- Text -*-
+
+.intro: Test to see if process limits are supported.
+
+Judging by the following, they seem to work fine ...
+
+$ ./cpu_limit 5
+Killed
+
+$ ./data_limit 1000000
+XXXXXXXXXXXXXXZ
+
+However, ulimit doesn't have the desired effect.

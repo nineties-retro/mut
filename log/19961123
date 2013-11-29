@@ -1,0 +1,22 @@
+			     -*- Text -*-
+
+13:47 - Start.
+
+        Tried to untar gdb-4.16.  It failed on the second disk.  This was
+        the same disk that was used as the second Plan 9 disk.  Looks like
+        the disk is dodgy, so thrown it away.
+
+        After looking at the kernel source for ptrace in Linux 1.0
+        noticed that an error is returned if the bottom 2 bits are set
+        implying that it expects a word address.  Quickly changed from
+        passing EIP directly to passing EIP*4 and finally got the
+        correct value back.
+
+        Now things are working.  Prior to this point there was a elf
+        reader, non-working ptrace and a non-compiling /proc version.
+
+        Created rld/tests and the malloc.c test.
+
+16:19 - Backup.
+
+21:41 - Backup.

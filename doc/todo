@@ -1,0 +1,31 @@
+.realloc: The alloc.max.space and alloc.max.count values are
+ different for realloc tests.  See
+ <URI:mut/tests/gen/results.x86/correct/realloc_exe_bfst>.
+
+.tty: Update the interface so that it is correct wrt the sole
+ implementation.
+
+.backtrace: Update the interface so that it is correct wrt the
+ sole implementation.
+
+.free: Should include a backtrace in a free trace.
+
+.realloc(x,0): XXX.
+
+.simplify.aout: OpenBSD was the last a.out holdout of any system that
+ I'm interested in running and changed years ago.  So, unless the goal
+ is to run on old systems the a.out code could be removed.
+
+.simplify.build: At the time the project was started it was mainly
+ developed on a 486 DX2-66 with 8MB of RAM.  This was adequate but no
+ speed daemon.  Having to do a make clean to seitch from one
+ configuration to anothe was painful.  So, options are tracked at a
+ fine grain level and multiple builds can co-exist.  As I write this
+ in 2013 it only takes a few seconds to re-build from scratch.  So,
+ again, it would be simpler to remove that support and just have the
+ .o files put in the same directory as the .c files, since, like it or
+ not, that's what Make really wants unless you fight it using VPATH.
+
+.linux.libc.leaks: see mut/log/20131124 showing that Linux static
+ executables leak seeminly by design and for a suggestion on how to
+ filter these leaks.

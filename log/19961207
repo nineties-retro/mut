@@ -1,0 +1,314 @@
+			     -*- Text -*-
+
+16:49 - Start.
+
+17:11 - Added -t/trace option.
+
+17:41 - Revised rld/tests so that it is possible to have multiple
+        versions of the around at the same time e.g. static/dynamic,
+        (no)frame-pointer, sparc/x86, ... etc.
+
+        Tried out the dynamic version of cur and it fails :-
+
+./main -t ../tests/gen/.gcc.x86.fp.dynamic/cur 
+A
+rld_manager.c:361: failed assertion `action'
+IOT trap/Abort
+$ 
+
+17:49 - This is because malloc/calloc/free/... etc., aren't being
+        found in the executable and so aren't being registered.
+
+18:00 - Created rld/misc/elf{sd}/elf.c from the previously written
+        elf.c and elf-dynamic.c that were sitting in my general misc
+        directory.  Haven't compiled them since my machine is an a.out
+        machine at the moment.
+
+18:11 - Partially updated rld/src/arch/sparc to reduce the amount of
+        work necessary when the code is finally compiled on a SPARC.
+        Probably going to have to rewrite some of the PC code since
+        SPARC has PC/NPC to be read/set.
+
+18:32 - Added leak reporting to rld/src/resources/list/rld_resources.c
+
+./main -t ../tests/gen/.gcc.x86.fp.static/malloc
+A
+./main info trace malloc 8 7000
+B
+./main info trace malloc 16 8000
+C
+./main info trace free 8f0
+D
+./main info trace free 8f0
+E
+./main info trace malloc 1024 9000
+./main info process.exited 0
+./main error 0 RLK malloc 1024 9000 __setfpucw 400
+$ 
+
+18:33 - or without the tracing :-
+
+./main ../tests/gen/.gcc.x86.fp.static/malloc
+A
+B
+C
+D
+E
+./main info process.exited 0
+./main error 0 RLK malloc 1024 9000 __setfpucw 400
+$ 
+
+18:34 - Hm, the backtrace looks a bit dodgy.
+
+19:02 - Fixed up the backtrace in the producer (it was previously
+        incorrectly calling the entry_backtrace), so now get :-
+
+./main ../tests/gen/.gcc.x86.fp.static/rlk
+A
+B
+./main info process.exited 0
+./main error 0 RLK malloc 1024 8000 _IO_file_doallocate 27be
+./main error 0 RLK malloc 8 7000 __gnu_malloc bd main 107 _entry 39 <?> 0
+$ 
+
+19:08 - Now outputs the number of elements in a backtrace before the
+        backtrace :-
+
+./main ../tests/gen/.gcc.x86.fp.static/rlk
+A
+B
+./main info process.exited 0
+./main error 0 RLK malloc 1024 8000 1 _IO_file_doallocate 27be
+./main error 0 RLK malloc 8 7000 4 __gnu_malloc bd main 107 _entry 39 <?> 0
+$ 
+
+19:17 - Hm, the dynamic version needs more work since the dynamic
+        version doesn't work :-
+
+$ ./main -t ../tests/gen/.gcc.x86.fp.dynamic/rlk
+A
+B
+./main info process.exited 0
+
+        Tried setting the breakpoint on __gnu_malloc but that didn't help.
+
+19:33 - The reason that malloc isn't found is that it has an entry of :-
+
+167 x= fab (_malloc), type 3/3/3, value 1610614936/1610614936/60000898
+ABS EXT
+
+        Notice that N_TEXT is not set and this is the qualifer that it
+        used in rld_exec.c.  Took this out and it didn't improve the
+        matter :-
+
+$ ./main -t ../tests/gen/.gcc.x86.fp.static/rlk
+A
+./main info trace malloc 8 7000
+B
+./main info trace malloc 1024 8000
+./main info process.exited 0
+./main error 0 RLK malloc 1024 8000 1 _IO_file_doallocate 27be
+./main error 0 RLK malloc 8 7000 4 __gnu_malloc bd main 107 exit_dummy_decl:G1 39 <?> 0
+$ 
+
+19:38 - Now we pick up some dodgy variables.  Adding N_ABS cures the
+        dodgy variable problem :-
+
+$ ./main -t ../tests/gen/.gcc.x86.fp.static/rlk
+A
+./main info trace malloc 8 7000
+B
+./main info trace malloc 1024 8000
+./main info process.exited 0
+./main error 0 RLK malloc 1024 8000 1 _IO_file_doallocate 27be
+./main error 0 RLK malloc 8 7000 4 __gnu_malloc bd main 107 _entry 39 <?> 0
+$ 
+
+19:40 - but doesn't cure the fact that the dynamic case still doesn't work.
+
+$ ./main -t ../tests/gen/.gcc.x86.fp.dynamic/rlk
+A
+B
+./main info process.exited 0
+$ 
+
+19:47 - Changed to log _gnu_malloc and _gnu_free and added some error
+        logging :-
+
+./main -t ../tests/gen/.gcc.x86.fp.dynamic/rlk
+rld_manager_manage: _gnu_malloc failed
+rld_manager_manage: _gnu_calloc failed
+rld_manager_manage: _gnu_free failed
+rld_manager_manage: _gnu_cfree failed
+A
+B
+./main info process.exited 0
+$ 
+
+19:47 - Time to look at rld_exec_function_addr
+
+./main -t ../tests/gen/.gcc.x86.fp.dynamic/rlk
+rld_exec_function_addr: _gnu_malloc = _entry (0)
+rld_exec_function_addr: _gnu_malloc = one (64)
+rld_exec_function_addr: _gnu_malloc = __shared_dummy__ (80)
+rld_exec_function_addr: _gnu_malloc = __gnu_calloc (84)
+rld_exec_function_addr: _gnu_malloc = __gnu_malloc (164)
+rld_exec_function_addr: _gnu_malloc = main (228)
+rld_exec_function_addr: _gnu_malloc = _do_global_dtors:F19 (296)
+rld_exec_function_addr: _gnu_malloc = __do_global_dtors (296)
+rld_exec_function_addr: _gnu_malloc = _do_global_ctors:F19 (376)
+rld_exec_function_addr: _gnu_malloc = __do_global_ctors (376)
+rld_exec_function_addr: _gnu_malloc = _main:F19 (440)
+rld_exec_function_addr: _gnu_malloc = __main (440)
+rld_exec_function_addr: _gnu_malloc = home/jalod/gnu/src/gcc-2.5.8/ (472)
+rld_exec_function_addr: _gnu_malloc = __load_shared_libraries (760)
+rld_exec_function_addr: _gnu_malloc = __setfpucw (1040)
+rld_exec_function_addr: _gnu_malloc = __libc_init (1104)
+rld_exec_function_addr: _gnu_malloc = __gnu_compiled_c (1164)
+rld_exec_function_addr: _gnu_malloc = __shared_dummy1__ (4096)
+rld_exec_function_addr: _gnu_malloc = _etext (4096)
+rld_exec_function_addr: _gnu_malloc = etext (4096)
+rld_exec_function_addr: _gnu_malloc = _exit_dummy_ref (4100)
+rld_exec_function_addr: _gnu_malloc = initialized.6 (4104)
+rld_exec_function_addr: _gnu_malloc = _exit_dummy_decl (4108)
+rld_exec_function_addr: _gnu_malloc = __fpu_control (4112)
+rld_exec_function_addr: _gnu_malloc = __libc_4_521 (4128)
+rld_exec_function_addr: _gnu_malloc = _NEEDS_SHRLIB_libc_4 (4128)
+rld_exec_function_addr: _gnu_malloc = _libc_CONFLICT_LIST (4144)
+rld_exec_function_addr: _gnu_malloc = __SHARED_LIBRARIES__ (4148)
+rld_exec_function_addr: _gnu_malloc = __CTOR_LIST__ (4164)
+rld_exec_function_addr: _gnu_malloc = _SHARABLE_CONFLICTS__ (4176)
+rld_exec_function_addr: _gnu_malloc = _edata (4216)
+rld_exec_function_addr: _gnu_malloc = edata (4216)
+rld_manager_manage: _gnu_malloc failed
+rld_exec_function_addr: _gnu_calloc = _entry (0)
+rld_exec_function_addr: _gnu_calloc = one (64)
+rld_exec_function_addr: _gnu_calloc = __shared_dummy__ (80)
+rld_exec_function_addr: _gnu_calloc = __gnu_calloc (84)
+rld_exec_function_addr: _gnu_calloc = __gnu_malloc (164)
+rld_exec_function_addr: _gnu_calloc = main (228)
+rld_exec_function_addr: _gnu_calloc = _do_global_dtors:F19 (296)
+rld_exec_function_addr: _gnu_calloc = __do_global_dtors (296)
+rld_exec_function_addr: _gnu_calloc = _do_global_ctors:F19 (376)
+rld_exec_function_addr: _gnu_calloc = __do_global_ctors (376)
+rld_exec_function_addr: _gnu_calloc = _main:F19 (440)
+rld_exec_function_addr: _gnu_calloc = __main (440)
+rld_exec_function_addr: _gnu_calloc = home/jalod/gnu/src/gcc-2.5.8/ (472)
+rld_exec_function_addr: _gnu_calloc = __load_shared_libraries (760)
+rld_exec_function_addr: _gnu_calloc = __setfpucw (1040)
+rld_exec_function_addr: _gnu_calloc = __libc_init (1104)
+rld_exec_function_addr: _gnu_calloc = __gnu_compiled_c (1164)
+rld_exec_function_addr: _gnu_calloc = __shared_dummy1__ (4096)
+rld_exec_function_addr: _gnu_calloc = _etext (4096)
+rld_exec_function_addr: _gnu_calloc = etext (4096)
+rld_exec_function_addr: _gnu_calloc = _exit_dummy_ref (4100)
+rld_exec_function_addr: _gnu_calloc = initialized.6 (4104)
+rld_exec_function_addr: _gnu_calloc = _exit_dummy_decl (4108)
+rld_exec_function_addr: _gnu_calloc = __fpu_control (4112)
+rld_exec_function_addr: _gnu_calloc = __libc_4_521 (4128)
+rld_exec_function_addr: _gnu_calloc = _NEEDS_SHRLIB_libc_4 (4128)
+rld_exec_function_addr: _gnu_calloc = _libc_CONFLICT_LIST (4144)
+rld_exec_function_addr: _gnu_calloc = __SHARED_LIBRARIES__ (4148)
+rld_exec_function_addr: _gnu_calloc = __CTOR_LIST__ (4164)
+rld_exec_function_addr: _gnu_calloc = _SHARABLE_CONFLICTS__ (4176)
+rld_exec_function_addr: _gnu_calloc = _edata (4216)
+rld_exec_function_addr: _gnu_calloc = edata (4216)
+rld_manager_manage: _gnu_calloc failed
+rld_exec_function_addr: _gnu_free = _entry (0)
+rld_exec_function_addr: _gnu_free = one (64)
+rld_exec_function_addr: _gnu_free = __shared_dummy__ (80)
+rld_exec_function_addr: _gnu_free = __gnu_calloc (84)
+rld_exec_function_addr: _gnu_free = __gnu_malloc (164)
+rld_exec_function_addr: _gnu_free = main (228)
+rld_exec_function_addr: _gnu_free = _do_global_dtors:F19 (296)
+rld_exec_function_addr: _gnu_free = __do_global_dtors (296)
+rld_exec_function_addr: _gnu_free = _do_global_ctors:F19 (376)
+rld_exec_function_addr: _gnu_free = __do_global_ctors (376)
+rld_exec_function_addr: _gnu_free = _main:F19 (440)
+rld_exec_function_addr: _gnu_free = __main (440)
+rld_exec_function_addr: _gnu_free = home/jalod/gnu/src/gcc-2.5.8/ (472)
+rld_exec_function_addr: _gnu_free = __load_shared_libraries (760)
+rld_exec_function_addr: _gnu_free = __setfpucw (1040)
+rld_exec_function_addr: _gnu_free = __libc_init (1104)
+rld_exec_function_addr: _gnu_free = __gnu_compiled_c (1164)
+rld_exec_function_addr: _gnu_free = __shared_dummy1__ (4096)
+rld_exec_function_addr: _gnu_free = _etext (4096)
+rld_exec_function_addr: _gnu_free = etext (4096)
+rld_exec_function_addr: _gnu_free = _exit_dummy_ref (4100)
+rld_exec_function_addr: _gnu_free = initialized.6 (4104)
+rld_exec_function_addr: _gnu_free = _exit_dummy_decl (4108)
+rld_exec_function_addr: _gnu_free = __fpu_control (4112)
+rld_exec_function_addr: _gnu_free = __libc_4_521 (4128)
+rld_exec_function_addr: _gnu_free = _NEEDS_SHRLIB_libc_4 (4128)
+rld_exec_function_addr: _gnu_free = _libc_CONFLICT_LIST (4144)
+rld_exec_function_addr: _gnu_free = __SHARED_LIBRARIES__ (4148)
+rld_exec_function_addr: _gnu_free = __CTOR_LIST__ (4164)
+rld_exec_function_addr: _gnu_free = _SHARABLE_CONFLICTS__ (4176)
+rld_exec_function_addr: _gnu_free = _edata (4216)
+rld_exec_function_addr: _gnu_free = edata (4216)
+rld_manager_manage: _gnu_free failed
+rld_exec_function_addr: _gnu_cfree = _entry (0)
+rld_exec_function_addr: _gnu_cfree = one (64)
+rld_exec_function_addr: _gnu_cfree = __shared_dummy__ (80)
+rld_exec_function_addr: _gnu_cfree = __gnu_calloc (84)
+rld_exec_function_addr: _gnu_cfree = __gnu_malloc (164)
+rld_exec_function_addr: _gnu_cfree = main (228)
+rld_exec_function_addr: _gnu_cfree = _do_global_dtors:F19 (296)
+rld_exec_function_addr: _gnu_cfree = __do_global_dtors (296)
+rld_exec_function_addr: _gnu_cfree = _do_global_ctors:F19 (376)
+rld_exec_function_addr: _gnu_cfree = __do_global_ctors (376)
+rld_exec_function_addr: _gnu_cfree = _main:F19 (440)
+rld_exec_function_addr: _gnu_cfree = __main (440)
+rld_exec_function_addr: _gnu_cfree = home/jalod/gnu/src/gcc-2.5.8/ (472)
+rld_exec_function_addr: _gnu_cfree = __load_shared_libraries (760)
+rld_exec_function_addr: _gnu_cfree = __setfpucw (1040)
+rld_exec_function_addr: _gnu_cfree = __libc_init (1104)
+rld_exec_function_addr: _gnu_cfree = __gnu_compiled_c (1164)
+rld_exec_function_addr: _gnu_cfree = __shared_dummy1__ (4096)
+rld_exec_function_addr: _gnu_cfree = _etext (4096)
+rld_exec_function_addr: _gnu_cfree = etext (4096)
+rld_exec_function_addr: _gnu_cfree = _exit_dummy_ref (4100)
+rld_exec_function_addr: _gnu_cfree = initialized.6 (4104)
+rld_exec_function_addr: _gnu_cfree = _exit_dummy_decl (4108)
+rld_exec_function_addr: _gnu_cfree = __fpu_control (4112)
+rld_exec_function_addr: _gnu_cfree = __libc_4_521 (4128)
+rld_exec_function_addr: _gnu_cfree = _NEEDS_SHRLIB_libc_4 (4128)
+rld_exec_function_addr: _gnu_cfree = _libc_CONFLICT_LIST (4144)
+rld_exec_function_addr: _gnu_cfree = __SHARED_LIBRARIES__ (4148)
+rld_exec_function_addr: _gnu_cfree = __CTOR_LIST__ (4164)
+rld_exec_function_addr: _gnu_cfree = _SHARABLE_CONFLICTS__ (4176)
+rld_exec_function_addr: _gnu_cfree = _edata (4216)
+rld_exec_function_addr: _gnu_cfree = edata (4216)
+rld_manager_manage: _gnu_cfree failed
+A
+B
+./main info process.exited 0
+$ 
+
+19:59 - Although the functions are there, it is failing to find them
+        due to the leading "_".  Confused how the malloc case works so
+        trying that again.  Here's a bit of the trace :-
+
+rld_exec_function_addr: free = malloc (1296)
+rld_exec_function_addr: free = free (2176)
+rld_manager_manage: free= 2176
+
+20:03 - It seems that in this case the "_" is correctly removed on entry.
+        So back to the entry routine.
+
+20:11 - After tracing it back, it turned out that the "problem" was
+        that it is not "__gnu_malloc" but "___gnu_malloc" :-
+
+$ ./main -t ../tests/gen/.gcc.x86.fp.dynamic/rlk
+A
+./main info trace __gnu_malloc 8 5000
+B
+./main info process.exited 0
+./main error 0 RLK __gnu_malloc 8 5000 3 main 108 _entry 39 <?> 0
+
+20:25 - Unlike under SunOS, when you strip a dynamically linked
+        executable under Linux, there are no symbols at all left.
+        Consequently it is not possible to detect resource problems on
+        stripped Linux executables :-< 
+
+20:28 - Backup.

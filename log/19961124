@@ -1,0 +1,12 @@
+			     -*- Text -*-
+
+13:38 - Start.
+
+        I think this is when some reorganization of the source took
+        place, specifically the rewrite that resulted in
+        rld/src/actions and rld/src/resources and the removal or
+        rld/src/resource.
+
+      - Added rld/tests/{ccr,cur}.c
+
+22:39 - Backup.

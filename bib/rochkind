@@ -1,0 +1,11 @@
+			     -*- Text -*-
+
+.intro:
+ Advanced Unix Programming
+ Marc J. Rochkind
+ Prentice-Hall
+ 1985
+
+Along with the Linux kernel, this was my sole reference to ptrace
+until I upgraded to Linux 2.0.34 and in doing so gained a
+reasonable set of manual pages.

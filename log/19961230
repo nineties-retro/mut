@@ -1,0 +1,216 @@
+			     -*- Text -*-
+
+10:58 - Start.
+
+11:26 - Rewrote <URI:mut/src/ui/tty/mut_ui.c#mut_ui_process_args> so
+        that it almost follows the POSIX rules about command line
+        arguments.  For example :-
+
+$ ./main -sbft ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/realloc.exe
+A
+./main info trace realloc 0 0 8 8049688 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+B
+./main info trace realloc 8049688 8 16 8049688 2 main 80484e0 8048523 67 _start 8048430 804848b 91
+C
+./main info trace free 8049688 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+11:27 - The one area of difference is still that the -l option takes
+        the path from the end of the -l instead of in a separate argument.
+
+12:01 - Worked on <URI:mut/tests/scripts/mut_test>.  Now to the point
+        where it runs the tests and creates the necessary output files.
+
+$ ../tests/scripts/mut_test -l -r out ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on
+count64_exe
+count64_exe_s
+fum_free_exe
+fum_free_exe_b
+fum_free_exe_sb
+fum_free_chain_exe
+fum_free_chain_exe_sb
+ffm_exe
+ffm_exe_b
+ffm_exe_f
+ffm_exe_fb
+malloc0_exe
+malloc0_exe_b
+malloc0_exe_s
+malloc0_exe_f
+malloc0_exe_z
+malloc0_exe_t
+malloc0_exe_sbfzt
+$ 
+
+12:02 - Backup.
+
+14:49 - Back to the regression tests.
+
+15:04 - <URI:mut/tests/scripts/mut_test> now takes an option to define
+        where the correct results are and where the current results
+        should be put.
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on
+$ 
+
+17:03 - Have a reasonable test script working, but no matter what I do
+        with limits I cannot seem to avoid the overflow tests trashing
+        badly until there is no VM left.  So giving up on that and
+        just ignore the overflow tests for now.
+
+        Creating the correct results ...
+
+$ ../tests/scripts/mut_test -r ../tests/gen/results.x86/correct ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+
+
+        Testing the a new MUT ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+17:17 - Added a section on testing to <URI:mut/README>
+
+17:29 - Break.
+
+17:40 - Resume.
+
+18:12 - Break.
+
+18:25 - Resume.  
+
+        Whilst testing reallocn, the following was generated ...
+
+$ ./main -tb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/reallocn.exe
+./main info trace realloc 0 0 524288 400c7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+...
+./main warning RR0 realloc 41168008 524288 524288 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+X
+./main info trace free 41168008 524288
+main: mut.c:928: mut_do_consumer: Assertion `resource->action->type != mut_action_type_realloc' failed.
+IOT trap/Abort
+
+        This indicates that FFM was about to be entered.  This was
+        because <URI:mut/src/mut.c#mut_realloc_free> was being called
+        before it was known whether the call to realloc had
+        succeeded.  Moved the call to after the successful realloc
+        call ...
+
+18:45 - 
+
+$ ./main -tsb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/reallocn.exe
+./main info trace realloc 0 0 524288 400c7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 400c7008 524288 524288 40148008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40148008 524288 524288 401c9008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 401c9008 524288 524288 4024a008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4024a008 524288 524288 402cb008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 402cb008 524288 524288 4034c008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4034c008 524288 524288 403cd008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 403cd008 524288 524288 4044e008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4044e008 524288 524288 404cf008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 404cf008 524288 524288 40550008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40550008 524288 524288 405d1008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 405d1008 524288 524288 40652008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40652008 524288 524288 406d3008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 406d3008 524288 524288 40754008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40754008 524288 524288 407d5008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 407d5008 524288 524288 40856008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40856008 524288 524288 408d7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 408d7008 524288 524288 40958008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40958008 524288 524288 409d9008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 409d9008 524288 524288 40a5a008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40a5a008 524288 524288 40adb008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40adb008 524288 524288 40b5c008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40b5c008 524288 524288 40bdd008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40bdd008 524288 524288 40c5e008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40c5e008 524288 524288 40cdf008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40cdf008 524288 524288 40d60008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40d60008 524288 524288 40de1008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40de1008 524288 524288 40e62008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40e62008 524288 524288 40ee3008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40ee3008 524288 524288 40f64008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40f64008 524288 524288 40fe5008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40fe5008 524288 524288 41066008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 41066008 524288 524288 410e7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 410e7008 524288 524288 41168008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 41168008 524288 524288 0 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main warning RR0 realloc 41168008 524288 524288 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+X
+./main info trace free 41168008 524288
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 17825792 34 alloc.max.space 524288 1 alloc.max.count 524288 1 malloc 0 free 1 realloc 1 calloc 0 cfree 0
+$ 
+
+18:46 - Oops, what is that realloc 1 all about?
+
+19:00 - It was about a missing hits count increment.  Now fixed this ...
+
+$ ./main -tsb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/reallocn.exe
+./main info trace realloc 0 0 524288 400c7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 400c7008 524288 524288 40148008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40148008 524288 524288 401c9008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 401c9008 524288 524288 4024a008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4024a008 524288 524288 402cb008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 402cb008 524288 524288 4034c008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4034c008 524288 524288 403cd008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 403cd008 524288 524288 4044e008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 4044e008 524288 524288 404cf008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 404cf008 524288 524288 40550008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40550008 524288 524288 405d1008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 405d1008 524288 524288 40652008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40652008 524288 524288 406d3008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 406d3008 524288 524288 40754008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40754008 524288 524288 407d5008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 407d5008 524288 524288 40856008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40856008 524288 524288 408d7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 408d7008 524288 524288 40958008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40958008 524288 524288 409d9008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 409d9008 524288 524288 40a5a008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40a5a008 524288 524288 40adb008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40adb008 524288 524288 40b5c008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40b5c008 524288 524288 40bdd008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40bdd008 524288 524288 40c5e008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40c5e008 524288 524288 40cdf008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40cdf008 524288 524288 40d60008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40d60008 524288 524288 40de1008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40de1008 524288 524288 40e62008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40e62008 524288 524288 40ee3008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40ee3008 524288 524288 40f64008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 40f64008 524288 524288 40fe5008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 40fe5008 524288 524288 41066008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 41066008 524288 524288 410e7008 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main info trace realloc 410e7008 524288 524288 41168008 2 main 80484e0 804853f 95 _start 8048430 804848b 91
+./main info trace realloc 41168008 524288 524288 0 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+./main warning RR0 realloc 41168008 524288 524288 2 main 80484e0 80484fc 28 _start 8048430 804848b 91
+X
+./main info trace free 41168008 524288
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 17825792 34 alloc.max.space 524288 1 alloc.max.count 524288 1 malloc 0 free 1 realloc 34 calloc 0 cfree 0
+$ 
+
+19:57 - Finally added the code to deal with the case where realloc is
+        passed an address which has not been allocated and memory is
+        not being freed.
+
+20:00 - Oops doesn't work ...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10
+Segmentation fault
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+Segmentation fault
+$ ./main -sb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10 2 main 8048510 8048539 41 _start 8048460 80484bb 91
+Segmentation fault
+$ 
+
+20:23 - Fixed the above and added a lot more calls to test the realloc
+        behaviour in <URI:mut/tests/scripts/mut_test>.
+
+20:40 - Backup.

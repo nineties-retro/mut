@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+   $Id$
+
+.intro: mut_aout_mach.h template.
+
+#define mut_aout_mach ...
+
+  An integer which defines the machine type (N_MACHTYPE) for the 
+  given architecture.

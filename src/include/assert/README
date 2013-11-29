@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+Some systems have a dodgy assert header file (can't remember which one
+now, it has been a few years) or one that results undesirable symbols
+being pulled in.  Therefore, mut_assert is used to hide these tedious
+details.
+
+vendor
+  Just define mut_assert in terms of <assert.h> as defined by the
+  vendor.

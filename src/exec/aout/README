@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: An executable reader for statically linked a.out executables.
+
+This is now slightly out of date since some changes have been made to
+the interface since this was last compiled.

@@ -1,0 +1,237 @@
+			     -*- Text -*-
+
+13:21 - Start.
+
+14:08 - Moved exec and process control from <URI:mut/src/mut_cli.c>
+        to <URI:mut/src/mut_manager.[ch]> since there is no need for
+        the UI to know about these now that the UI is not in charge of
+        registering the functions with the manager.
+
+        In the process, appeared to have done something wrong since
+        the calloc and cfree values look corrupt :-
+
+$ ./main -f -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/mlk_realloc1.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 0 0 16 8049698
+C
+./main info trace free 8049688 8
+D
+./main info process.exited 0
+./main info stats alloc.now 16 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 1 free 1 realloc 2 calloc 3221224696 cfree 1074345832
+./main error MLK realloc 16 8049698 0
+$         
+
+        Instead of fixing this problem straight away, boldly went
+        ahead with the planned UI renaming ...
+
+        Created <URI:mut/src/ui> and moved <URI:mut/src/mut_cli.c> to
+        <URI:mut/src/ui/tty/mut_ui.c>
+
+14:15 - Also boldly went ahead with the <URI:mut/src/mut_manager.[ch]>
+        to <URI:mut/src/mut.[ch]> name change.
+
+14:18 - A complete rebuild from scratch has not cured the problem
+
+$ ./main -f -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/mlk_realloc1.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 0 0 16 8049698
+C
+./main info trace free 8049688 8
+D
+./main info process.exited 0
+./main info stats alloc.now 16 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 1 free 1 realloc 2 calloc 3221224696 cfree 1074345832
+./main error MLK realloc 16 8049698 0
+$ 
+
+14:22 - Wished for Purify or something like it, but decided to tackle
+        the problem the traditional way -- with a debugger.  The
+        intention being to inspect m->xxx.calloc at various points to
+        try and narrow down when the value becomes corrupt.
+
+        Set a breakpoint on mut_open and stepped through the calloc
+        initialisation only to find that the hits was wrong straight
+        after the call to mut_manage.  Ran it again and this time
+        stepped into mut_manage and immediately saw the cause of the
+        problem.  If the action was not in the executable, then the
+        hits field was not being initialised.  A couple of solutions:
+        unconditionally initialise the hits counter or only print out
+        the hits if the action is active.  Currently have gone for the
+        former.
+
+$ ./main -f -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/mlk_realloc1.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 0 0 16 8049698
+C
+./main info trace free 8049688 8
+D
+./main info process.exited 0
+./main info stats alloc.now 16 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+./main error MLK realloc 16 8049698 0
+$ 
+
+14:32 - Rename any remaining "rld_" files/functions/structures ... to "mut_"
+
+15:08 - Finished renaming.  Barring any missed references to rld in
+        READMEs and some code that hasn't been compiled, everything
+        should now be mut.
+
+15:17 - Cleaned up a few things in <URI:mut/README>
+
+16:13 - Implemented a slightly x86 specific version of faking up a
+        malloc call in realloc.  Unfortunately, first time out it
+        failed :-
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main fatal 5 ptrace.poke.text 0
+$ 
+
+         Booted up gdb on it and quickly found that the reason for the
+         0 is that the addr field of malloc is 0 since the file does
+         not refer to malloc at all.  What do do?
+
+         * The problem isn't likely to occur in practice since it is
+           rare to find an executable that calls realloc but does not
+           call malloc.
+
+         * Could flag when malloc is managed if no -f has been specified.
+
+         * Instead of calling malloc, call realloc with a 0 address.
+
+         The third solution seems preferable and also makes the code
+         less x86 specific in that instead of having to write code to
+         shuffle arguments (which would be a nop on x86 but would be
+         necessary on SPARC, MIPS, ... etc.), can just 0 out the
+         address argument.
+
+16:30 - Have made most of the changes to support the above.
+        Break
+
+16:50 - Resume.  Fix up one name change and ...
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049698
+C
+./main info trace free 8049698 16
+D
+./main info process.exited 0
+./main info stats alloc.now 8 1 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+./main error MLK realloc 8 8049688 0
+$ 
+
+16:53 - Close but no cigar.  Need to fix up the leak.  Also noticed
+        that the freeing version also has a problem, notice the now
+        count in the following ...
+
+$ ./main -f -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049688
+C
+./main info trace free 8049688 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 1 alloc.total 24 2 alloc.max.space 16 2 alloc.max.count 16 2 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+17:02 - Fixed up the 1 above.  It was due to decrementing the size on
+        a realloc (before it gets incremented by the realloc), but not
+        decrementing the count.
+
+$ ./main -f -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049688
+C
+./main info trace free 8049688 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+
+17:03 - Running with no -f indicates that there is a count problem here.
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049698
+C
+./main info trace free 8049698 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 4294967295 alloc.total 24 2 alloc.max.space 16 0 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+./main error MLK realloc 8 8049688 0
+$ 
+
+17:10 - Had a look over the calls to mut_counter_dec and noticed a
+        typo in mut_realloc_free
+
+          m->stats.now.count= mut_counter_dec(m->stats.now.space, 1);
+
+        should be :-
+
+          m->stats.now.count= mut_counter_dec(m->stats.now.count, 1);
+
+        This has cured the alloc.now count :-
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049698
+C
+./main info trace free 8049698 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+./main error MLK realloc 8 8049688 0
+$ 
+
+17:13 - Now on to the leak and the difference between max.space and max.count
+
+17:37 - Haven't looked at the leak, instead added various block
+        comments to routines in <URI:mut/src/mut.c>
+
+        Placed breakpoints on free and realloc and stepping through ...
+
+17:42 - Break.
+
+17:59 - Resume.
+
+18:11 - Noticed whilst stepping through that there is an inconsistency
+        wrt to decrementing now and totals.  Anyway, whilst stepping
+        realised that the problem was possibly due to the leak logger
+        <URI:mut/src/resources/list/mut_resources.c#mut_resources_close>
+        not testing if the resource is consumed.  It did, but the test
+        was out of date -- it was based on whether the associated
+        action was a consumer when it should have been looking at the
+        consumed flag.
+
+$ ./main -s -t ../tests/gen/gcc.x86.fp.dynamic.elfd/realloc.exe 
+A
+./main info trace realloc 0 0 8 8049688
+B
+./main info trace realloc 8049688 8 16 8049698
+C
+./main info trace free 8049698 16
+D
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 16 1 alloc.max.count 8 1 malloc 0 free 1 realloc 2 calloc 0 cfree 0
+$ 
+
+18:15 - Backup.

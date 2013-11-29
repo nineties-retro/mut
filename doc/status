@@ -1,0 +1,63 @@
+.proto: There was little planning or design involved before
+ implementation started.  MUT is a prototype written to test out
+ reading ELF and a.out files, ptrace and the /proc filesystem.  It
+ should not be taken any further as it is, instead it should be
+ analysed and a design produced before reimplementation -- preferably
+ in a higher level language than C.
+
+.bogus-definitions: warn if malloc, free, ... etc. are defined
+ but are not functions.  ELF seems to have the capability to support
+ this, but at least under Linux, a variable still has a function code.
+ See <URI:mut/log/19970106#19:52>
+
+.tests: As I write this in 2001-01-04, the program works again
+ after some minor tweaks to bring it up to date with RedHat Linux 6.2.
+ I believe it produces the correct output for the tests, but it does
+ differ from the last recorded output (back in 1997-01-22) due to
+ changes GLIBC.  At some point I need to confirm that all the tests
+ are ok and update the test results.
+
+.bad.trace: Most of <URI:mut/src/proc/ptrace/mut_process.c> is
+ now independent of ptrace(2) due to the introduction of
+ <URI:mut/src/proc/ptrace/mut_trace.[ch]>.  Consequently much of
+ <URI:mut/src/proc/ptrace/mut_process.c> could serve as the
+ implementation for a /proc version too.  Need to redesign this area in
+ light of existing experience to produce a better abstraction.
+
+.bad.doc.backtrace: Need to document the backtrace interface
+ <URI:mut/src/backtrace>.
+
+.bad.doc.log: Need to document the log interface <URI:mut/src/log>
+
+.bad.log: The whole error logging mechanism needs a rethink.
+
+.bad.xref: An attempt has been made to capture the project evolution
+ <URI:mut/log> and the dependencies between the various documents
+ .misc.tagging.  However, whilst better than some projects it is still
+ woefully inadequate.  The whole area of ideas, goals, requirements,
+ solutions and plans needs much better organisation -- probably need to
+ read <URI:bib/gilb> some more.  Based on experience with RLD/MUT it
+ would appear that some tagging mechanism that can live with renaming
+ and affords some location independence is necessary.  However, perhaps
+ that is just a symptom and attacking the cause of the renaming
+ ... etc. will obviate the need?
+
+.bad.resources: Use an O(nlogn) data-structure to implement the
+ resource map <URI:mut/src/resources>.  The current O(n) implementation
+ <URI:mut/src/resoruces/list> is fine for small programs but previous
+ experience with this on OTZ (EDIF 300 Level 1 -> Level 0 translator)
+ shows that as the number of active resources increases, the O(n)
+ implementation can significantly slow down the program.  This is a
+ relatively easy thing to fix.  This will also take the pressure off
+ the desire to split the resources into active and consumed to speed
+ up the lookup time for large programs. 
+
+.bad.getopt: The tty interface command parser
+ <URI:mut/src/ui/tty/mut_ui.c#mut_ui_process_args> should probably use
+ getopt(3) rather than the hand crafted argument parser.
+ However, since I find the getopt(3) interface ugly beyond belief I
+ haven't been able to bring myself to do this.
+
+.bad.uint64.out: mut_uint64_out <URI:mut/src/uint64/mut_uint64_out>
+ should format the integer to a string rather than writing it to a
+ FILE * so that the dependency on FILE * can be eliminated.

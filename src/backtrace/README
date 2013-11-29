@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: implementation of <URI:mut/README#idea.backtrace>.
+
+
+XXX: need to document the backtrace interface.

@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: mut_counter implemented as unsigned long.
+
+If sizeof(unsigned long) == 4, then this isn't much use since it will
+overflow for many real programs.

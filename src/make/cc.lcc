@@ -1,0 +1,2 @@
+ACC=$(CC) -t
+ACC_WARNINGS= -A -A

@@ -1,0 +1,14 @@
+			     -*- Text -*-
+
+     $Id$
+
+.intro: counter for counting producer/consumer hits.
+
+On a 32-bit machine an unsigned long is usually only 32-bits which is
+not necessarily large enough to count the number of hits in a long
+running program.  Therefore, the mut_counter type is defined which
+hides the actual implementation.
+
+The requried interface is defined in mut_counter.h.  Each
+implementation should also provide a mut_counter.c (even if this is
+empty -- see ulong version).

@@ -1,0 +1,10 @@
+.min: Support .idea.free.unalloc and .idea.leak.
+
+.desired: Support .min and .idea.free.free.
+
+.max: Support .idea.*.
+
+.platform: Whilst cross-platform debugging (.idea.xplatform)
+ may appear attractive, it isn't clear how useful it is.  Until such
+ time as this need is clarified, it is sufficient for the program to
+ only be able to debug native applications.

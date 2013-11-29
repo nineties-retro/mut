@@ -1,0 +1,25 @@
+			     -*- Text -*-
+
+14:53 - Start work on fleshing out mut.sh so that my first external
+        user can make some sense of the mut output.
+
+        First thing that needed doing was making a few corrections to
+        the ptrace specific stuff in the SPARC version which seems to
+        have got out of date wrt to the Linux/x86 version.
+
+        Found I'd forgotten a lot of (Bourne) shell hacking and
+        stumbled around for a while trying to get a mechanism to deal
+        with dumping stack backtraces.  Wasted almost an hour fiddling
+        with expr and then dc to try and calculate the difference
+        between two addresses that mut produces, only to find that the
+        field that comes afterwards is the difference!  I must have
+        realised when I wrote mut that it was easier to write out this
+        redundant piece of information than have the backend fiddle
+        with caclulating it.
+
+        Did not track time carefully enough to know exactly how much
+        time was spent, but around 2 hours would be a good guess.
+
+        By the time I had finished I had a rudimentary backtrace
+        support, though I have yet to produce a version that works
+        with and without backtraces.

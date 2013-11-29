@@ -1,0 +1,221 @@
+			     -*- Text -*-
+
+10:02 - Start
+
+10:34 - Wrote up why the desirable method of embedding a function
+        pointer to dispatch on the action type is not used
+        <URI:mut/actions/integrated/README>
+
+10:44 - Finished updating the dispatch so that it now deals with
+        malloc, realloc, calloc, free and cfree separately where
+        necessary. 
+
+10:48 - Changed the names of the tests in mut/tests so that the
+        reflect the memory specific nature of the tests i.e. ccr ->
+        ffm, cur -> fum and rlk -> mlk.
+
+10:53 - Making the tests fell over due to the name change from rld to mut.
+        Just finished updating all (most?) of the makefiles so that
+        $(RLD) -> $(MUT) 
+
+11:00 - Added mut/tests/calloc.c and tested it ...
+
+$ ./main -t ../tests/gen/gcc.x86.fp.dynamic.elfd/calloc.exe 
+A
+./main info trace calloc 80483c8 8 8 80496a8
+B
+./main info trace calloc 80483c8 16 8 80496f0
+C
+./main info trace cfree 80483f8 80496f0
+D
+./main info trace cfree 80483f8 80496a8
+E
+./main info process.exited 0
+$ 
+
+11:01 - Hm, would be helpful if [c]free displayed the size of object
+        it is freeing.
+
+11:07 - Added this ...
+
+$ ./main -t ../tests/gen/gcc.x86.fp.dynamic.elfd/calloc.exe 
+A
+./main info trace calloc 80483c8 8 8 80496a8
+B
+./main info trace calloc 80483c8 16 8 80496f0
+C
+./main info trace cfree 80483f8 80496f0 128
+D
+./main info trace cfree 80483f8 80496a8 64
+E
+./main info process.exited 0
+$ 
+
+11:08 - Decided that displaying the address of the action serves no
+        useful purpose and so removing it ...
+
+11:10 - Done ...
+
+$ ./main -t ../tests/gen/gcc.x86.fp.dynamic.elfd/calloc.exe 
+A
+./main info trace calloc 8 8 80496a8
+B
+./main info trace calloc 16 8 80496f0
+C
+./main info trace cfree 80496f0 128
+D
+./main info trace cfree 80496a8 64
+E
+./main info process.exited 0
+$ 
+
+11:12 - Decided that rld_log_error should only be used for logging errors
+        in the users program and hence does not need the errno
+        parameter.
+
+11:15 - Done ..
+
+$ ./main -t ../tests/gen/gcc.x86.fp.dynamic.elfd/fum_free.exe 
+A
+./main info trace free 10 0
+./main error FUM free 10
+B
+./main info trace malloc 8 8049678
+C
+./main info trace free 8049678 8
+./main info process.exited 0
+$ 
+
+11:29 - Added the opt compilation flag, ACC_OPT and
+        <URI:mut/src/make/cc.*.opt.*>
+
+11:55 - Tried mut as is with some installed commands :-
+
+$ ./main -t /usr/bin/du -s
+./main info trace realloc 0 18
+./main info trace realloc 18 804bc98
+./main info trace realloc 0 18
+./main info trace realloc 18 804bcb0
+./main info trace malloc 133 804bcc8
+./main info trace free 804bcc8 133
+./main info trace free 4008a923 0
+./main error FUM free 4008a923
+./main info trace malloc 24 804bd58
+./main info process.signaled 11
+./main error MLK malloc 24 804bd58 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+
+        The address given in the FUM looks more like a return address
+        then a malloc'd bit of memory.  Tried df and that gave the
+        same results.  Also tried tar and that gave the same results.
+        Did some limited debugging with the tar sources.  Nothing
+        conclusive.  Need to look at this some more.
+
+11:57 - Backup.
+
+
+13:04 - Restart.
+
+13:05 - Split the malloc.c test into malloc0.c and malloc1.c
+
+13:12 - Tried out du again, but this time with -f.  It seems to work
+        fine :-
+
+$ ./main -f -t /usr/bin/du -s attic
+./main info trace realloc 0 18
+./main info trace realloc 18 804bc98
+./main info trace realloc 0 18
+./main info trace realloc 18 804bcb0
+./main info trace malloc 133 804bcc8
+./main info trace free 804bcc8 133
+./main info trace malloc 420 804bcc8
+./main info trace malloc 840 804be70
+./main info trace malloc 12 804c1c0
+./main info trace malloc 101 804c1d0
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804d270
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804d678
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804da80
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804de88
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace free 804de88 1024
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804de88
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace free 804de88 1024
+./main info trace free 804da80 1024
+./main info trace free 804d678 1024
+./main info trace malloc 32 804c240
+./main info trace malloc 4096 804c268
+./main info trace malloc 1024 804d678
+./main info trace free 804c268 4096
+./main info trace free 804c240 32
+./main info trace free 804d678 1024
+./main info trace free 804d270 1024
+65	attic
+./main info process.exited 0
+./main error MLK malloc 101 804c1d0 0
+./main error MLK malloc 12 804c1c0 0
+./main error MLK malloc 840 804be70 0
+./main error MLK malloc 420 804bcc8 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+13:52 - rld_manager -> mut_manager.
+
+14:48 - Added all the stats gathering and display stuff
+        e.g. <URI:mut/src/mut_manager.h#mut_manager.stats> 
+
+$ ./main -s -f /usr/bin/du -s attic
+65	attic
+./main info process.exited 0
+./main info stats alloc.now 1373 4 alloc.total 32418 23 alloc.max.space 9597 10 alloc.max.count 9597 10 malloc 23 free 19 realloc 2 calloc 0 cfree 0
+./main error MLK malloc 101 804c1d0 0
+./main error MLK malloc 12 804c1c0 0
+./main error MLK malloc 840 804be70 0
+./main error MLK malloc 420 804bcc8 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+16:53 - Updated <URI:mut/src/mut_manager.c#mut_manager_do_realloc> so
+        that it correctly gathers statistics ...
+
+$ ./main -f -s /usr/bin/du -s attic
+65	attic
+./main info process.exited 0
+./main info stats alloc.now 1409 6 alloc.total 32454 25 alloc.max.space 9633 12 alloc.max.count 9633 12 malloc 23 free 19 realloc 2 calloc 0 cfree 0
+./main error MLK malloc 101 804c1d0 0
+./main error MLK malloc 12 804c1c0 0
+./main error MLK malloc 840 804be70 0
+./main error MLK malloc 420 804bcc8 0
+./main error MLK realloc 18 804bcb0 0
+./main error MLK realloc 18 804bc98 0
+$ 
+
+17:00 - Added <URI:mut/tests/space_count.c>
+
+17:17 - Added various cross references, especially from the bib.
+        Break.
+
+18:26 - Cleaned up a few files.
+
+18:31 - Backup.

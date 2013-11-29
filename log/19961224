@@ -1,0 +1,478 @@
+			     -*- Text -*-
+
+10:27 - Start.
+
+10:34 - Modified <URI:mut/src/proc/ptrace/arch/x86/mut_process_arch.c#mut_process_function_backtrace>
+        so that a return address of 0 terminates a backtrace.  No
+        longer get the unsightly <unknown> now ...
+
+$ ./main -t -b ../tests/gen/gcc.x86.fp.dynamic.elfd/fum_free_chain.exe
+A
+./main info trace free 10 0
+./main error FUM free 10 3 foo 80484f6 main 804851c _start 804848b
+B
+./main info trace malloc 8 8049688 2 main 8048535 _start 804848b
+C
+./main info trace free 8049688 8
+./main info process.exited 0
+
+10:46 - Updated some READMEs and added more documentation in
+        <URI:mut/src/proc/ptrace>.  A brief digression into CC mode
+        for Emacs.
+
+11:54 - Finished the above to a reasonable level.
+
+12:06 - Cleaned up the READMEs in <URI:mut/misc>
+
+12:32 - Have documented around half of <URI:mut/src/mem>.
+
+12:33 - Break.
+
+17:20 - Resume.  Decided to try out ps ...
+
+$ ./main -t /bin/ps
+./main info trace malloc 28 804c8d0
+./main info trace malloc 32 804c8f0
+./main info trace malloc 1024 804c918
+  PID TTY STAT  TIME COMMAND
+./main info trace malloc 20 804ce18
+./main info trace malloc 32 804ce30
+./main info trace malloc 84 804ce58
+./main info trace malloc 256 804ceb0
+./main info trace malloc 24 804cfb8
+./main info trace malloc 260 804cfd8
+./main info trace free 804ce58 84
+./main info trace realloc 0 0 6 804d0e0
+./main info trace realloc 804d0e0 6 16 804d0f0
+./main info trace realloc 0 0 4 804d108
+./main info trace realloc 0 0 6 804d210
+./main info trace realloc 804d210 6 16 804d220
+./main info trace realloc 804d108 4 8 804d238
+./main info trace realloc 0 0 13 804d340
+./main info trace realloc 804d340 13 28 804d358
+./main info trace realloc 804d238 8 12 804d378
+./main info trace realloc 0 0 18 804d480
+./main info trace realloc 804d480 18 36 804d498
+./main info trace realloc 804d378 12 16 804d4c0
+./main info trace realloc 0 0 8 804d5d0
+./main info trace realloc 804d5d0 8 16 804d5e0
+./main info trace realloc 804d4c0 16 20 804d5f8
+./main info process.signaled 11
+./main error MLK realloc 20 804d5f8 0
+./main error MLK realloc 16 804d5e0 0
+./main error MLK realloc 36 804d498 0
+./main error MLK realloc 28 804d358 0
+./main error MLK realloc 16 804d220 0
+./main error MLK realloc 16 804d0f0 0
+./main error MLK malloc 260 804cfd8 0
+./main error MLK malloc 24 804cfb8 0
+./main error MLK malloc 256 804ceb0 0
+./main error MLK malloc 32 804ce30 0
+./main error MLK malloc 20 804ce18 0
+./main error MLK malloc 1024 804c918 0
+./main error MLK malloc 32 804c8f0 0
+./main error MLK malloc 28 804c8d0 0
+$ 
+
+
+17:21 - Have more success with -f, but it now logs FUM errors ...
+
+$ ./main -t -f /bin/ps
+./main info trace malloc 28 804c8d0
+./main info trace malloc 32 804c8f0
+./main info trace malloc 1024 804c918
+  PID TTY STAT  TIME COMMAND
+./main info trace malloc 20 804ce18
+./main info trace malloc 32 804ce30
+./main info trace malloc 84 804ce58
+./main info trace malloc 256 804ceb0
+./main info trace malloc 24 804cfb8
+./main info trace malloc 260 804cfd8
+./main info trace free 804ce58 84
+./main info trace realloc 0 0 6 804ce58
+./main info trace realloc 804ce58 6 16 804ce58
+./main info trace realloc 0 0 4 804ce70
+./main info trace realloc 0 0 6 804ce80
+./main info trace realloc 804ce80 6 16 804ce80
+./main info trace realloc 804ce70 4 8 804ce70
+./main info trace realloc 0 0 13 804ce98
+./main info trace realloc 804ce98 13 28 804d2d0
+./main info trace realloc 804ce70 8 12 804ce70
+./main info trace realloc 0 0 21 804d3e8
+./main info trace realloc 804d3e8 21 44 804d3e8
+./main info trace realloc 804ce70 12 16 804ce98
+./main info trace realloc 0 0 8 804ce70
+./main info trace realloc 804ce70 8 16 804d510
+./main info trace realloc 804ce98 16 20 804ce98
+   85   1 S    0:00 -bash 
+./main info trace free 804ce58 16
+./main info trace free 804cd20 0
+./main error FUM free 804cd20
+  106   1 R    0:05 emacs 
+./main info trace free 804ce80 16
+./main info trace free 804d0e0 0
+./main error FUM free 804d0e0
+  113  p0 S    0:00 /bin/bash -i 
+./main info trace free 804d2d0 28
+./main info trace free 804d1d8 0
+./main error FUM free 804d1d8
+  129  p0 S    0:00 ./main -t -f /bin/ps 
+./main info trace free 804d3e8 44
+./main info trace free 804d2f0 0
+./main error FUM free 804d2f0
+  130  p0 R    0:00 /bin/ps 
+./main info trace free 804d510 16
+./main info trace free 804d418 0
+./main error FUM free 804d418
+./main info trace free 804ce98 20
+./main info process.exited 0
+./main error MLK malloc 260 804cfd8 0
+./main error MLK malloc 24 804cfb8 0
+./main error MLK malloc 256 804ceb0 0
+./main error MLK malloc 32 804ce30 0
+./main error MLK malloc 20 804ce18 0
+./main error MLK malloc 1024 804c918 0
+./main error MLK malloc 32 804c8f0 0
+./main error MLK malloc 28 804c8d0 0
+$ 
+
+17:23 - Not much that can be done with the above since I don't have
+        the source to ps available to confirm whether there really is
+        a FUM error or not.  If we compare the two traces, then at the
+        point of failure we have :-
+
+./main info trace realloc 804d5d0 8 16 804d5e0
+./main info trace realloc 804d4c0 16 20 804d5f8
+./main info process.signaled 11
+
+./main info trace realloc 804ce70 8 16 804d510
+./main info trace realloc 804ce98 16 20 804ce98
+   85   1 S    0:00 -bash 
+
+17:27 - I suspect it is because I haven't finished the realloc
+        implementation in the case that memory isn't being freed.  It
+        currently doesn't do the necessary memcpy.
+
+17:58 - First attempt at <URI:mut/proc/ptrace/mut_process.c#mut_process_memcpy>
+        is obviously not quite correct ...
+
+$ ./main -t /bin/ps
+./main info trace malloc 28 804c8d0
+./main info trace malloc 32 804c8f0
+./main info trace malloc 1024 804c918
+  PID TTY STAT  TIME COMMAND
+./main info trace malloc 20 804ce18
+./main info trace malloc 32 804ce30
+./main info trace malloc 84 804ce58
+./main info trace malloc 256 804ceb0
+./main info trace malloc 24 804cfb8
+./main info trace malloc 260 804cfd8
+./main info trace free 804ce58 84
+./main info trace realloc 0 0 6 804d0e0
+./main fatal 5 ptrace.poke.data 804e000
+$ 
+
+17:59 - It helps if you actually decrement a loop counter in a loop!
+        Still looks like there are some errors though :-
+
+$ ./main -t /bin/ps
+./main info trace malloc 28 804c8d0
+./main info trace malloc 32 804c8f0
+./main info trace malloc 1024 804c918
+  PID TTY STAT  TIME COMMAND
+./main info trace malloc 20 804ce18
+./main info trace malloc 32 804ce30
+./main info trace malloc 84 804ce58
+./main info trace malloc 256 804ceb0
+./main info trace malloc 24 804cfb8
+./main info trace malloc 260 804cfd8
+./main info trace free 804ce58 84
+./main info trace realloc 0 0 6 804d0e0
+./main info trace realloc 804d0e0 6 16 804d0f0
+./main info trace realloc 0 0 4 804d108
+./main info trace realloc 0 0 6 804d210
+./main info trace realloc 804d210 6 16 804d220
+./main info trace realloc 804d108 4 8 804d238
+./main info trace realloc 0 0 13 804d340
+./main info trace realloc 804d340 13 28 804d358
+./main info trace realloc 804d238 8 12 804d378
+./main info trace realloc 0 0 18 804d480
+./main info trace realloc 804d480 18 36 804d498
+./main info trace realloc 804d378 12 16 804d4c0
+./main info trace realloc 0 0 8 804d5d0
+./main info trace realloc 804d5d0 8 16 804d5e0
+./main info trace realloc 804d4c0 16 20 804d5f8
+   85   1 S    0:00 -bash 
+./main info trace free 804d0f0 16
+./main info trace free 804cd20 0
+./main error FUM free 804cd20
+  106   1 R    0:24 emacs 
+./main info trace free 804d220 16
+./main info trace free 804d118 0
+./main error FUM free 804d118
+  113  p0 S    0:00 /bin/bash -i 
+./main info trace free 804d358 28
+./main info trace free 804d248 0
+./main error FUM free 804d248
+  293  p0 S    0:00 ./main -t /bin/ps 
+./main info trace free 804d498 36
+./main info trace free 804d388 0
+./main error FUM free 804d388
+  294  p0 R    0:00 /bin/ps 
+./main info trace free 804d5e0 16
+./main info trace free 804d4d8 0
+./main error FUM free 804d4d8
+./main info trace free 804d5f8 20
+./main info process.exited 0
+./main error MLK malloc 260 804cfd8 0
+./main error MLK malloc 24 804cfb8 0
+./main error MLK malloc 256 804ceb0 0
+./main error MLK malloc 32 804ce30 0
+./main error MLK malloc 20 804ce18 0
+./main error MLK malloc 1024 804c918 0
+./main error MLK malloc 32 804c8f0 0
+./main error MLK malloc 28 804c8d0 0
+$ 
+
+18:05 - Ran the tar -xMf test again to see if this made any
+        difference.  It didn't it still failed in the same way.
+
+18:50 - Added the -z option to zero out any free'd or realloc'd memory.
+
+19:39 - Created <URI:mut/doc/mut.1> and added minimal documentation
+        for the existing options.
+
+19:56 - Created <URI:mut/tests/afm_free.c> to test out -z.
+
+$ ./main -z ../tests/gen/gcc.x86.fp.dynamic.elfd/afm_free.exe
+A
+B
+C
+D
+E
+F
+H
+./main info process.exited 0
+$ 
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd/afm_free.exe
+A
+B
+C
+D
+E
+F
+G
+./main info process.exited 0
+$ 
+
+19:57 - Backup.
+
+21:31 - Have a look at the backtrace problem when no fp.
+
+$ ./main -b -t ../tests/gen/gcc.x86.nfp.dynamic.elfd/fum_free_chain.exe
+A
+./main info trace free 10 0
+./main error FUM free 10 1 foo 80484f6
+B
+./main info trace malloc 8 8049688 1 main 8048533
+C
+./main info trace free 8049688 8
+./main info process.exited 0
+$ ./main -b -t ../tests/gen/gcc.x86.fp.dynamic.elfd/fum_free_chain.exe
+A
+./main info trace free 10 0
+./main error FUM free 10 3 foo 80484f6 main 804851c _start 804848b
+B
+./main info trace malloc 8 8049688 2 main 8048535 _start 804848b
+C
+./main info trace free 8049688 8
+./main info process.exited 0
+$ 
+
+21:35 - Hm, with no fp the backtrace is truncated.  Need to look into
+        that.  Just check what happens with ps (1).
+
+$ ./main -b /bin/ps 
+./main info backtrace.off
+  PID TTY STAT  TIME COMMAND
+   85   1 S    0:00 -bash 
+./main error FUM free 804cd20
+   90   1 S    0:26 emacs 
+./main error FUM free 804d118
+  102  p0 S    0:00 /bin/bash -i 
+./main error FUM free 804d248
+  365  p0 S    0:00 ./main -b /bin/ps 
+./main error FUM free 804d388
+  366  p0 R    0:00 /bin/ps 
+./main error FUM free 804d4d8
+./main info process.exited 0
+./main error MLK malloc 260 804cfd8 0
+./main error MLK malloc 24 804cfb8 0
+./main error MLK malloc 256 804ceb0 0
+./main error MLK malloc 32 804ce30 0
+./main error MLK malloc 20 804ce18 0
+./main error MLK malloc 1024 804c918 0
+./main error MLK malloc 32 804c8f0 0
+./main error MLK malloc 28 804c8d0 0
+$ 
+
+21:40 - So it seems that if backtraces are turned off due to lack of
+        symbols, the program doesn't fail.  No suprise there.  After
+        #ifdefing out the backtrace disable ...
+
+$ ./main -b /bin/ps 
+  PID TTY STAT  TIME COMMAND
+./main fatal 5 ptrace.peek.data 63746533
+$ 
+
+21:50 - Let's have a look with gdb :-
+
+$ gdb ../tests/gen/gcc.x86.nfp.dynamic.elfd/fum_free_chain.exe
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break free
+Breakpoint 1 at 0x8048418
+(gdb) run
+(no debugging symbols found)...Breakpoint 1 at 0x40082fe0
+A
+(no debugging symbols found)...
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) x/3wx $esp
+0xbffffcdc <__ypbindlist+2146669840>:	0x080484f6	0x00000010	0xbffffd08
+(gdb) info reg esp
+esp            0xbffffcdc	0xbffffcdc
+(gdb) info reg ebp
+ebp            0xbffffd08	0xbffffd08
+(gdb) x/40i main
+0x8048500 <main>:	subl   $0x4,%esp
+0x8048503 <main+3>:	pushl  %ebp
+0x8048504 <main+4>:	pushl  $0x2
+0x8048506 <main+6>:	pushl  $0x80485a8
+0x804850b <main+11>:	pushl  $0x1
+0x804850d <main+13>:	call   0x80483d8 <write>
+0x8048512 <main+18>:	addl   $0xc,%esp
+0x8048515 <main+21>:	call   0x80484e0 <foo>
+0x804851a <main+26>:	pushl  $0x2
+0x804851c <main+28>:	pushl  $0x80485ab
+0x8048521 <main+33>:	pushl  $0x1
+0x8048523 <main+35>:	call   0x80483d8 <write>
+0x8048528 <main+40>:	addl   $0xc,%esp
+0x804852b <main+43>:	pushl  $0x8
+0x804852d <main+45>:	call   0x80483b8 <malloc>
+0x8048532 <main+50>:	addl   $0x4,%esp
+0x8048535 <main+53>:	movl   %eax,0x4(%esp,1)
+0x8048539 <main+57>:	pushl  $0x2
+0x804853b <main+59>:	pushl  $0x80485ae
+0x8048540 <main+64>:	pushl  $0x1
+0x8048542 <main+66>:	call   0x80483d8 <write>
+0x8048547 <main+71>:	addl   $0xc,%esp
+0x804854a <main+74>:	movl   0x4(%esp,1),%eax
+0x804854e <main+78>:	pushl  %eax
+0x804854f <main+79>:	call   0x8048418 <free>
+0x8048554 <main+84>:	addl   $0x4,%esp
+0x8048557 <main+87>:	xorl   %eax,%eax
+0x8048559 <main+89>:	jmp    0x8048560 <main+96>
+0x804855b <main+91>:	nop    
+0x804855c <main+92>:	leal   0x0(%esi,1),%esi
+0x8048560 <main+96>:	popl   %ebp
+0x8048561 <main+97>:	addl   $0x4,%esp
+0x8048564 <main+100>:	ret    
+0x8048565 <main+101>:	nop    
+0x8048566 <main+102>:	nop    
+0x8048567 <main+103>:	nop    
+0x8048568 <main+104>:	nop    
+0x8048569 <main+105>:	nop    
+0x804856a <main+106>:	nop    
+0x804856b <main+107>:	nop    
+(gdb) x/10i foo
+0x80484e0 <foo>:	subl   $0x4,%esp
+0x80484e3 <foo+3>:	pushl  %ebp
+0x80484e4 <foo+4>:	movl   $0x10,0x4(%esp,1)
+0x80484ec <foo+12>:	movl   0x4(%esp,1),%eax
+0x80484f0 <foo+16>:	pushl  %eax
+0x80484f1 <foo+17>:	call   0x8048418 <free>
+0x80484f6 <foo+22>:	addl   $0x4,%esp
+0x80484f9 <foo+25>:	popl   %ebp
+0x80484fa <foo+26>:	addl   $0x4,%esp
+0x80484fd <foo+29>:	ret    
+(gdb) 
+
+21:50 - It seems that ebp is still (partially?) being used as a frame
+        pointer. 
+
+22:09 - The following version truly doesn't use ebp as a frame pointer.
+
+$ gdb ../tests/gen/gcc.x86.nfp.dynamic.elfd.on/fum_free_chain.exe
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...(no debugging symbols found)...
+(gdb) break free
+Breakpoint 1 at 0x8048418
+(gdb) run
+(no debugging symbols found)...Breakpoint 1 at 0x40082fe0
+A
+(no debugging symbols found)...
+Breakpoint 1, 0x40082fe0 in __libc_free ()
+(gdb) x/30i foo
+0x80484e0 <foo>:	pushl  $0x10
+0x80484e2 <foo+2>:	call   0x8048418 <free>
+0x80484e7 <foo+7>:	addl   $0x4,%esp
+0x80484ea <foo+10>:	ret    
+0x80484eb <foo+11>:	nop    
+0x80484ec <foo+12>:	leal   0x0(%esi,1),%esi
+0x80484f0 <main>:	pushl  %ebx
+0x80484f1 <main+1>:	pushl  $0x2
+0x80484f3 <main+3>:	pushl  $0x8048578
+0x80484f8 <main+8>:	pushl  $0x1
+0x80484fa <main+10>:	call   0x80483d8 <write>
+0x80484ff <main+15>:	call   0x80484e0 <foo>
+0x8048504 <main+20>:	pushl  $0x2
+0x8048506 <main+22>:	pushl  $0x804857b
+0x804850b <main+27>:	pushl  $0x1
+0x804850d <main+29>:	call   0x80483d8 <write>
+0x8048512 <main+34>:	pushl  $0x8
+0x8048514 <main+36>:	call   0x80483b8 <malloc>
+0x8048519 <main+41>:	movl   %eax,%ebx
+0x804851b <main+43>:	pushl  $0x2
+0x804851d <main+45>:	pushl  $0x804857e
+0x8048522 <main+50>:	pushl  $0x1
+0x8048524 <main+52>:	call   0x80483d8 <write>
+0x8048529 <main+57>:	addl   $0x28,%esp
+0x804852c <main+60>:	pushl  %ebx
+0x804852d <main+61>:	call   0x8048418 <free>
+0x8048532 <main+66>:	xorl   %eax,%eax
+0x8048534 <main+68>:	addl   $0x4,%esp
+0x8048537 <main+71>:	popl   %ebx
+0x8048538 <main+72>:	ret    
+(gdb) bt
+#0  0x40082fe0 in __libc_free ()
+#1  0x80484e7 in foo ()
+(gdb) 
+
+22:10 - and produces the same backtrace as mut ...
+
+$ ./main -t -b ../tests/gen/gcc.x86.nfp.dynamic.elfd.on/fum_free_chain.exe
+A
+./main info trace free 10 0
+./main error FUM free 10 1 foo 80484e7
+B
+./main info trace malloc 8 8049658 1 main 804851a
+C
+./main info trace free 8049658 8
+./main info process.exited 0
+$ 
+
+22:11 - Presumably this will all go badly wrong if ebp has a non-zero
+        value in it.
+
+22:28 - Created <URI:mut/tests/backtrace> and confirmed that GDB
+        doesn't do much beter than MUT with no frame pointer.
+
+22:30 - Shutdown.
+

@@ -1,0 +1,4 @@
+A
+mut info trace free 10 0
+mut error FUM free 10 2 main 80484e0 8048507 39 _start 8048430 804848b 91
+mut info process.signaled 11

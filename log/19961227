@@ -1,0 +1,11 @@
+			     -*- Text -*-
+16:42 - Start
+
+        Created <URI:mut/misc/div> and experimented with division by
+        10 using shifts.  See <URI:mut/misc/div/div_16_10.c> and
+        <URI:mut/misc/div/div_8_10.c> and especially
+        <URI:mut/misc/div/README>.
+
+10:34 - Decided that division by shift can work, but decided to try
+        division in chunks.  Stop.
+

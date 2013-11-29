@@ -1,0 +1,5 @@
+.style: All of the C code should conform to Linux kernel style, 
+
+.ifdef.feature: #ifdef is not used to control features in MUT,
+ instead that's done by having separate implementations and
+ using options to make to determine which file is included/compiled.

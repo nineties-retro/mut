@@ -1,0 +1,12 @@
+			     -*- Text -*-
+
+.intro: 
+ UNIX Internals: The New Frontiers
+ Uresh Vahalia
+ Prentice-Hall
+ 1996
+
+.procfs: Section 9.11.2 pages 281-283 discusses the SVR4.2 /proc file
+ system.  Unfortunately, this does not look much like the one described
+ in <URI:mut/bib/nohr> or /proc file system available in Linux 2.0.24.
+ The only entries that look vaguely the same are map(s) and status.

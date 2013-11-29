@@ -1,0 +1,203 @@
+                             -*- Text -*-
+14:08
+  Start.
+
+  Unpacked after a 2+ year hibernation.  Trying to compile under
+  RedHat 6.2.
+
+    gcc proc/ptrace/arch/x86/mut_process_arch.c ...
+    proc/ptrace/arch/x86/mut_process_arch.c: In function `mut_process_read_pc':
+    proc/ptrace/arch/x86/mut_process_arch.c:85: `EIP' undeclared (first use in this function)
+
+  It appears this is no longer pulled in by sys/ptrace.h.
+  So pull in sys/reg.h explicitly.
+
+14:10
+  That seems to cure it.
+
+14:11
+  Stop.
+
+14:28
+  Start
+
+  Does it pass its tests?
+
+14:40
+  No.  It is detecting leaks in some programs :-
+
+    amidala$ ./main /bin/ps
+      PID TTY          TIME CMD
+      558 ttyp0    00:00:00 bash
+     2338 ttyp0    00:00:00 main
+     2339 ttyp0    00:00:00 ps
+    ./main info process.exited 0
+    ./main error MLK malloc 4 81629F0
+    ./main error MLK malloc 32 81629C8
+    ./main error MLK malloc 4 81629B8
+    ./main error MLK malloc 32 8162990
+    ./main error MLK malloc 5 8162980
+    ./main error MLK malloc 32 8162958
+    ./main error MLK malloc 4 8162948
+    ./main error MLK malloc 32 8162920
+    amidala$ 
+
+  but not in my tests :-
+
+    amidala$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+    A
+    B
+    ./main info process.exited 0
+    amidala$ 
+
+15:09
+  It appears the problem is that when compiled the program does not
+  actually reference malloc, instead it references malloc@@GLIBC_2.0
+
+    $ objdump --syms ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+
+    ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe:     file format elf32-i386
+
+    SYMBOL TABLE:
+    080480f4 l    d  .interp	00000000              
+    08048108 l    d  .note.ABI-tag	00000000              
+    08048128 l    d  .hash	00000000              
+    0804815c l    d  .dynsym	00000000              
+    080481dc l    d  .dynstr	00000000              
+    0804825c l    d  .gnu.version	00000000              
+    0804826c l    d  .gnu.version_r	00000000              
+    0804828c l    d  .rel.got	00000000              
+    08048294 l    d  .rel.plt	00000000              
+    080482bc l    d  .init	00000000              
+    080482ec l    d  .plt	00000000              
+    08048350 l    d  .text	00000000              
+    0804847c l    d  .fini	00000000              
+    08048498 l    d  .rodata	00000000              
+    080494a8 l    d  .data	00000000              
+    080494b4 l    d  .eh_frame	00000000              
+    080494b8 l    d  .ctors	00000000              
+    080494c0 l    d  .dtors	00000000              
+    080494c8 l    d  .got	00000000              
+    080494ec l    d  .dynamic	00000000              
+    0804958c l    d  .bss	00000000              
+    00000000 l    d  .stab	00000000              
+    00000000 l    d  .stabstr	00000000              
+    00000000 l    d  .comment	00000000              
+    080495a4 l    d  .note	00000000              
+    00000000 l    d  *ABS*	00000000              
+    00000000 l    d  *ABS*	00000000              
+    00000000 l    d  *ABS*	00000000              
+    00000000 l    df *ABS*	00000000              initfini.c
+    08048374 l       .text	00000000              gcc2_compiled.
+    00000000 l    df *ABS*	00000000              init.c
+    00000000 l    df *ABS*	00000000              crtstuff.c
+    08048380 l       .text	00000000              gcc2_compiled.
+    080494ac l     O .data	00000000              p.2
+    080494c0 l     O .dtors	00000000              __DTOR_LIST__
+    080494b0 l     O .data	00000000              completed.3
+    08048380 l     F .text	00000000              __do_global_dtors_aux
+    080494b4 l     O .eh_frame	00000000              __EH_FRAME_BEGIN__
+    080483c8 l     F .text	00000000              fini_dummy
+    0804958c l     O .bss	00000018              object.8
+    080483d0 l     F .text	00000000              frame_dummy
+    080483f0 l     F .text	00000000              init_dummy
+    080494b4 l     O .data	00000000              force_to_data
+    080494b8 l     O .ctors	00000000              __CTOR_LIST__
+    00000000 l    df *ABS*	00000000              crtstuff.c
+    08048450 l       .text	00000000              gcc2_compiled.
+    08048450 l     F .text	00000000              __do_global_ctors_aux
+    080494bc l     O .ctors	00000000              __CTOR_END__
+    08048474 l     F .text	00000000              init_dummy
+    080494b4 l     O .data	00000000              force_to_data
+    080494c4 l     O .dtors	00000000              __DTOR_END__
+    080494b4 l     O .eh_frame	00000000              __FRAME_END__
+    00000000 l    df *ABS*	00000000              initfini.c
+    0804847c l       .text	00000000              gcc2_compiled.
+    00000000 l    df *ABS*	00000000              mlk_malloc.c
+    080494ec g     O .dynamic	00000000              _DYNAMIC
+    0804847c g     O *ABS*	00000000              _etext
+    080482fc  w    F *UND*	00000074              __register_frame_info@@GLIBC_2.0
+    0804830c       F *UND*	0000003d              write@@GLIBC_2.0
+    00000000         *UND*	00000004              _fp_hw
+    080482bc g     F .init	00000000              _init
+    0804831c       F *UND*	000001b7              malloc@@GLIBC_2.0
+    0804832c  w    F *UND*	000000a2              __deregister_frame_info@@GLIBC_2.0
+    08048350 g       .text	00000000              _start
+    0804958c g     O *ABS*	00000000              __bss_start
+    08048400 g     F .text	00000042              main
+    0804833c       F *UND*	00000105              __libc_start_main@@GLIBC_2.0
+    080494a8  w      .data	00000000              data_start
+    0804847c g     F .fini	00000000              _fini
+    0804958c g     O *ABS*	00000000              _edata
+    080494c8 g     O .got	00000000              _GLOBAL_OFFSET_TABLE_
+    080495a4 g     O *ABS*	00000000              _end
+    0804849c g     O .rodata	00000004              _IO_stdin_used
+    080494a8 g       .data	00000000              __data_start
+    00000000  w      *UND*	00000000              __gmon_start__
+
+
+    $ 
+
+15:11
+  The question now is what is the best way to deal with this since
+  other executable clearly have problem, e.g. the ps.
+
+
+15:13
+  It appears that the dynamic syms do conain the right reference :-
+
+    $ objdump --dynamic-syms ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+
+    ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe:     file format elf32-i386
+
+    DYNAMIC SYMBOL TABLE:
+    080482fc  w   DF *UND*	00000074  GLIBC_2.0   __register_frame_info
+    0804830c      DF *UND*	0000003d  GLIBC_2.0   write
+    0804831c      DF *UND*	000001b7  GLIBC_2.0   malloc
+    0804832c  w   DF *UND*	000000a2  GLIBC_2.0   __deregister_frame_info
+    0804833c      DF *UND*	00000105  GLIBC_2.0   __libc_start_main
+    0804849c g    DO .rodata	00000004  Base        _IO_stdin_used
+    00000000  w   D  *UND*	00000000              __gmon_start__
+
+
+    $ 
+
+15:13
+  And the same is true for /bin/ps.  So it seems the problem is
+  related to looking up the symbols in the static rather than dynamic
+  table.  When it was designed it was assumed that if both tables
+  existed the dynamic one was a subset of the static one and so it was
+  not consulted.
+
+
+15:27
+  As a test I put
+
+      char * undesirable_suffix = strstr(n, "@@GLIBC_2.0");
+      if (undesirable_suffix != 0) {
+        *undesirable_suffix= '\0';
+      }
+
+  into mut_exec_extract_symbols and it seems to have done the trick :-
+
+    $ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+    A
+    B
+    ./main info process.exited 0
+    ./main error MLK malloc 8 80495B0
+    $ ./main -t ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+    A
+    ./main info trace malloc 8 80495B0
+    B
+    ./main info process.exited 0
+    ./main error MLK malloc 8 80495B0
+    $ 
+
+15:28
+  Now just need to design a more flexible solution.
+
+15:57
+  Ok, done that, updated manual pages.
+
+15:58
+  Stop.

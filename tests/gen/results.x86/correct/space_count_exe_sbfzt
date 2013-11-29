@@ -1,0 +1,24 @@
+mut info trace malloc 10 80496e0 2 main 80484b0 80484bd 13 _start 8048400 804845b 91
+mut info trace malloc 10 80496f0 2 main 80484b0 80484ca 26 _start 8048400 804845b 91
+mut info trace malloc 10 8049700 2 main 80484b0 80484d7 39 _start 8048400 804845b 91
+mut info trace malloc 10 8049710 2 main 80484b0 80484e4 52 _start 8048400 804845b 91
+mut info trace malloc 10 8049720 2 main 80484b0 80484f1 65 _start 8048400 804845b 91
+mut info trace malloc 10 8049730 2 main 80484b0 80484fe 78 _start 8048400 804845b 91
+mut info trace malloc 10 8049740 2 main 80484b0 804850b 91 _start 8048400 804845b 91
+mut info trace malloc 10 8049750 2 main 80484b0 8048518 104 _start 8048400 804845b 91
+mut info trace malloc 10 8049760 2 main 80484b0 8048525 117 _start 8048400 804845b 91
+mut info trace malloc 10 8049770 2 main 80484b0 8048532 130 _start 8048400 804845b 91
+mut info trace free 80496e0 10
+mut info trace free 80496f0 10
+mut info trace free 8049700 10
+mut info trace free 8049710 10
+mut info trace free 8049720 10
+mut info trace free 8049730 10
+mut info trace free 8049740 10
+mut info trace free 8049750 10
+mut info trace free 8049760 10
+mut info trace free 8049770 10
+mut info trace malloc 1000 80496e0 2 main 80484b0 80485ba 266 _start 8048400 804845b 91
+mut info trace free 80496e0 1000
+mut info process.exited 0
+mut info stats alloc.now 0 0 alloc.total 1100 11 alloc.max.space 1000 1 alloc.max.count 100 10 malloc 11 free 11 realloc 0 calloc 0 cfree 0

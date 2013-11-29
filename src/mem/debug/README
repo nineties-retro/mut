@@ -1,0 +1,37 @@
+			     -*- Text -*-
+
+.intro: a debugging malloc/free/realloc
+
+This is a slightly modified version of the debugging memory management
+routines used in PEP and OTZ.  It is an inline and slightly simpler
+version of the type of memory tracking that MUT itself provides and
+useful for bootstrapping MUT.
+
+I remember spotting various errors in the code when writing MUT, but
+not fixing them since this code is redundant given a working MUT (at
+least for my programs which do not do heavy allocation).
+
+malloc records the file/line from which it was called, the address allocated
+and its size along with some bookkeeping information such as the number
+of times it has been called ... etc.
+
+free checks that the address it is given has been previously
+allocated by malloc/realloc and has not already been freed by a previous
+call to free (to implement this, all memory allocated has to be kept
+allocated to the end of the program -- watch that heap space!).
+
+realloc does a combination of malloc/realloc.
+
+The implementation deviates from the standard malloc/realloc/free interface
+in that it requires initialising (mem_init(), mem_open()) before any
+calls can be made and closing (mem_close()) before terminating the
+program.
+
+Note that selective return values are ignored since reporting any errors 
+in any meaningful way would complicate the implementation.  For example, 
+simply terminating a free call because it was not possible to write a 
+leak message to the log is not acceptable since it could leave resources
+open.  Termination is the responsibility of the caller, but passing this
+information back would mean that the caller would need to be aware that
+a free could fail which the default free cannot (at least not without
+terminating the program).

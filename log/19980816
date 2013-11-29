@@ -1,0 +1,154 @@
+			     -*- Text -*-
+
+19:27 - Start.
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exs
+Segmentation fault
+$ 
+
+19:30 - 
+
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+(gdb) run ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exs
+
+Program received signal SIGSEGV, Segmentation fault.
+0x804a938 in mut_exec_strtab_open (exec=0xbffffbd8, reader=0xbffffa30)
+    at exec/elf/mut_exec.c:203
+(gdb) p *reader
+$1 = {header = {
+    e_ident = "\177ELF\001\001\001\000\000\000\000\000\000\000\000", 
+    e_type = 2, e_machine = 3, e_version = 1, e_entry = 134513664, 
+    e_phoff = 52, e_shoff = 1816, e_flags = 0, e_ehsize = 52, 
+    e_phentsize = 32, e_phnum = 5, e_shentsize = 40, e_shnum = 21, 
+    e_shstrndx = 20}, section = {header = {{sh_name = 41, sh_type = 11, 
+        sh_flags = 2, sh_addr = 134513020, sh_offset = 380, sh_size = 288, 
+        sh_link = 4, sh_info = 1, sh_addralign = 4, sh_entsize = 16}, {
+        sh_name = 154, sh_type = 7, sh_flags = 0, sh_addr = 60, 
+        sh_offset = 1596, sh_size = 60, sh_link = 0, sh_info = 0, 
+        sh_addralign = 1, sh_entsize = 0}, {sh_name = 1073767104, sh_type = 0, 
+        sh_flags = 0, sh_addr = 1073753278, sh_offset = 1073766068, 
+        sh_size = 1073766928, sh_link = 14720, sh_info = 1073820564, 
+        sh_addralign = 1073767104, sh_entsize = 1073766928}}, free = 1}, 
+  strings = {data = 0x8054a18 "", size = 160}, dsymtab = 0xbffffa64, 
+  symtab = 0x0, stabs = 0x0, strtab = {sh_name = 0, sh_type = 1073766752, 
+    sh_flags = 0, sh_addr = 1073766912, sh_offset = 3221224256, 
+    sh_size = 1073751319, sh_link = 1073820552, sh_info = 3221224180, 
+    sh_addralign = 1074346360, sh_entsize = 1073766928}, source = 0x80549c0, 
+  log = 0xbffffba8, 
+  file_name = 0xbffffde2 "../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exs"}
+(gdb) up
+#1  0x804c420 in mut_exec_open (exec=0xbffffbd8, 
+    file_name=0xbffffde2 "../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exs", log=0xbffffba8) at exec/elf/mut_exec.c:755
+(gdb) 
+
+19:31 - It is clear that the problem is opening a strtab when
+        reader->strtab has not been set.
+
+19:35 - It is because the file had been stripped, just moved the
+        symtab=dsym assignment to before the opening of the strtab.
+
+$ ./main -b ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exs
+./main info backtrace.off
+A
+B
+./main info process.exited 0
+./main error MLK malloc 8 8049608
+
+19:53 - 
+
+$ ./main -b -oxxx ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_free_chain.exe
+A
+B
+C
+$ ./mut.sh < xxx
+./main error FUM: attempt to deallocate an unallocated object at address
+0x10 by _free_
+     0x80484F6 = foo(0x80484E0+22) src/fum_free_chain.c:13
+     0x804851C = main(0x8048500+28) src/fum_free_chain.c:20
+     0x804848B = _start(0x8048430+91) ?:0
+$ cat xxx
+./main error FUM free 10 3 foo 80484E0 80484F6 22 src/fum_free_chain.c 13 main 8048500 804851C 28 src/fum_free_chain.c 20 _start 8048430 804848B 91 ? 0
+
+
+$ gdb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_free_chain.exe
+GDB is free software and you are welcome to distribute copies of it
+ under certain conditions; type "show copying" to see the conditions.
+There is absolutely no warranty for GDB; type "show warranty" for details.
+GDB 4.16 (i486-unknown-linux --target i486-linux), 
+Copyright 1996 Free Software Foundation, Inc...
+(gdb) x/25i main
+0x8048500 <main>:	pushl  %ebp
+0x8048501 <main+1>:	movl   %esp,%ebp
+0x8048503 <main+3>:	subl   $0x4,%esp
+0x8048506 <main+6>:	pushl  $0x2
+0x8048508 <main+8>:	pushl  $0x80485a8
+0x804850d <main+13>:	pushl  $0x1
+0x804850f <main+15>:	call   0x80483d8 <write>
+0x8048514 <main+20>:	addl   $0xc,%esp
+0x8048517 <main+23>:	call   0x80484e0 <foo>
+0x804851c <main+28>:	pushl  $0x2
+0x804851e <main+30>:	pushl  $0x80485ab
+0x8048523 <main+35>:	pushl  $0x1
+0x8048525 <main+37>:	call   0x80483d8 <write>
+
+(gdb) x/10i foo
+0x80484e0 <foo>:	pushl  %ebp
+0x80484e1 <foo+1>:	movl   %esp,%ebp
+0x80484e3 <foo+3>:	subl   $0x4,%esp
+0x80484e6 <foo+6>:	movl   $0x10,0xfffffffc(%ebp)
+0x80484ed <foo+13>:	movl   0xfffffffc(%ebp),%eax
+0x80484f0 <foo+16>:	pushl  %eax
+0x80484f1 <foo+17>:	call   0x8048418 <free>
+0x80484f6 <foo+22>:	addl   $0x4,%esp
+0x80484f9 <foo+25>:	movl   %ebp,%esp
+0x80484fb <foo+27>:	popl   %ebp
+(gdb) 
+
+19:56 - From the above it is clear that the instruction addresses are
+        the addresses of the next instruction rather than the actual
+        call instruction i.e. it is the return address.  Need to fix this.
+
+20:06 - Put a cheap hack in of -5 in the x86 backtrace code.  This
+        make things a bit better :-
+
+$ ./main -b -oxxx ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_free_chain.exe
+A
+B
+C
+$ ./mut.sh < xxx
+./main error FUM: attempt to deallocate an unallocated object at address
+0x10 by _free_
+     0x80484F1 = foo(0x80484E0+17) src/fum_free_chain.c:13
+     0x8048517 = main(0x8048500+23) src/fum_free_chain.c:19
+     0x8048486 = _start(0x8048430+86) ?:0
+$ cat xxx
+./main error FUM free 10 3 foo 80484E0 80484F1 17 src/fum_free_chain.c 13 main 8048500 8048517 23 src/fum_free_chain.c 19 _start 8048430 8048486 86 ? 0
+./main info process.exited 0
+
+20:07 - Still a line out in the malloc leak test :-
+
+$ ./main -b -oxxx ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe
+A
+B
+$ ./mut.sh < xxx
+./main error MLK: 8 byte object allocated by _malloc_ at address 0x8049608
+has not been deallocated.
+     0x80484C9 = main(0x80484B0+25) src/mlk_malloc.c:14
+     0x8048456 = _start(0x8048400+86) ?:0
+$ cat xxx
+./main info process.exited 0
+./main error MLK malloc 8 8049608 2 main 80484B0 80484C9 25 src/mlk_malloc.c 14 _start 8048400 8048456 86 ? 0
+$ 
+
+20:18 - Worry about the above some other time.
+
+20:19 - Backup.

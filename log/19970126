@@ -1,0 +1,84 @@
+			     -*- Text -*-
+
+11:34 - Start.
+
+11:38 - Ensured that 
+        <URI:mut/src/proc/ptrace/arch/sparc/mut_process_arch.c>
+        <URI:mut/src/proc/ptrace/arch/mips/mut_process_arch.c>
+        correctly read/write arguments: previously no matter which
+        argument you asked for, you alway got the zeroth argument.
+        
+11:46 - Added various cross references between the above arch specific
+        code and <URI:mut/bib/sparc9> and <URI:mut/bib/mips> respectively.
+
+11:52 - Still passes x86 tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+12:00 - Factored out all the backtrace creation calls into
+        <URI:mut/src/mut.c#mut_produce_backtrace>.  This reduced the
+        source size by 300 bytes and simplified the call sites.
+
+12:03 - Still passes the tests :-
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+12:21 - Would really like to get timing information into the usage
+        trace for allocated memory.  This appears to be directly
+        available via ptrace for SPARC/MIPS but not for version 2.0.24
+        of Linux.  Investigating the /proc/<pid>/stat file, gets the
+        following :-
+
+$ cat /proc/85/stat
+85 (bash) S 1 85 85 1025 90 256 149 45 404 179 21 16 3 5 0 0 0 0 1524 1548288 207 2147483647 134512640 134762670 3221225192 3221224512 1074583367 0 65536 2151170052 125910779 1136889 0 0
+$ 
+
+From looking at <URI:/usr/src/linux-2.0.24/fs/proc/array.c#get_stat>,
+some of these appear to be :- 
+
+85             - pid
+(bash)         - command name
+S              - state (Sleeping)
+1              - parent pid
+85             - process group
+85             - session
+1025           - tty
+90             - tty process group
+256            - some flags
+149            - minor fault
+45             - cmin fault
+404            - major fault
+179            - c major fault
+21             - utime
+16             - stime
+3              - cutime
+5              - cstime
+0              - priority
+0              - nice
+0              - timeout
+0              - interval (real) timer value
+1524           - start time
+1548288        - vm size
+207            - rss
+2147483647     - rss limit
+134512640      - start code
+134762670      - end code
+3221225192     - start stack
+3221224512     - esp
+1074583367     - eip
+0              - signal
+65536          - blocked
+2151170052     - sigignore
+125910779 1136889 0 0
+$ 
+
+12:31 - Considered altering the x86 breakpointing so that the word
+        read/written is always on a word boundary -- this will avoid
+        potentially attempting to write past the end of a page should
+        a breakpoint be necessary in the last three bytes of a page.
+        Decided that this is an unlikely situation and so defer it to
+        some later date.
+
+12:34 - Stop.

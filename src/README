@@ -1,0 +1,121 @@
+			     -*- Text -*-
+
+.intro: All the source for mut.
+
+
+COMPILING 
+
+.compiling.flags:  The following is a list of the various flags which
+ control which variant of MUT is actually compiled.  They are split
+ into two groups.  This split is a rough one based on how often it is
+ anticipated that the value will be altered during development.  The
+ first group consists of values that it is useful to be able to alter
+ easily and not have the result overwrite any other existing build.  It
+ is anticipated that members of the second group will rarely change, or
+ rather they will only change when MUT is ported to a new OS or
+ architecture.  Note that the groups are not fixed for all time, if you
+ find that during development it is useful to be able to alter one of
+ the values in the second group quite often, then just move it to the
+ first group (i.e. add it to the VARIANT in <URI:mut/src/Makefile>).
+
+.compiling.flags:volatile:
+
+  mem:		{debug, vendor}
+
+  mut_opt_exec:		{elf, aout}
+    Only the ELF version is up to date, so if you aren't on an ELF
+    system you are out of luck.
+
+  mut_opt_debug:	{on, off}
+    If you select `on' then whatever flags are necessary to ensure
+    that enough information is produced to facilitate debugging are included.
+
+  mut_opt_opt:		{on, off}
+    If you select `on' then whatever flags are necessary to ensure
+    the highest level of optimisation is performed by the compiler are
+    included.
+
+  mut_opt_log:		{tty}
+
+  CC:		{gcc, lcc}
+    The type of C compiler used.  Obivously you an only use an option
+    if you have the compiler installed.
+
+  proc:		{ptrace, proc}
+    Currently you should set this to `ptrace' since the `proc' option
+    doesn't work yet.
+
+  mut_opt_arch:		{x86, sparc}
+    `x86' for any machine with an 80x86 chip
+    `sparc' for any machine with a SPARC chip.
+
+  counter:	{ulong, uint64}
+    This should generally be set to `uint64'.  Exceptions are when
+    `unsigned long' on your machine is a 64-bit value or you for some
+    reason can't get the `uint64' option to work and you are willing
+    to live with some counts being wrong due to overflow.
+
+  uint64:	{longlong, struct}
+    If you are compiling with GCC or your compiler supports the 
+    `long long' extension to mean a 64-bit value, then use `longlong'.
+
+    If your compiler doesn't support a 64-bit value in the above way,
+    then use `struct' which implements the 64-bit value as a structure
+    containing two integers.
+
+.compiling.flags:stable:
+
+  elf:		{undef, vendor}
+    `elf' should generaly be set to `vendor'.  Only set it to `undef'
+    if the ST_UNDEF value is missing from your <elf.h> file.
+
+  assert:	{vendor}
+  backtrace:	{fixed}
+  errno:	{vendor}
+  ptrace:	{portable, vendor}
+    Under SunOS 4.1.X or Linux 1.0 set this to portable, otherwise you
+    should be able to use vendor
+  resources:	{list}
+  stddef:	{vendor}
+  stdio:	{vendor}
+  stdlib:	{vendor}
+  string:	{vendor, portable}
+    Under SunOS 4.1.X set this to portable.
+  ui:		{tty}
+
+.compiling.flags.alter:  To alter a value, you can either edit the
+ Makefile (<URI:mut/src/Makefile>) or just pass the value as a comand
+ line option to make.  For example, to compile with lcc rather than gcc :-
+
+	$ make CC=lcc
+
+.compiling.default: the default rule just builds MUT.
+
+
+RUNNING
+
+.run: See <URI:mut/doc/mut.1>
+
+
+STRUCTURE
+
+NAMING
+
+.naming.files.rule: all file names start with "mut_".  
+
+.naming.files.reason: this is done to avoid unfortunate name clashes
+ with system header files.
+
+.naming.symbols.rule: all names visible to the linker have the prefix "mut_".
+
+.naming.symbols.reason: there are a couple of reasons that this is done.
+
+.naming.symbols.reason.external: to avoid reduce the possibility of
+ any name clashes with any libraries that MUT needs to be linked
+ against.
+
+.naming.symbols.reason.inlining: by requiring that even static symbols
+ have the prefix, it makes it possible to concatenate all the source
+ such that it can be fed to the compiler as a single file.  This make
+ it possible for compilers that cannot do inter-file optimization but
+ which can do intra-file optimization to do their best.

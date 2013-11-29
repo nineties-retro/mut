@@ -1,0 +1,35 @@
+			     -*- Text -*-
+
+17:58 - Start.
+
+        Becoming bored with rld now that I've managed to do most of
+        the things I set out to do (try out ELF and ptrace in anger),
+        so have decided to concentrated on making sure that
+        .goal.desired is satisfied and forget (for now) about
+        .goal.max. 
+
+        In the process have decided that a name change is in order.
+        RLD was never a good name since it emphasized leak detection
+        too much.  Have decided on MUT - Memory Usage Tracker/Tracer.
+
+        A consequence some of the general code to do with actions can
+        be ripped out and replaced with simpler, more direct code.
+        Will save an archive of the current state so that it is
+        possible to resurrect this code in the future if necessary.
+        Now is the time I wish I'd found time to reinstall a
+        configuration control system or even a revision control
+        system :-< 
+
+18:27 - Break
+
+19:07 - Resume.
+
+20:16 - Ripped out most of the action stuff and it is back in a state
+        where it passes all the tests again.
+
+        To do:
+         * fake up the malloc call on a realloc.
+         * embed an action pointer in the action so that the dispatch
+           is automatic.
+
+20:19 - Backup.

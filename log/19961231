@@ -1,0 +1,505 @@
+			     -*- Text -*-
+
+10:58 - Start.
+
+11:24 - Created <URI:mut/misc/limit> to test out the limit support
+        under Linux.  The result is that limits are supported (via
+        setrlimit), but that ulimit(1) doesn't seem to have any effect.
+
+12:04 - Been rooting aound the system header files trying to find out
+        more about what sort of information can be retreived by ptrace.
+        At least under Linux, there doesn't seem to be any information
+        such as process time.  Perhaps it can be retrieved indirectly
+        by doing getrusage(RUSAGE_CHILDREN, ...).
+
+12:10 - Break.
+
+12:34 - Resume.  Started to add an iterator for resources so that they
+        can be scanned at various times rather than just at the end as
+        present.
+
+12:49 - Break.  
+
+14:13 - Resume + shutdown.
+
+15:15 - Resume.  Had a look at the SPARC/SunOS sys/user.h sys/proc.h
+        and sun4/pcb.h files in SVM and noticed that SPARC/SunOS seems to
+        make a lot more information potentially available via ptrace
+        e.g. if the user->u_procp can be followed then it gives access
+        to information such as the cpu usage, size of text, data,
+        stack, resident set, ... etc.
+
+
+15:20 - Finished the iterator addition and moved the leak detection
+        from <URI:mut/src/resources/list/mut_resources.c> to
+        <URI:mut/src/mut.c#mut_report_leaks>.  Was initially confused
+        the following failures ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+mlk_malloc_exe_s FAILED
+mlk_malloc_exe_sbfzt FAILED
+mlk_malloc_exs_s FAILED
+mlk_malloc_exs_sbfzt FAILED
+mlk_realloc0_exe_s FAILED
+mlk_realloc0_exe_sbfzt FAILED
+mlk_realloc0_exs_s FAILED
+mlk_realloc0_exs_sbfzt FAILED
+mlk_realloc1_exe_s FAILED
+mlk_realloc1_exe_sbfzt FAILED
+mlk_realloc1_exs_s FAILED
+mlk_realloc1_exs_sbfzt FAILED
+
+15:40 - Finally realised it was due to now reporting leaks before the
+        statistics rather than the other way around.
+
+16:06 - Whilst documenting <URI:mut/src/resources> added 
+        <URI:mut/README#rule.undefined> and <URI:mut/README#rule.unspecified>.
+
+16:58 - Decided whilst doing the above documentation that the lack of
+        abstraction in the area of mut_resources could not go on since
+        it hindered adding any resource usage counts.  So
+        reworked it to reduce the amount of explicit field access that
+        goes on by adding some macros.  Still passes all the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+17:01 - Break.
+
+17:09 - Resume.  Add the aforementioned counts.
+
+17:29 - Added the mut_control_usage flag, and calls to the newly
+        created <URI:mut/src/mut.c#mut_report_usage> in 
+        <URI:mut/src/mut.c#mut_malloc_success> and
+        <URI:mut/src/mut.c#mut_calloc_success>.  Seems to work ok :-
+
+$ ./main -su ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/malloc0.exe
+A
+./main info mem.usage 1 malloc 80496a8 8 0
+B
+./main info mem.usage 2 malloc 80496b8 16 0 malloc 80496a8 8 0
+C
+D
+E
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+$ ./main -sbu ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/malloc0.exe
+A
+./main info mem.usage 1 malloc 80496a8 8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+B
+./main info mem.usage 2 malloc 80496b8 16 2 main 80484e0 804851d 61 _start 8048430 804848b 91 malloc 80496a8 8 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+C
+D
+E
+./main info process.exited 0
+./main info stats alloc.now 0 0 alloc.total 24 2 alloc.max.space 24 2 alloc.max.count 24 2 malloc 2 free 2 realloc 0 calloc 0 cfree 0
+$ 
+
+
+17:30 - What the usage could really do with is a sequence count and/or
+        the allocation time.
+
+17:47 - Updated <URI:mut/doc/mut.1> to cover the new -u flag and
+        reworded the intro.
+
+17:48 - Backup.
+
+19:02 - Resume.  Added the usage call to free.
+
+$ ./main -ut ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/malloc0.exe
+A
+./main info trace malloc 8 80496a8
+./main info mem.usage 1 malloc 80496a8 8 0
+B
+./main info trace malloc 16 80496b8
+./main info mem.usage 2 malloc 80496b8 16 0 malloc 80496a8 8 0
+C
+./main info trace free 80496b8 16
+./main info mem.usage 1 malloc 80496a8 8 0
+D
+./main info trace free 80496a8 8
+./main info mem.usage 0
+E
+./main info process.exited 0
+$ 
+
+
+19:27 - Added the usage call to realloc and also fixed so that the
+        backtrace is now only output in usage and leaks if a backtrace
+        is requested :-
+
+$ ./main -ut ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/realloc.exe
+A
+./main info trace realloc 0 0 8 8049688
+./main info mem.usage 1 realloc 8049688 8
+B
+./main info trace realloc 8049688 8 16 8049698
+./main info mem.usage 1 realloc 8049698 16
+C
+./main info trace free 8049698 16
+./main info mem.usage 0
+D
+./main info process.exited 0
+$ 
+
+19:28 - 
+
+$ ./main -ubt ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/realloc.exe
+A
+./main info trace realloc 0 0 8 8049688 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+./main info mem.usage 1 realloc 8049688 8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+B
+./main info trace realloc 8049688 8 16 8049698 2 main 80484e0 8048523 67 _start 8048430 804848b 91
+./main info mem.usage 1 realloc 8049698 16 2 main 80484e0 8048523 67 _start 8048430 804848b 91
+C
+./main info trace free 8049698 16
+./main info mem.usage 0
+D
+./main info process.exited 0
+$ 
+
+19:31 - The above changes have caused some failures in the leak tests
+        since previously they incorrectly output the size of the
+        backtrace even if the backtrace is not output (notice how the
+        -b tests all pass, except for those on static files) :-
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+mlk_malloc_exe FAILED
+mlk_malloc_exe_s FAILED
+mlk_malloc_exe_f FAILED
+mlk_malloc_exe_z FAILED
+mlk_malloc_exe_t FAILED
+mlk_malloc_exs FAILED
+mlk_malloc_exs_b FAILED
+mlk_malloc_exs_s FAILED
+mlk_malloc_exs_f FAILED
+mlk_malloc_exs_z FAILED
+mlk_malloc_exs_t FAILED
+mlk_malloc_exs_sbfzt FAILED
+mlk_realloc0_exe FAILED
+mlk_realloc0_exe_s FAILED
+mlk_realloc0_exe_f FAILED
+mlk_realloc0_exe_z FAILED
+mlk_realloc0_exe_t FAILED
+mlk_realloc0_exs FAILED
+mlk_realloc0_exs_b FAILED
+mlk_realloc0_exs_s FAILED
+mlk_realloc0_exs_f FAILED
+mlk_realloc0_exs_z FAILED
+mlk_realloc0_exs_t FAILED
+mlk_realloc0_exs_sbfzt FAILED
+mlk_realloc1_exe FAILED
+mlk_realloc1_exe_s FAILED
+mlk_realloc1_exe_f FAILED
+mlk_realloc1_exe_z FAILED
+mlk_realloc1_exe_t FAILED
+mlk_realloc1_exs FAILED
+mlk_realloc1_exs_b FAILED
+mlk_realloc1_exs_s FAILED
+mlk_realloc1_exs_f FAILED
+mlk_realloc1_exs_z FAILED
+mlk_realloc1_exs_t FAILED
+mlk_realloc1_exs_sbfzt FAILED
+$ 
+
+20:17 - Fixed up most of the problems.  It was due to getting the
+        sense of an assertion wrong when changing from using the
+        `consumed' flag to storing the consumer action.
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+
+20:18 - The above are due to the backtrace now containing the producer
+        instead of the consumer.  Want to move to sharing backtraces.
+
+20:43 - Changed to resources referring to rather than owning backtraces.
+        Only one more failure ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+fum_realloc_exe FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/fum_realloc.exe
+A
+./main error FUM realloc 10
+B
+C
+./main info process.exited 0
+backtrace/fixed/mut_backtrace.c 121 freeing_unallocated_memory 0x1b
+IOT trap/Abort
+$ 
+
+20:49 - The problem was not initialising the backtrace pointers to
+        NULL now that they aren't owned.  Now back to the original
+        errors ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+$ 
+
+21:27 - Backtraces can now be shared (each contains a reference count).
+        However, haven't got the update quite right since new tests
+        are failing ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+calloc_exe_bt FAILED
+calloc_exs_bft FAILED
+calloc_exs_bfst FAILED
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exe_f FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+ffm_exs_f FAILED
+ffm_exs_bf FAILED
+fum_free_exe_b FAILED
+...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/calloc.exe
+A
+B
+C
+D
+E
+./main info process.exited 0
+Segmentation fault
+
+        This was due to forgetting that a backtrace can be NULL in the
+        close routine.  Modified to take account of this ...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/calloc.exe
+A
+B
+C
+D
+E
+./main info process.exited 0
+
+        Still failing though ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+calloc_exe_bt FAILED
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+fum_free_exe_b FAILED
+fum_free_exe_sb FAILED
+fum_free_exe_tsb FAILED
+fum_free_chain_exe_b FAILED
+fum_free_chain_exe_sb FAILED
+fum_free_chain_exe_tsb FAILED
+fum_realloc_exe_b FAILED
+fum_realloc_exe_sb FAILED
+fum_realloc_exe_tsb FAILED
+malloc0_exe_bt FAILED
+malloc1_exe_bt FAILED
+mlk_realloc1_exe_b FAILED
+
+        This is probably due to the (semi)-deliberate to memory leaks ...
+
+$ ./main -bt ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/calloc.exe
+A
+./main info trace calloc 8 8 80496a8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+B
+./main info trace calloc 16 8 80496f0 2 main 80484e0 8048521 65 _start 8048430 804848b 91
+C
+./main info trace cfree 80496f0 128
+D
+./main info trace cfree 80496a8 64
+E
+./main info process.exited 0
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8054980 32
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8054938 32
+$ 
+
+21:33 - Added the necessary call to free consumer backtraces ...
+
+$ ./main -bt ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/calloc.exe
+A
+./main info trace calloc 8 8 80496a8 2 main 80484e0 8048501 33 _start 8048430 804848b 91
+B
+./main info trace calloc 16 8 80496f0 2 main 80484e0 8048521 65 _start 8048430 804848b 91
+C
+./main info trace cfree 80496f0 128
+D
+./main info trace cfree 80496a8 64
+E
+./main info process.exited 0
+$ 
+
+21:33 - Now back to the original errors, so can now work on fixing them ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe FAILED
+ffm_exe_b FAILED
+ffm_exs FAILED
+ffm_exs_b FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+$ 
+
+21:45 - Made sure that on a FFM error that the consumer not name is
+        output :-
+
+$ ./main -bt ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+
+A
+./main info trace malloc 8 8049678 2 main 80484e0 80484ff 31 _start 8048430 804848b 91
+B
+./main info trace free 8049678 8
+C
+./main info trace free 8049678 8
+./main error FFM free 8049678 free 2 main 80484e0 804851e 62 _start 8048430 804848b 91
+./main info process.exited 0
+
+
+21:46 - Unfortunately this has introduced some more errors ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+calloc_exe_bft FAILED
+calloc_exe_bfst FAILED
+ffm_exe_bf FAILED
+malloc0_exe_bft FAILED
+malloc0_exe_bfst FAILED
+malloc1_exe_bft FAILED
+malloc1_exe_bfst FAILED
+mlk_realloc1_exe_sbfzt FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+space_count_exe_sbfzt FAILED
+$ 
+
+21:46 - Which appear to be due to a leak :-
+
+$ ./main -bf ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+./main info process.signaled 11
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x80547d8 32
+$ 
+
+22:57 - Spent some time trying to minimise the number of times a
+        backtrace is taken in an attempt to maximally share the ones
+        that are taken.  Unfortunately this hasn't fixed the leak 
+
+$ ./main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+./main info process.signaled 11
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8054748 32
+
+
+22:58 - Tried running mut under itself but nothing was diagnosed ...
+
+$ ./main -b ./main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+./main info process.signaled 11
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8054790 32
+./main info process.exited 1
+
+23:00 - This is because the leak is being masked by the internal
+        memory manager <URI:mut/src/mem/debug> which is producing the
+        above leak report.  If instead we run mut on a version with
+        the vendor malloc ...
+
+$ ./main -b gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main info process.signaled 11
+./main info process.exited 1
+./main error MLK malloc 32 8053af8 5 mut_backtrace_open 804ba70 804ba7e 14 mut_do_consumer 804f770 804f822 178 mut_run 8050a20 8050b61 321 main 80512f0 80513bc 204 _start 8048840 804889b 91
+$ 
+
+23:01 - Which is reasonably useful, now we know the problem is in the
+        backtrace handling of mut_do_consumer.
+
+23:27 - Found one leak, it was due to mut_resources_really_delete_resource
+        only deleting the producer backtrace and not the consumer backtrace.
+        However, this just seems to have highlighed another ...
+
+$ ./main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+./main info process.signaled 11
+backtrace/fixed/mut_backtrace.c 73 memory_leak 0x8054778 32
+$ 
+
+23:30 - Alledgedly it is still the problem of the consumer ...
+
+$ ./main -b gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+gen/gcc.vendor.tty.on.off.ptrace.x86.uint64.struct/main info process.signaled 11
+./main info process.exited 1
+./main error MLK malloc 32 8053b38 5 mut_backtrace_open 804ba70 804ba7e 14 mut_do_consumer 804f7a0 804f852 178 mut_run 8050a50 8050b91 321 main 8051330 80513fc 204 _start 8048840 804889b 91
+$ 
+
+
+23:55 - Finally fixed the above leak.  It was due to not freeing the
+        backtrace when -f is used.  Now on to the tests ...
+
+$ ./main -fb ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/ffm.exe
+A
+B
+C
+./main error FUM free 8049678 2 main 80484e0 804853b 91 _start 8048430 804848b 91
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+ffm_exe_b FAILED
+fum_realloc_exe_b FAILED
+fum_realloc_exe_sb FAILED
+fum_realloc_exe_tsb FAILED
+mlk_realloc0_exe_b FAILED
+mlk_realloc0_exe_sbfzt FAILED
+mlk_realloc1_exe_b FAILED
+mlk_realloc1_exe_sbfzt FAILED
+realloc_exe_bt FAILED
+realloc_exe_bft FAILED
+realloc_exe_bfst FAILED
+realloc_exs_bft FAILED
+realloc_exs_bfst FAILED
+$ 
+
+23:56 - Leave the above for now.  Shutdown.
+

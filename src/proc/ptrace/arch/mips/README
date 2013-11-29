@@ -1,0 +1,8 @@
+			     -*- Text -*-
+
+.intro: MIPS version of mut_process_arch.[ch] -- never compiled.
+
+This is really just a cut&paste version of the SPARC code with a few
+obvious alterations.  It won't compile since it refers to constants
+which don't exist under MIPS and the backtrace code is still SPARC
+based. 

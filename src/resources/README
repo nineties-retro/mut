@@ -1,0 +1,8 @@
+			     -*- Text -*-
+
+.intro: an address -> object map.
+
+The use of `resource' is because this code is inherited from RLD where
+it was general resources that were being stored, not just memory objects.
+
+See mut_resources.h for interface template.

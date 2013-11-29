@@ -1,0 +1,56 @@
+			     -*- Text -*-
+
+11:51 - Start.  Earlier this week decided that it would be helpful to
+        log how much time was spent working on rld and what was done
+        and when.  So created rld/log.
+
+12:40 - Have written up as much as I can remember of past work.
+
+12:50 - Created rld/src/backtrace/fixed and moved
+        rld/src/rld_backtrace* there since the current fixed size
+        implementation is only one possible implementation.
+
+12:58 - Start adding some documentation to rld/src/counter.
+
+13:05 - Finished initial documentation.  Break for lunch.
+
+13:38 - Finished lunch.  Added best guess as to what was done on
+        19961124 and added some new log entries based on looking at
+        the dates of some files.
+
+14:05 - Changed rld_exec_addr to be a struct to try and eliminate as
+        many implicit type conversions as possible.
+
+14:47 - Finished reworking rld/src/proc/ptrace/arch/x86/rld_process_arch.c
+        
+14:52 - Added explicit error checks to all ptrace PEEK calls.
+
+16:32 - Introduced rld/src/proc/ptrace/rld_trace.[ch] to add some type
+        safety to the ptrace calls.  Also added rld/src/include/ptrace
+        to hide differences over the location and prototype for ptrace.
+
+        Rewrote rld/src/proc/ptrace/rld_process.c and
+        rld/src/process/proc/trace/x86/rld_process_arch.c in terms of
+        rld_trace.  It all passes the cur tests.
+
+17:09 - Food break.
+
+17:35 - Finished food.
+
+18:12 - Removed frame_pointer from backtrace since there doesn't seem
+        much point in having it.
+
+18:41 - Change rld/exec/aout so that just the external functions are
+        stored rather than all the symbols, and the external functions
+        are stored in address order to aid the backtrace process.
+
+20:26 - Done battle with the lack of information in an a.out file and
+        finally managed to do a reasonable job of extracting the
+        function symbols.
+
+20:41 - Can't decide on the required interface for making the backtrace
+        display the full function name + offset.  rld_exec now has the
+        necessary addr->name mapping and rld_backtrace has the
+        required address.  Does rld_backtrace know about rld_exec or what?
+
+20:44 - Backup.

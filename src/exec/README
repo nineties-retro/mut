@@ -1,0 +1,10 @@
+			     -*- Text -*-
+
+.intro: executable file reader
+
+.interface: The interface that each reader must support is in
+ mut_exec.txt, mut_exec_addr.txt and mut_log_exec_addr.h.
+
+.new: To support a new executable format, just create a new directory
+ with the necessary file in it.  For example, to support COFF, create a
+ directory called `coff'.

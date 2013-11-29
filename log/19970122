@@ -1,0 +1,79 @@
+			     -*- Text -*-
+
+20:25 - Start.
+
+        To fix the problem with <proprietary-program> need to do the
+        thing which I've been putting off almost since I started
+        mut/rld: remove all breakpoints when calling malloc and
+        friends in case they call each other internally.
+
+20:31 - Ensured that the x86 version still passes all the regression tests.
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+20:44 - Added <URI:mut/tests/src/incest.c> so that there is something
+        to test an incestuous realloc definition.  It currently fails
+        in the expected way ...
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/incest.exe 
+A
+./main fatal 0 action.addr realloc 8048480 8048580
+$ 
+
+20:56 - Decided that the best way to achieve this is to ensure that 
+        <URI:mut/src/mut.c#mut_run> is in charge of removing and
+        restoring the breakpoints.  To do this, have to ensure that there
+        is only one call to mut_process_resume and this is moved to
+        the end of the  <URI:mut/src/mut.c#mut_run> loop.  To do this
+        have to modify 
+        <URI:mut/src/proc/ptrace/arch/mut_process_arch.h#mut_process_skip_to>
+        so that it does not resume, but instead just ensures that the
+        state is ok for a resume to work.
+
+20:59 - Done this and ensured that it passes the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+21:00 - Now to move the resume calls ...
+
+21:07 - Done this, still passes the tests ...
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+21:29 - Now done everything described at 20:56 and all tests pass :-
+
+$ ../tests/scripts/mut_test -c ../tests/gen/results.x86/correct -r ../tests/gen/results.x86/current ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe
+$ 
+
+21:30 - The incest test now passes too :-
+
+$ ./main ../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/incest.exe 
+A
+B
+C
+./main info process.exited 0
+$ 
+
+21:31 - Break.
+
+21:37 - Resume.
+
+A side-effect of the changes is that the logic is simpler and the code
+has shrunk by 1K.
+
+21:29 - Thought for the future, does realloc(x, 0) mean free?
+
+21:57 - Added the incest test to the test suite.
+
+22:09 - Brought <URI:mut/README> up to date.
+
+22:33 - Created <URI:mut/src/arch/mips> and <URI:mut/bib/mips>.
+
+22:52 - Added arg, result and sp sections to <URI:mut/src/arch/mips>
+        and created skeleton versions of the necessary files in 
+        <URI:mut/src/proc/ptrace/arch/mips> based on the SPARC versions.
+
+22:55 - Backup.

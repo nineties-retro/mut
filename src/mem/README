@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: MUT internal memory management.
+
+Each implementation must supply the following three files: mut_mem.c,
+mut_mem.h and mut_mem_ctrl.h.

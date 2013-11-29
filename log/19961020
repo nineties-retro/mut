@@ -1,0 +1,9 @@
+			     -*- Text -*-
+
+      - Unknown work done on rld/src/exec/elfd.
+
+      - Created what would later become rld/src/arch/{sparc,mips,x86}.
+
+      - Added rld/bib/{pentium,sparc9}
+
+21:41 - Backup.

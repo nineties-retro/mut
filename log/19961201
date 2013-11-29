@@ -1,0 +1,77 @@
+			     -*- Text -*-
+
+13:56 - start.
+
+14:22 - Decided that rld_backtrace should know about rld_exec rather than
+        passing it to the rld_log_backtrace call.  So now displays the
+        function name as well as the address :-
+
+./main ../tests/cur_chain
+A
+./main error 0 CUR 10 foo fa main 135 _entry 39 <?> 0
+B
+C
+./main info process.exited 0
+$ 
+
+14:24 - Need to do something about the 0 address ...
+
+14:34 - The 0 is the return address of the top frame.  Need to try out
+        on other systems to see what type of return addresses they
+        have to decide whether to do anything special about 0.  I
+        suspect there isn't and this is x86+a.out specific.
+
+15:34 - Cleaned up rld/README: Separated out the little that was there
+        into IDEA, GOALS, REQUIREMENTS, SOLUTIONS and TODO and added a
+        lot to the IDEA, GOALS, REQUIREMENTS and SOLUTIONS.  Still
+        needs a lot of work though.
+
+15:38 - All the internal work for <URI:mut/doc/req/min.leak> is
+        supposedly done, all that is left is to add the code to report
+        any leaks and test it.
+
+15:43 - Noticed most of the work has been done for
+        <URI:mut/doc/req/desired.free> and that is more
+        immediately interesting, so work on that instead.
+
+15:48 - Think break.
+
+16:05 - Back.  Can do CCR by logging the resource as consumed.
+
+16:42 - Now passes the ccr test :-
+
+./main ../tests/ccr
+A
+B
+C
+./main error 0 CCR free 7000 free main 127 _entry 39 <?> 0
+./main info process.exited 0
+$ 
+
+16:44 - Tried to test out rld on otz but found that can't build otz
+        since it requires RCS and that has not been re-installed.
+
+16:47 - Something wrong with the logic since when consuming resources,
+        it should not be possible to detect CCR errors with the
+        current implementation.  However :-
+
+./main -c ../tests/ccr
+A
+B
+C
+./main error 0 CCR free 7000 free main 127 _entry 39 <?> 0
+./main info process.exited 0
+$ 
+
+17:26 - Added consumer name to CUR.
+
+18:03 - Fixed up the logic in the manager regarding consuming.
+        However, it has highighted a different problem :-
+
+./main -c ../tests/ccr
+A
+B
+./main fatal 0 action.addr free 8b0 127
+$ 
+
+18:06 - Backup.

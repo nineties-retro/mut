@@ -1,0 +1,6 @@
+			     -*- Text -*-
+
+.intro: A fixed size backtrace.
+
+This is a simple implementation useful for testing and arguably ok for
+production use.

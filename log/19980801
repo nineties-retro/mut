@@ -1,0 +1,252 @@
+			     -*- Text -*-
+
+14:34 - Start.
+
+14:59 - Found the O'Caml code I wrote a while ago that printed out the
+        contents of the .stabs section -- it was archived as sg.tar.gz
+
+15:07 - The following code is from elf.c and starts at line 90 :-
+
+static void locate_string_table(char const ** table, size_t *size)
+{
+  Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
+  size_t max= header->e_shnum;
+  size_t n= 1;
+
+  for (n= 1; n < max; n += 1) {
+    Elf32_Shdr * section_header= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
+    if (section_header->sh_type == SHT_STRTAB && n != header->e_shstrndx && strcmp(".strtab", locate_section_header_string(section_header->sh_name)) == 0) {
+      assert(section_header->sh_offset);
+      *table= &file_contents[section_header->sh_offset];
+      *size= section_header->sh_size;
+      return;
+    }
+  }
+  assert(0);
+}
+
+static char const * locate_string(Elf32_Word name)
+{
+  char const * string;
+  static char const * string_table= 0;
+  static size_t       string_table_size;
+
+  if (string_table == 0) {
+    locate_string_table(&string_table, &string_table_size);
+    assert(string_table != (char const *)0);
+    assert(string_table_size > 0);
+  }
+
+  assert(name < string_table_size);
+  string= &string_table[name];
+  assert(string);
+  return string;
+}
+
+15:11 - The following is a section of the objdump --syms appears to
+        show that after a function definition (FUN) and optional formal
+        arguments (PSYM) come source line information (SLINE) where
+        n_desc is the line number and n_value is the offset from the
+        preceeding FUN.
+
+Symnum n_type n_othr n_desc n_value  n_strx String
+...
+337    FUN    0      91     08048920 8024   locate_string_table:f19
+338    PSYM   0      90     00000008 8048   table:p76=*73
+339    PSYM   0      90     0000000c 8062   size:p77=*4
+340    SLINE  0      91     00000000 7827   
+341    SLINE  0      92     00000007 7827   
+342    SLINE  0      93     0000000f 7827   
+343    SLINE  0      94     00000019 7827   
+344    SLINE  0      96     00000020 7827   
+345    SLINE  0      97     00000040 7827   
+346    SLINE  0      98     00000061 7827   
+347    SLINE  0      99     0000009e 7827   
+348    SLINE  0      100    000000d0 7827   
+349    SLINE  0      101    000000e1 7827   
+350    SLINE  0      102    000000ec 7827   
+351    SLINE  0      104    000000f0 7827   
+352    SLINE  0      96     000000f0 7827   
+353    SLINE  0      105    00000100 7827   
+354    SLINE  0      106    00000120 7827   
+355    SLINE  0      106    00000120 7827   
+356    LSYM   0      92     fffffffc 7986   header:74
+357    LSYM   0      93     fffffff8 7996   max:4
+358    LSYM   0      94     fffffff4 8002   n:4
+359    LBRAC  0      0      00000007 7827   
+360    LSYM   0      97     fffffff0 8006   section_header:75
+361    LBRAC  0      0      00000040 7827   
+362    RBRAC  0      0      000000f0 7827   
+363    RBRAC  0      0      00000120 7827   
+364    FUN    0      109    08048a50 8074   locate_string:f73
+365    PSYM   0      108    00000008 7895   name:p5
+366    SLINE  0      109    00000000 7827   
+367    SLINE  0      110    00000006 7827   
+368    SLINE  0      114    00000006 7827   
+369    SLINE  0      115    00000013 7827   
+370    SLINE  0      116    00000025 7827   
+371    SLINE  0      117    00000060 7827   
+372    SLINE  0      120    000000a0 7827   
+373    SLINE  0      121    000000e0 7827   
+374    SLINE  0      122    000000ec 7827   
+375    SLINE  0      123    00000120 7827   
+376    SLINE  0      124    00000130 7827   
+377    SLINE  0      124    00000130 7827   
+378    LSYM   0      110    fffffffc 8092   string:73
+379    STSYM  0      111    0804a90c 8102   string_table:V73
+380    LCSYM  0      112    0804aa50 8119   string_table_size:V4
+381    LBRAC  0      0      00000006 7827   
+382    RBRAC  0      0      00000130 7827   
+383    FUN    0      128    08048b90 8140   elf_hash:f5
+
+
+15:15 - Taking the difference between the first two functions gives :-
+
+(gdb) p/x 0x08048a50-0x08048920
+$4 = 0x130
+
+        which is just larger than the last SLINE offset.
+
+16:05 - Read over and added some documentation mut/src/exec/elf/mut_exec.c
+        with a view to seeing where the line number information could
+        be added.
+
+        The logical place to get the info. out seems to be via
+        mut_exec_addr_name.  Adding a file and line to that will make
+        the argument list relatively long, so perhaps should 
+        pass through a struct.
+
+   
+
+16:13 - Based on the following it seems that
+
+* first n_type == SO => n_strx points at the directory name
+  of the file.  n_value == start of address range covered by the file.
+
+* second n_type == SO => n_strx points to the file name.
+
+* third n_type == SO => end marker for file n_value == last address
+  in range covered by the file.
+
+$ objdump --stabs bar
+
+bar:     file format elf32-i386
+
+Contents of .stab section:
+
+Symnum n_type n_othr n_desc n_value  n_strx String
+
+-1     SO     0      0      08048480 0      misc/stabs/
+0      SO     0      0      08048480 28     foo.c
+1      OPT    0      0      00000000 34     gcc2_compiled.
+2      LSYM   0      0      00000000 49     int:t1=r1;-2147483648;2147483647;
+3      LSYM   0      0      00000000 83     char:t2=r2;0;127;
+4      LSYM   0      0      00000000 101    long int:t3=r1;-2147483648;2147483647;
+5      LSYM   0      0      00000000 140    unsigned int:t4=r1;0;-1;
+6      LSYM   0      0      00000000 165    long unsigned int:t5=r1;0;-1;
+7      LSYM   0      0      00000000 195    long long int:t6=r1;01000000000000000000000;0777777777777777777777;
+8      LSYM   0      0      00000000 263    long long unsigned int:t7=r1;0000000000000;01777777777777777777777;
+9      LSYM   0      0      00000000 331    short int:t8=r1;-32768;32767;
+10     LSYM   0      0      00000000 361    short unsigned int:t9=r1;0;65535;
+11     LSYM   0      0      00000000 395    signed char:t10=r1;-128;127;
+12     LSYM   0      0      00000000 424    unsigned char:t11=r1;0;255;
+13     LSYM   0      0      00000000 452    float:t12=r1;4;0;
+14     LSYM   0      0      00000000 470    double:t13=r1;8;0;
+15     LSYM   0      0      00000000 489    long double:t14=r1;12;0;
+16     LSYM   0      0      00000000 514    complex int:t15=s8real:1,0,32;imag:1,32,32;;
+17     LSYM   0      0      00000000 559    complex float:t16=r16;4;0;
+18     LSYM   0      0      00000000 586    complex double:t17=r17;8;0;
+19     LSYM   0      0      00000000 614    complex long double:t18=r18;12;0;
+20     LSYM   0      0      00000000 648    void:t19=19
+21     FUN    0      4      08048480 660    abc:F1
+22     PSYM   0      3      00000008 667    x:p1
+23     SLINE  0      4      00000000 672    
+24     SLINE  0      5      00000003 672    
+25     SLINE  0      6      00000010 672    
+26     SO     0      0      08048494 672    
+27     SO     0      0      080484a0 0      misc/stabs/
+28     SO     0      0      080484a0 673    bar.c
+29     OPT    0      0      00000000 34     gcc2_compiled.
+30     LSYM   0      0      00000000 49     int:t1=r1;-2147483648;2147483647;
+31     LSYM   0      0      00000000 83     char:t2=r2;0;127;
+32     LSYM   0      0      00000000 101    long int:t3=r1;-2147483648;2147483647;
+33     LSYM   0      0      00000000 140    unsigned int:t4=r1;0;-1;
+34     LSYM   0      0      00000000 165    long unsigned int:t5=r1;0;-1;
+35     LSYM   0      0      00000000 195    long long int:t6=r1;01000000000000000000000;0777777777777777777777;
+36     LSYM   0      0      00000000 263    long long unsigned int:t7=r1;0000000000000;01777777777777777777777;
+37     LSYM   0      0      00000000 331    short int:t8=r1;-32768;32767;
+38     LSYM   0      0      00000000 361    short unsigned int:t9=r1;0;65535;
+39     LSYM   0      0      00000000 395    signed char:t10=r1;-128;127;
+40     LSYM   0      0      00000000 424    unsigned char:t11=r1;0;255;
+41     LSYM   0      0      00000000 452    float:t12=r1;4;0;
+42     LSYM   0      0      00000000 470    double:t13=r1;8;0;
+43     LSYM   0      0      00000000 489    long double:t14=r1;12;0;
+44     LSYM   0      0      00000000 514    complex int:t15=s8real:1,0,32;imag:1,32,32;;
+45     LSYM   0      0      00000000 559    complex float:t16=r16;4;0;
+46     LSYM   0      0      00000000 586    complex double:t17=r17;8;0;
+47     LSYM   0      0      00000000 614    complex long double:t18=r18;12;0;
+48     LSYM   0      0      00000000 648    void:t19=19
+49     LSYM   0      118    00000000 679    __long_double_t:t14
+50     LSYM   0      22     00000000 699    _G_clock_t:t3
+51     LSYM   0      23     00000000 713    _G_dev_t:t9
+52     LSYM   0      24     00000000 725    _G_fpos_t:t3
+53     LSYM   0      25     00000000 738    _G_gid_t:t9
+54     LSYM   0      26     00000000 750    _G_ino_t:t5
+55     LSYM   0      27     00000000 762    _G_mode_t:t9
+56     LSYM   0      28     00000000 775    _G_nlink_t:t9
+57     LSYM   0      29     00000000 789    _G_off_t:t3
+58     LSYM   0      30     00000000 801    _G_pid_t:t1
+59     LSYM   0      34     00000000 813    _G_ptrdiff_t:t1
+60     LSYM   0      35     00000000 829    _G_sigset_t:t5
+61     LSYM   0      39     00000000 844    _G_size_t:t4
+62     LSYM   0      40     00000000 857    _G_time_t:t3
+63     LSYM   0      41     00000000 870    _G_uid_t:t9
+64     LSYM   0      42     00000000 882    _G_wchar_t:t3
+65     LSYM   0      43     00000000 896    _G_ssize_t:t1
+66     LSYM   0      44     00000000 910    _G_wint_t:t1
+67     LSYM   0      45     00000000 923    _G_va_list:t20=*19
+68     LSYM   0      50     00000000 942    _G_int8_t:t10
+69     LSYM   0      51     00000000 956    _G_uint8_t:t11
+70     LSYM   0      52     00000000 971    _G_int16_t:t8
+71     LSYM   0      53     00000000 985    _G_uint16_t:t9
+72     LSYM   0      54     00000000 1000   _G_int32_t:t1
+73     LSYM   0      55     00000000 1014   _G_uint32_t:t4
+74     LSYM   0      56     00000000 1029   _G_int64_t:t6
+75     LSYM   0      57     00000000 1043   _G_uint64_t:t7
+76     LSYM   0      0      00000000 1058   _IO_lock_t:T21=s8ptr:20,0,32;field1:8,32,16;\
+77     LSYM   0      0      00000000 1104   field2:8,48,16;;
+78     LSYM   0      0      00000000 1121   _IO_marker:T22=s12_next:23=*22,0,32;_sbuf:24=*25=xs_IO_FILE:,32,32;\
+79     LSYM   0      0      00000000 1190   _pos:1,64,32;;
+80     LSYM   0      0      00000000 1205   _IO_FILE:T25=s80_flags:1,0,32;_IO_read_ptr:26=*2,32,32;\
+81     LSYM   0      0      00000000 1262   _IO_read_end:26,64,32;_IO_read_base:26,96,32;\
+82     LSYM   0      0      00000000 1309   _IO_write_base:26,128,32;_IO_write_ptr:26,160,32;\
+83     LSYM   0      0      00000000 1360   _IO_write_end:26,192,32;_IO_buf_base:26,224,32;\
+84     LSYM   0      0      00000000 1409   _IO_buf_end:26,256,32;_IO_save_base:26,288,32;_IO_backup_base:26,320,32;\
+85     LSYM   0      0      00000000 1483   _IO_save_end:26,352,32;_markers:23,384,32;_chain:24,416,32;\
+86     LSYM   0      0      00000000 1544   _fileno:1,448,32;_blksize:1,480,32;_offset:3,512,32;\
+87     LSYM   0      0      00000000 1598   _cur_column:9,544,16;_unused:2,560,8;_shortbuf:27=ar1;0;0;2,568,8;\
+88     LSYM   0      0      00000000 1666   _IO_lock:21,576,64;;
+89     LSYM   0      227    00000000 1687   _IO_FILE:t25
+90     LSYM   0      71     00000000 1700   size_t:t4
+91     LSYM   0      76     00000000 1710   FILE:t25
+92     LSYM   0      77     00000000 1719   fpos_t:t3
+93     FUN    0      5      080484a0 1729   def:f1
+94     PSYM   0      4      00000008 667    x:p1
+95     SLINE  0      5      00000000 672    
+96     SLINE  0      6      00000003 672    
+97     SLINE  0      7      00000020 672    
+98     FUN    0      10     080484d0 1736   main:F1
+99     SLINE  0      10     00000000 672    
+100    SLINE  0      11     00000003 672    
+101    SLINE  0      12     0000001d 672    
+102    SLINE  0      13     00000030 672    
+103    SO     0      0      08048504 672    
+
+16:21 - Keep a (function-address, range) mapping and keep the optional
+        address -> line mappings within those entries.
+
+        Each function-address*range mapping optionally holds the file
+        name and directory.
+
+16:24 - Stop.
+

@@ -1,0 +1,107 @@
+			     -*- Text -*-
+
+/*
+**.intro: mut_exec.h template
+**
+*/
+
+typedef struct { ... } mut_exec_function;
+
+  `mut_exec_function' is used as part of the  `mut_exec_functions_addr' 
+  interface.  The type must contain at least the following fields :-
+  
+    char const    * name
+    mut_exec_addr   addr
+    int             flags
+  
+  The meaning of the fields is described in `mut_exec_functions_addr'.
+
+
+typedef ... mut_exec;
+
+  `mut_exec' represents an executable in MUT.
+
+
+mut_exec_extern int
+mut_exec_open(mut_exec * exec, char const *file_name,
+              mut_log * log, char const * undesirable_suffix);
+
+  `mut_exec_open' opens `exec' on `file_name'.
+
+  `mut_exec_open' returns a non-zero value if `exec' is opened
+  successfully and zero if it is not.
+
+  Any errors that occur during the operations on `exec' are logged
+  with `log'.
+
+  At some point between gcc-2.4.X and gcc-2.96.2 gcc and/or ld started
+  writing out symbols like "malloc" as "malloc@@GLIBC_2.0".  Whatever
+  the reason for this is, it slightly complicates symbol lookup.  To hide
+  the detail of the exact suffix, `undesirable_suffix' is set to
+  contain whatever suffix of a symbol should be ignored for the
+  purposes of comparison, for example in the above it would be set to
+  "@@GLIBC_2.0".
+
+
+mut_exec_extern int
+mut_exec_functions_addr
+( mut_exec          * exec
+, size_t              n_functions
+, mut_exec_function * functions
+);
+
+  On entry the `name' field of each entry in `functions' should
+  contain the name of a function to be located.
+
+  `mut_exec_functions_addr' fills the `addr' field of each element of
+  `functions' for which there is a function with the corresponding
+  `name', and sets the corresponding `flag' to a positive value.
+  If `name' is not bound to a function but is defined, then the
+  corresponding `flags' value is set to a negative value.
+  If `name' is not defined at all, then the `flags' value is set to 0.
+
+  `mut_exec_functions_addr' returns a non-zero value on success and
+  zero if an error occurs.
+
+  The result is undefined if `functions' contain less than `n_functions'.
+
+
+mut_exec_extern int
+mut_exec_addr_name
+( mut_exec       * exec
+, mut_exec_addr    addr
+, mut_exec_addr  * function_addr
+, char const    ** function_name
+, char const    ** file_name
+, int            * line
+);
+
+  `mut_exec_addr_name' looks for a function whose range covers
+  `addr'.  The name comes from the time when all it did was return the
+   name of the function.
+
+  If there is a function, then `function_name' is set to
+  the name of the function, `function_addr' is set to the address
+  of the start of the function and a non-zero value is returned.
+
+  If there is no such function, then 0 is returned.
+
+
+mut_exec_extern int
+mut_exec_close(mut_exec * exec);
+
+  `mut_exec_close' closes `exec'.
+
+  `mut_exec_close' returns a non-zero value if `exec' is not closed
+  successfully and zero if it is not.
+
+
+
+The following grammar defines the legal sequence of mut_exec actions :-
+
+  start ::= 
+    'mut_exec_open' 
+    'mut_exec_functions_addr'
+    { 'mut_exec_addr_name' }
+    'mut_exec_addr_close'.
+

@@ -1,0 +1,9 @@
+			     -*- Text -*-
+
+Some systems either don't provide an <errno.h> or provide an <errno.h>
+that doesn't contain a definition of errno.  Therefore, to abstract
+away from these tedious details mut_errno.h is always #included where
+errno is needed in rld.
+
+vendor
+  A definition or mut_errno.h in terms of errno.h
