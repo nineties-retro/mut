@@ -4,6 +4,7 @@
  * Linked-list symbol table.
  */
 
+#include <string.h>
 #include "mut_errno.h"		/* errno */
 #include "mut_log.h"		/* mut_log */
 #include "mut_mem.h"		/* mut_malloc, mut_free */
