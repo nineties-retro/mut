@@ -10,6 +10,11 @@ INTRODUCTION
    nothing that the leaking program can do to corrupt the memory
    tracking.
 
+   In its current state only known to work on 32-bit Linux systems
+   (Ubuntu 14.04 ... Ubuntu 16.10), with some work could be made to
+   work on other 32-bit Unix systems and with more work on 64-bit
+   systems.
+
 HISTORY
    During the early 1990s I was able to use Purify under Solaris to
    track down memory related problems in legacy C dode.  When I no
