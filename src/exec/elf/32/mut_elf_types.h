@@ -12,6 +12,6 @@ typedef Elf32_Addr mut_elf_addr;
 
 #define mut_elf_st_type(t) (ELF32_ST_TYPE(t))
 
-#define mut_elf_class ELFCLASS64
+#define mut_elf_class ELFCLASS32
 
 #endif

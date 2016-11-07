@@ -21,11 +21,10 @@ mut_opt_ui=tty
 #.volatile
 # See <URI:mut/src/README#compiling.flags.volatile>
 mut_opt_arch=x86
-mut_opt_arch_size=64
+mut_opt_arch_size=32
 mut_opt_cc=gcc
 mut_opt_counter=uint64
 mut_opt_exec=elf
-mut_opt_exec_elf_size=32
 mut_opt_debug=on
 mut_opt_log=tty
 mut_opt_mem=debug
