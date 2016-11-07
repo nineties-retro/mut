@@ -21,7 +21,8 @@
 
 int mut_process_read_pc(mut_process *p, mut_exec_addr *pc)
 {
-	int eip;
+	mut_reg eip;
+
 	mut_assert_pre(p->status == mut_process_status_stopped);
 	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_eip, &eip))
 		return 0;
@@ -33,7 +34,7 @@ int mut_process_read_pc(mut_process *p, mut_exec_addr *pc)
 
 int mut_process_write_pc(mut_process *p, mut_exec_addr pc)
 {
-	int eip = mut_exec_addr_to_int(pc);
+	mut_reg eip = mut_exec_addr_to_long(pc);
 	mut_assert_pre(p->status == mut_process_status_stopped);
 	return mut_trace_write_reg(&p->trace, mut_process_arch_regs_eip, eip);
 }
@@ -42,28 +43,28 @@ int mut_process_write_pc(mut_process *p, mut_exec_addr pc)
 
 int mut_process_read_arg(mut_process *p, size_t n, mut_arg *arg)
 {
-	int esp;
+	mut_reg esp;
 	mut_exec_addr arg_addr;
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
 	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_esp, &esp))
 		return 0;
-	arg_addr = mut_exec_addr_from_int(esp + mut_arg_size + n*mut_arg_size);
+	arg_addr = mut_exec_addr_from_ulong(esp + mut_arg_size + n*mut_arg_size);
 	return mut_trace_read_data(&p->trace, arg_addr, arg);
 }
 
 
 int mut_process_write_arg(mut_process *p, size_t n, mut_arg arg)
 {
-	int esp;
+	mut_reg esp;
 	mut_exec_addr arg_addr;
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
 	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_esp, &esp))
 		return 0;
-	arg_addr = mut_exec_addr_from_int(esp + mut_arg_size + n*mut_arg_size);
+	arg_addr = mut_exec_addr_from_ulong(esp + mut_arg_size + n*mut_arg_size);
 	return mut_trace_write_data(&p->trace, arg_addr, arg);
 }
 
@@ -71,8 +72,9 @@ int mut_process_write_arg(mut_process *p, size_t n, mut_arg arg)
 
 int mut_process_function_return_addr(mut_process *p, mut_exec_addr *addr)
 {
-	int esp;  mut_exec_addr esp_addr;
-	int a;
+	mut_reg esp;
+	mut_exec_addr esp_addr;
+	mut_reg a;
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
@@ -113,9 +115,9 @@ int mut_process_write_result(mut_process *p, mut_arg result)
  */
 int mut_process_function_backtrace(mut_process * p, mut_backtrace * bt)
 {
-	int return_addr;
+	mut_reg return_addr;
 	mut_exec_addr return_addr_addr;
-	int esp, ebp, base;
+	mut_reg esp, ebp, base;
 	int status;
 
 	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_esp, &esp))
@@ -158,7 +160,7 @@ int mut_process_function_backtrace(mut_process * p, mut_backtrace * bt)
  */
 int mut_process_skip_to(mut_process *p, mut_exec_addr pc)
 {
-	int esp;
+	mut_reg esp;
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
 	p->pc = pc;

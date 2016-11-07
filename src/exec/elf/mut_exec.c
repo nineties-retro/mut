@@ -16,9 +16,9 @@
 #include "mut_exec.h"		/* mut_exec */
 
 struct mut_exec_stab {
-	Elf32_Word other_and_string_index;
-	Elf32_Word line_and_type;
-	Elf32_Word value;
+	mut_elf_word other_and_string_index;
+	mut_elf_word line_and_type;
+	mut_elf_word value;
 };
 
 /* <URI:mut/misc/stabs/README#fun.code> */
@@ -36,40 +36,40 @@ struct mut_exec_stab {
 
 static int mut_exec_stab_type(struct mut_exec_stab * s)
 {
-	unsigned int mask= (1<<(CHAR_BIT*sizeof(Elf32_Half)))-1;
+	unsigned int mask= (1<<(CHAR_BIT*sizeof(mut_elf_half)))-1;
 	unsigned int v= s->line_and_type&mask;
 	return (int)v;
 }
 
 static size_t mut_exec_stab_str(struct mut_exec_stab * s)
 {
-	unsigned int mask= (1<<(CHAR_BIT*sizeof(Elf32_Half)))-1;
+	unsigned int mask= (1<<(CHAR_BIT*sizeof(mut_elf_half)))-1;
 	size_t v= s->other_and_string_index&mask;
 	return v;
 }
 
 
 #define mut_exec_stab_line(s) \
-	((s)->line_and_type >> (CHAR_BIT*sizeof(Elf32_Half)))
+	((s)->line_and_type >> (CHAR_BIT*sizeof(mut_elf_half)))
 
 #define mut_exec_stab_addr(s) ((s)->value)
 #define mut_exec_stab_offset(s) ((s)->value)
 
 
 struct mut_exec_reader {
-	Elf32_Ehdr   header;
+	mut_elf_ehdr   header;
 	struct {
-		Elf32_Shdr header[3];
+		mut_elf_shdr header[3];
 		size_t     free;
 	} section;
 	struct {
 		char   * data;
 		size_t   size;
 	} strings;
-	Elf32_Shdr * dsymtab;
-	Elf32_Shdr * symtab;
-	Elf32_Shdr * stabs;
-	Elf32_Shdr   strtab;
+	mut_elf_shdr * dsymtab;
+	mut_elf_shdr * symtab;
+	mut_elf_shdr * stabs;
+	mut_elf_shdr   strtab;
 	FILE       * source;
 	mut_log    * log;
 	char const * file_name;
@@ -101,7 +101,7 @@ static int mut_exec_check_id(mut_exec_reader *reader)
 
 static int mut_exec_check_class(mut_exec_reader *reader)
 {
-	if (reader->header.e_ident[EI_CLASS] != ELFCLASS32) {
+	if (reader->header.e_ident[EI_CLASS] != mut_elf_class) {
 		char class[2];
 		mut_log_warning(reader->log, "elf.bad-class");
 		mut_log_string(reader->log, reader->file_name);
@@ -201,7 +201,7 @@ hash_link_range_error:
 }
 
 
-static char const *mut_exec_strtab_lookup(mut_exec * exec, Elf32_Word str)
+static char const *mut_exec_strtab_lookup(mut_exec * exec, mut_elf_word str)
 {
 	mut_assert_pre(str < exec->strings.size);
 	return &exec->strings.data[str];
@@ -226,20 +226,20 @@ static void mut_exec_strtab_close(mut_exec *exec)
 static int mut_exec_extract_symbols(mut_exec *exec, mut_exec_reader *reader,
 				    char const *undesirable_suffix)
 {
-	Elf32_Sym * symbols;
+	mut_elf_sym * symbols;
 	size_t      n_symbols;
 	size_t      i;
 
-	mut_assert_pre(reader->symtab != (Elf32_Shdr *)0);
+	mut_assert_pre(reader->symtab != 0);
 	mut_assert_pre(exec->strings.data != 0);
 
-	if (reader->symtab->sh_size % sizeof(Elf32_Sym) != 0) {
+	if (reader->symtab->sh_size % sizeof(mut_elf_sym) != 0) {
 		mut_log_fatal(reader->log, "elf.sym.size", 0);
 		mut_log_string(reader->log, reader->file_name);
 		(void)mut_log_end(reader->log);
 		goto incorrect_symtab_size;
 	}
-	n_symbols= reader->symtab->sh_size/sizeof(Elf32_Sym);
+	n_symbols= reader->symtab->sh_size/sizeof(mut_elf_sym);
 	symbols= mut_mem_malloc(reader->symtab->sh_size);
 	if (symbols ==  0) {
 		mut_log_mem_full(reader->log, errno);
@@ -260,8 +260,8 @@ static int mut_exec_extract_symbols(mut_exec *exec, mut_exec_reader *reader,
 	}
 	mut_exec_symtab_open(&exec->symtab, reader->log);
 	for (i= 0; i < n_symbols; i += 1) {
-		Elf32_Sym * s= &symbols[i];
-		if (ELF32_ST_TYPE(s->st_info) == STT_FUNC) {
+		mut_elf_sym * s= &symbols[i];
+		if (mut_elf_st_type(s->st_info) == STT_FUNC) {
 			mut_exec_addr sa= mut_exec_addr_from_ulong(s->st_value);
 			char const * n= mut_exec_strtab_lookup(exec, s->st_name);
 			char * start = undesirable_suffix ? strstr(n, undesirable_suffix) : 0;
@@ -289,7 +289,7 @@ incorrect_symtab_size:
 static int mut_exec_extract_stabs(mut_exec_reader *reader,
 				  struct mut_exec_stab **stabs, size_t *n_stabs)
 {
-	mut_assert_pre(reader->stabs != (Elf32_Shdr *)0);
+	mut_assert_pre(reader->stabs != 0);
 
 	if (reader->stabs->sh_entsize != sizeof(struct mut_exec_stab)) {
 		mut_log_fatal(reader->log, "elf.stab.size", 0);
@@ -341,7 +341,7 @@ incorrect_stabs_size:
 static int mut_exec_stabstr_open(mut_exec * exec, mut_exec_reader * reader)
 {
 	long strtab_offset;
-	Elf32_Shdr strtab;
+	mut_elf_shdr strtab;
 
 	if (reader->stabs->sh_link > reader->header.e_shnum) {
 		mut_log_fatal(reader->log, "elf.section_index.range", 0);
@@ -405,7 +405,7 @@ hash_link_range_error:
 #if 0
 /* 19980922 - why is this not used ? */
 char const *
-mut_exec_stabstr_lookup(mut_exec * exec, Elf32_Word str)
+mut_exec_stabstr_lookup(mut_exec * exec, mut_elf_word str)
 {
      mut_assert_pre(str < exec->stabstr.size);
      return &exec->stabstr.data[str];
@@ -499,7 +499,7 @@ static int mut_exec_shstrtab_open(mut_exec_reader * reader)
 {
 	size_t byte_shstrndx= reader->header.e_shstrndx*reader->header.e_shentsize;
 	long byte_offset= reader->header.e_shoff + byte_shstrndx;
-	Elf32_Shdr header;
+	mut_elf_shdr header;
 
 	if (fseek(reader->source, byte_offset, SEEK_SET) < 0) {
 		mut_log_fatal(reader->log, "io.seek", errno);
@@ -548,7 +548,7 @@ could_not_allocate_strings:
 }
 
 
-static const char *mut_exec_shstrtab_lookup(mut_exec_reader *reader, Elf32_Word index)
+static const char *mut_exec_shstrtab_lookup(mut_exec_reader *reader, mut_elf_word index)
 {
 	mut_assert_pre(index < reader->strings.size);
 	return &reader->strings.data[index];
@@ -595,11 +595,11 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 		return 0;
 	}
 	reader->section.free= 0;
-	reader->symtab= (Elf32_Shdr *)0;
-	reader->dsymtab= (Elf32_Shdr *)0;
-	reader->stabs= (Elf32_Shdr *)0;
+	reader->symtab= 0;
+	reader->dsymtab= 0;
+	reader->stabs= 0;
 	for (n= 1;  n < n_headers;  n+=1) {
-		Elf32_Shdr *section_header= &reader->section.header[reader->section.free];
+		mut_elf_shdr *section_header= &reader->section.header[reader->section.free];
 		size_t size= reader->header.e_shentsize;
 		char const *section_name;
 
@@ -611,7 +611,7 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 		}
 		switch (section_header->sh_type) {
 		case SHT_DYNSYM:
-			if (reader->dsymtab != (Elf32_Shdr *)0) /* .protect */
+			if (reader->dsymtab != 0) /* .protect */
 				break;
 			section_name = mut_exec_shstrtab_lookup(reader, section_header->sh_name);
 			if (strcmp(section_name, ".dynsym") == 0) {
@@ -620,7 +620,7 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 			}
 			break;
 		case SHT_SYMTAB:
-			if (reader->symtab != (Elf32_Shdr *)0) /* .protect */
+			if (reader->symtab != 0) /* .protect */
 				break;
 			section_name = mut_exec_shstrtab_lookup(reader, section_header->sh_name);
 			if (strcmp(section_name, ".symtab") == 0) {
@@ -629,7 +629,7 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 			}
 			break;
 		case SHT_PROGBITS:
-			if (reader->stabs != (Elf32_Shdr *)0) /* .protect */
+			if (reader->stabs != 0) /* .protect */
 				break;
 			section_name = mut_exec_shstrtab_lookup(reader, section_header->sh_name);
 			if (strcmp(section_name, ".stab") == 0) {
@@ -641,7 +641,7 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 			break;
 		}
 	}
-	if (reader->dsymtab != (Elf32_Shdr *)0 || reader->symtab != (Elf32_Shdr *)0)
+	if (reader->dsymtab != 0 || reader->symtab != 0)
 		return 1;
 	mut_log_fatal(reader->log, "elf.nosymbols", 0);
 	mut_log_string(reader->log, reader->file_name);
@@ -666,7 +666,7 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 		return 0;
 	}
 
-	if (fread(&reader.header, sizeof(Elf32_Ehdr), 1, reader.source) != 1) {
+	if (fread(&reader.header, sizeof(mut_elf_ehdr), 1, reader.source) != 1) {
 		mut_log_fatal(log, "io.read", errno);
 		mut_log_string(log, file_name);
 		(void)mut_log_end(log);
@@ -688,7 +688,7 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 	if (!mut_exec_locate_sections(&reader))
 		goto could_not_locate_sections;
 
-	if (reader.symtab == (Elf32_Shdr *)0) {
+	if (reader.symtab == 0) {
 		reader.symtab= reader.dsymtab;
 		exec->has_full_symbols= 0;
 	} else {
@@ -701,7 +701,7 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 	if (!mut_exec_extract_symbols(exec, &reader, undesirable_suffix))
 		goto could_not_open_symtab;
 
-	if (reader.stabs != (Elf32_Shdr *)0) {
+	if (reader.stabs != 0) {
 		if (!mut_exec_stabstr_open(exec, &reader))
 			goto could_not_open_stabstr;
 		if (!mut_exec_extract_debug_info(exec, &reader))
@@ -720,7 +720,7 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 	return 1;
 
 could_not_extract_debug_info:
-	if (reader.stabs != (Elf32_Shdr *)0)
+	if (reader.stabs != 0)
 		mut_exec_stabstr_close(exec);
 could_not_open_stabstr:
 	mut_exec_symtab_close(&exec->symtab);

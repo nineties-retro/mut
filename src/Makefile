@@ -21,9 +21,11 @@ mut_opt_ui=tty
 #.volatile
 # See <URI:mut/src/README#compiling.flags.volatile>
 mut_opt_arch=x86
+mut_opt_arch_size=64
 mut_opt_cc=gcc
 mut_opt_counter=uint64
 mut_opt_exec=elf
+mut_opt_exec_elf_size=32
 mut_opt_debug=on
 mut_opt_log=tty
 mut_opt_mem=debug
@@ -86,7 +88,7 @@ endef
 empty:=
 space:= $(empty) $(empty)
 
-mut_tty_variant= tty.$(mut_opt_arch).$(mut_opt_cc).$(mut_opt_counter).$(mut_opt_exec).$(mut_opt_debug).$(mut_opt_log).$(mut_opt_mem).$(mut_opt_opt).$(mut_opt_os).$(mut_opt_proc).$(mut_opt_uint64).$(mut_opt_warn)
+mut_tty_variant= tty.$(mut_opt_arch).$(mut_opt_arch_size).$(mut_opt_cc).$(mut_opt_counter).$(mut_opt_exec).$(mut_opt_debug).$(mut_opt_log).$(mut_opt_mem).$(mut_opt_opt).$(mut_opt_os).$(mut_opt_proc).$(mut_opt_uint64).$(mut_opt_warn)
 
 mut_tty_out = $(mut_out_root)/$(mut_tty_variant)
 
@@ -107,6 +109,7 @@ mut_tty_src := \
 	ui/$(mut_opt_ui)/mut_ui.c
 
 mut_tty_dirs := \
+	arch/$(mut_opt_arch)/$(mut_opt_arch_size) \
 	arch/$(mut_opt_arch) \
 	include/assert/$(mut_opt_assert) \
 	include/errno/$(mut_opt_errno) \
@@ -120,9 +123,11 @@ mut_tty_dirs := \
 	counter/$(mut_opt_counter) \
 	exec/$(mut_opt_exec)/arch/$(mut_opt_arch) \
 	exec/$(mut_opt_exec)/elf/$(mut_opt_elf) \
+	exec/$(mut_opt_exec)/${mut_opt_arch_size} \
 	exec/$(mut_opt_exec) \
 	exec \
         backtrace/$(mut_opt_backtrace) \
+	proc/$(mut_opt_proc)/arch/$(mut_opt_arch)/os/$(mut_opt_os)/$(mut_opt_arch_size) \
 	proc/$(mut_opt_proc)/arch/$(mut_opt_arch)/os/$(mut_opt_os) \
 	proc/$(mut_opt_proc)/arch/$(mut_opt_arch) \
 	proc/$(mut_opt_proc)/ptrace/$(mut_opt_ptrace) \

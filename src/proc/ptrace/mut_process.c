@@ -161,19 +161,19 @@ int mut_process_resume(mut_process *p)
 }
 
 
-int mut_process_read_word(mut_process *p, mut_exec_addr addr, int *n)
+int mut_process_read_word(mut_process *p, mut_exec_addr addr, mut_reg *n)
 {
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(int)));
+	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(*n)));
 
 	return mut_trace_read_data(&p->trace, addr, n);
 }
 
 
-int mut_process_write_word(mut_process *p, mut_exec_addr addr, int n)
+int mut_process_write_word(mut_process *p, mut_exec_addr addr, mut_reg n)
 {
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(int)));
+	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(n)));
 
 	return mut_trace_write_data(&p->trace, addr, n);
 }
@@ -186,7 +186,7 @@ int mut_process_write_word(mut_process *p, mut_exec_addr addr, int n)
  * 3 -> 00000000000000000000000011111111
  */
 #define mut_process_byte_mask(nbytes) \
-  ((1<<((sizeof(int)-(nbytes))*CHAR_BIT))-1)
+	((((mut_reg)1)<<((sizeof(mut_reg)-(nbytes))*CHAR_BIT))-1)
 
 
 /*
@@ -196,25 +196,25 @@ int mut_process_write_word(mut_process *p, mut_exec_addr addr, int n)
  */
 int mut_process_memcpy(mut_process *p, mut_exec_addr dest, mut_exec_addr src, size_t n)
 {
-	unsigned int data;
-	size_t nwords = n/sizeof(int);
-	size_t nbytes = n%sizeof(int);
+	mut_reg data;
+	size_t nwords = n/sizeof(mut_reg);
+	size_t nbytes = n%sizeof(mut_reg);
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	mut_assert_pre(mut_exec_addr_aligned(dest, sizeof(int)));
-	mut_assert_pre(mut_exec_addr_aligned(src, sizeof(int)));
+	mut_assert_pre(mut_exec_addr_aligned(dest, sizeof(mut_reg)));
+	mut_assert_pre(mut_exec_addr_aligned(src, sizeof(mut_reg)));
 
 	while (nwords != 0) {
 		if (!mut_trace_read_data(&p->trace, src, &data))
 			return 0;
 		if (!mut_trace_write_data(&p->trace, dest, data))
 			return 0;
-		dest = mut_exec_addr_inc(dest, sizeof(int));
-		src = mut_exec_addr_inc(src, sizeof(int));
+		dest = mut_exec_addr_inc(dest, sizeof(mut_reg));
+		src = mut_exec_addr_inc(src, sizeof(mut_reg));
 		nwords -= 1;
 	}
 	if (nbytes != 0) {
-		unsigned int orig;
+		mut_reg orig;
 		if (!mut_trace_read_data(&p->trace, dest, &orig))
 			return 0;
 		if (!mut_trace_read_data(&p->trace, src, &data))
@@ -235,11 +235,11 @@ int mut_process_memcpy(mut_process *p, mut_exec_addr dest, mut_exec_addr src, si
  */
 int mut_process_memset(mut_process *p, mut_exec_addr addr, int c, size_t n)
 {
-	size_t nwords = n/sizeof(int);
-	size_t nbytes = n%sizeof(int);
+	size_t nwords = n/sizeof(mut_reg);
+	size_t nbytes = n%sizeof(mut_reg);
 	unsigned int pattern = c | (c<<8) | (c<<16) | (c<<24);
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(int)));
+	mut_assert_pre(mut_exec_addr_aligned(addr, sizeof(mut_reg)));
 
 	while (nwords != 0) {
 		if (!mut_trace_write_data(&p->trace, addr, pattern))
@@ -248,7 +248,7 @@ int mut_process_memset(mut_process *p, mut_exec_addr addr, int c, size_t n)
 		nwords -= 1;
 	}
 	if (nbytes != 0) {
-		unsigned int orig;
+		mut_reg orig;
 		if (!mut_trace_read_data(&p->trace, addr, &orig))
 			return 0;
 		pattern |= orig&mut_process_byte_mask(nbytes);

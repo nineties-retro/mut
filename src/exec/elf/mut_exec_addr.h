@@ -1,11 +1,11 @@
 #ifndef MUT_EXEC_ADDR_H
 #define MUT_EXEC_ADDR_H
 
-#include "mut_elf.h"		/* Elf32_Addr */
+#include "mut_elf_types.h"		/* mut_elf_addr */
 
-typedef Elf32_Addr mut_exec_addr;
+typedef mut_elf_addr mut_exec_addr;
 
-#define mut_exec_addr_to_int(xx) (xx)
+#define mut_exec_addr_to_long(xx) ((long)xx)
 #define mut_exec_addr_from_ulong(xx) (xx)
 #define mut_exec_addr_from_int(xx) (xx)
 #define mut_exec_addr_to_voidp(xx) ((void*)(xx))

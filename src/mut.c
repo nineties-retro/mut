@@ -657,7 +657,7 @@ static void mut_log_wum(mut *m, mut_exec_addr obj_addr, mut_exec_addr zone_addr,
 static int mut_zone_check(mut *m, mut_exec_addr obj_addr, mut_resource *obj,
 			  mut_action *consumer, mut_backtrace *bt)
 {
-	int zone_value;
+	mut_reg zone_value;
 	size_t true_size = mut_round_up(obj->size);
 	size_t pre_zone_addr = obj_addr-mut_zone_size;
 	size_t post_zone_addr = pre_zone_addr+true_size-mut_zone_size;

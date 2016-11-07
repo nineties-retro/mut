@@ -33,7 +33,7 @@ int mut_trace_trace_me(mut_log *log)
 
 
 
-int mut_trace_read_text(mut_trace *p, mut_exec_addr addr, int *data)
+int mut_trace_read_text(mut_trace *p, mut_exec_addr addr, mut_reg *data)
 {
 	void *a = mut_exec_addr_to_voidp(addr);
 	int d = ptrace(PT_READ_I, p->pid, a, 0);
@@ -50,7 +50,7 @@ int mut_trace_read_text(mut_trace *p, mut_exec_addr addr, int *data)
 
 
 
-int mut_trace_read_data(mut_trace *p, mut_exec_addr addr, int *data)
+int mut_trace_read_data(mut_trace *p, mut_exec_addr addr, mut_reg *data)
 {
 	void * a = mut_exec_addr_to_voidp(addr);
 	int d = ptrace(PT_READ_D, p->pid, a, 0);
@@ -67,7 +67,7 @@ int mut_trace_read_data(mut_trace *p, mut_exec_addr addr, int *data)
 
 
 
-int mut_trace_write_text(mut_trace *p, mut_exec_addr addr, int value)
+int mut_trace_write_text(mut_trace *p, mut_exec_addr addr, mut_reg value)
 {
 	void * a = mut_exec_addr_to_voidp(addr);
 
@@ -81,7 +81,7 @@ int mut_trace_write_text(mut_trace *p, mut_exec_addr addr, int value)
 }
 
 
-int mut_trace_write_data(mut_trace *p, mut_exec_addr addr, int value)
+int mut_trace_write_data(mut_trace *p, mut_exec_addr addr, mut_reg value)
 {
 	void * a = mut_exec_addr_to_voidp(addr);
 	if (ptrace(PT_WRITE_D, p->pid, a, value) == -1 && errno != 0) {
