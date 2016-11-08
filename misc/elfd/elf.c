@@ -63,38 +63,37 @@ static int display_type(Elf32_Half type)
 }
 
 
-static char const * locate_section_header_string(Elf32_Word name)
+static char const *locate_section_header_string(Elf32_Word name)
 {
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
-	Elf32_Shdr * section_header= (Elf32_Shdr *)&file_contents[header->e_shoff+header->e_shentsize*header->e_shstrndx];
-	if (header->e_shstrndx == 0) {
+	Elf32_Ehdr *h = (Elf32_Ehdr *)file_contents;
+	Elf32_Shdr *sh = (Elf32_Shdr *)&file_contents[h->e_shoff + h->e_shentsize*h->e_shstrndx];
+	if (h->e_shstrndx == 0) {
 		return "NONE";
 	} else {
-		char * string_table= &file_contents[section_header->sh_offset];
-		return &string_table[name];
+		const char *st= &file_contents[sh->sh_offset];
+		return &st[name];
 	}
 }
 
 static void locate_table_headers(void)
 {
-	Elf32_Ehdr * header = (Elf32_Ehdr *)file_contents;
-	size_t max = header->e_shnum;
+	Elf32_Ehdr * h = (Elf32_Ehdr *)file_contents;
+	size_t max = h->e_shnum;
 	size_t n;
 
 	for (n = 1; n < max; n += 1) {
-		Elf32_Shdr * section_header = (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
-		if (section_header->sh_type == SHT_HASH) {
-			assert(section_header->sh_link <= header->e_shnum);
-			printf("HASHTAB= %u\n", n);
-			symbol_table_header= (Elf32_Shdr *)&file_contents[header->e_shoff+section_header->sh_link*header->e_shentsize];
-			printf("SYMTAB= %d\n", section_header->sh_link);
-			hash_table_header= section_header;
-			assert(symbol_table_header->sh_link <= header->e_shnum);
-			string_table_header= (Elf32_Shdr *)&file_contents[header->e_shoff+symbol_table_header->sh_link*header->e_shentsize];
-			printf("STRTAB= %d\n", symbol_table_header->sh_link);
+		Elf32_Shdr * sh = (Elf32_Shdr *)&file_contents[h->e_shoff+n*h->e_shentsize];
+		printf("TYPE %d NAME %s\n", sh->sh_type, locate_section_header_string(sh->sh_name));
+		if (sh->sh_type == SHT_HASH) {
+			assert(sh->sh_link <= h->e_shnum);
+			printf("HASHTAB %u\n", n);
+			symbol_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff + sh->sh_link*h->e_shentsize];
+			printf("SYMTAB %d\n", sh->sh_link);
+			hash_table_header = sh;
+			assert(symbol_table_header->sh_link <= h->e_shnum);
+			string_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff+symbol_table_header->sh_link*h->e_shentsize];
+			printf("STRTAB %d\n", symbol_table_header->sh_link);
 			return;
-		} else {
-			printf("TYPE= %d\n", section_header->sh_type);
 		}
 	}
 	assert(0);
@@ -104,16 +103,16 @@ static void locate_table_headers(void)
 
 static Elf32_Shdr * locate_symbol_table_header(void)
 {
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
-	size_t max= header->e_shnum;
-	size_t n= 1;
+	Elf32_Ehdr * header = (Elf32_Ehdr *)file_contents;
+	size_t max = header->e_shnum;
+	size_t n;;
 
 	for (n= 1; n < max; n += 1) {
-		Elf32_Shdr * section_header= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
-		if (section_header->sh_type == SHT_SYMTAB)
-			return section_header;
+		Elf32_Shdr * dh= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
+		if (sh->sh_type == SHT_SYMTAB)
+			return sh;
 	}
-	return (Elf32_Shdr *)0;
+	return 0;
 }
 #endif
 
@@ -176,9 +175,9 @@ static char const * locate_string(Elf32_Word name)
 static unsigned long elf_hash(const char *name)
 {
 	const unsigned char *n = (const unsigned char *)name;
-	unsigned long h= 0, g;
-	while (*name != 0) {
-		h= (h<<4) + *n++;
+	unsigned long h = 0, g;
+	while (*n != 0) {
+		h = (h<<4) + *n++;
 		if ((g= h&0xf0000000) != 0) {
 			h ^= g>>24;
 			h ^= g;
@@ -218,25 +217,25 @@ static int display_symbol_table(void)
 
 static int display_section_headers(void)
 {
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
+	Elf32_Ehdr * h= (Elf32_Ehdr *)file_contents;
 
-	if (header->e_shoff == 0) {
+	if (h->e_shoff == 0) {
 	} else {
-		size_t max= header->e_shnum;
+		size_t max= h->e_shnum;
 		size_t n;
 
 		for (n= 1; n < max; n += 1) {
-			Elf32_Shdr * section_header= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
-			printf("S%u sh_name= %u (%s)\n", n, section_header->sh_name, locate_section_header_string(section_header->sh_name));
-			printf("S%u sh_type= %u\n", n, section_header->sh_type);
-			printf("S%u sh_flags= %x\n", n, section_header->sh_flags);
-			printf("S%u sh_addr= %x\n", n, section_header->sh_addr);
-			printf("S%u sh_offset= %u\n", n, section_header->sh_offset);
-			printf("S%u sh_size= %u\n", n, section_header->sh_size);
-			printf("S%u sh_link= %u\n", n, section_header->sh_link);
-			printf("S%u sh_info= %u\n", n, section_header->sh_info);
-			printf("S%u sh_addralign= %x\n", n, section_header->sh_addralign);
-			printf("S%u sh_entsize= %u\n", n, section_header->sh_entsize);
+			Elf32_Shdr * sh= (Elf32_Shdr *)&file_contents[h->e_shoff+n*h->e_shentsize];
+			printf("S%u sh_name= %u (%s)\n", n, sh->sh_name, locate_section_header_string(sh->sh_name));
+			printf("S%u sh_type= %u\n", n, sh->sh_type);
+			printf("S%u sh_flags= %x\n", n, sh->sh_flags);
+			printf("S%u sh_addr= %x\n", n, sh->sh_addr);
+			printf("S%u sh_offset= %u\n", n, sh->sh_offset);
+			printf("S%u sh_size= %u\n", n, sh->sh_size);
+			printf("S%u sh_link= %u\n", n, sh->sh_link);
+			printf("S%u sh_info= %u\n", n, sh->sh_info);
+			printf("S%u sh_addralign= %x\n", n, sh->sh_addralign);
+			printf("S%u sh_entsize= %u\n", n, sh->sh_entsize);
 		}
 	}
 	return EXIT_SUCCESS;
@@ -245,22 +244,22 @@ static int display_section_headers(void)
 
 static int display_program_headers(void)
 {
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
+	Elf32_Ehdr * h= (Elf32_Ehdr *)file_contents;
 
-	if (header->e_phoff == 0) {
+	if (h->e_phoff == 0) {
 	} else {
-		size_t max= header->e_phnum;
+		size_t max= h->e_phnum;
 		size_t n;
 
 		for (n= 0; n < max; n += 1) {
-			Elf32_Phdr * program_header= (Elf32_Phdr *)&file_contents[header->e_phoff+n*header->e_phentsize];
-			printf("P%u type=%u ", n, program_header->p_type);
-			printf("offset=%u ", program_header->p_offset);
-			printf("vaddr=%x ", program_header->p_vaddr);
-			printf("filesz=%u ", program_header->p_filesz);
-			printf("memsz=%u ", program_header->p_memsz);
-			printf("flags=%x ", program_header->p_flags);
-			printf("align=%x\n", program_header->p_align);
+			Elf32_Phdr * ph= (Elf32_Phdr *)&file_contents[h->e_phoff+n*h->e_phentsize];
+			printf("P%u type %u ", n, ph->p_type);
+			printf("offset %u ", ph->p_offset);
+			printf("vaddr %x ", ph->p_vaddr);
+			printf("filesz %u ", ph->p_filesz);
+			printf("memsz %u ", ph->p_memsz);
+			printf("flags %x ", ph->p_flags);
+			printf("align %x\n", ph->p_align);
 		}
 	}
 	return EXIT_SUCCESS;
@@ -268,15 +267,15 @@ static int display_program_headers(void)
 
 static int display_header(void)
 {
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
+	Elf32_Ehdr * h= (Elf32_Ehdr *)file_contents;
 
-	printf("E type= %d (", header->e_type);
-	display_type(header->e_type);  printf(")\n");
-	printf("E phentsize= %u\n", header->e_phentsize);
-	printf("E phnum= %u\n", header->e_phnum);
-	printf("E shentsize= %u\n", header->e_shentsize);
-	printf("E shnum= %u\n", header->e_shnum);
-	printf("E shstrndx= %u\n", header->e_shstrndx);
+	printf("E type= %d (", h->e_type);
+	display_type(h->e_type);  printf(")\n");
+	printf("E phentsize= %u\n", h->e_phentsize);
+	printf("E phnum= %u\n", h->e_phnum);
+	printf("E shentsize= %u\n", h->e_shentsize);
+	printf("E shnum= %u\n", h->e_shnum);
+	printf("E shstrndx= %u\n", h->e_shstrndx);
 	return EXIT_SUCCESS;
 }
 
