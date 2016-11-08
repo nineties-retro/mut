@@ -65,12 +65,14 @@ static int display_type(Elf32_Half type)
 
 static char const *locate_section_header_string(Elf32_Word name)
 {
-	Elf32_Ehdr *h = (Elf32_Ehdr *)file_contents;
-	Elf32_Shdr *sh = (Elf32_Shdr *)&file_contents[h->e_shoff + h->e_shentsize*h->e_shstrndx];
+	const Elf32_Ehdr *h = (Elf32_Ehdr *)file_contents;
+	const Elf32_Shdr *shs = (Elf32_Shdr *)&file_contents[h->e_shoff];
+	const Elf32_Shdr *sh = &shs[h->e_shstrndx];
+
 	if (h->e_shstrndx == 0) {
 		return "NONE";
 	} else {
-		const char *st= &file_contents[sh->sh_offset];
+		const char *st = &file_contents[sh->sh_offset];
 		return &st[name];
 	}
 }
@@ -83,8 +85,12 @@ static void locate_table_headers(void)
 
 	for (n = 1; n < max; n += 1) {
 		Elf32_Shdr * sh = (Elf32_Shdr *)&file_contents[h->e_shoff+n*h->e_shentsize];
-		printf("TYPE %d NAME %s\n", sh->sh_type, locate_section_header_string(sh->sh_name));
-		if (sh->sh_type == SHT_HASH) {
+		const char *name = locate_section_header_string(sh->sh_name);
+
+		printf("TYPE %d NAME %s o %u\n", sh->sh_type, name, sh->sh_offset);
+		switch (sh->sh_type) {
+		case SHT_HASH:
+			// sh->sh_link is index of symbol table.
 			assert(sh->sh_link <= h->e_shnum);
 			printf("HASHTAB %u\n", n);
 			symbol_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff + sh->sh_link*h->e_shentsize];
@@ -94,9 +100,21 @@ static void locate_table_headers(void)
 			string_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff+symbol_table_header->sh_link*h->e_shentsize];
 			printf("STRTAB %d\n", symbol_table_header->sh_link);
 			return;
+		case SHT_SYMTAB:
+			// sh->sh_link is index of string table.
+			symbol_table_header = sh;
+			string_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff+symbol_table_header->sh_link*h->e_shentsize];
+			break;
+		case SHT_STRTAB:
+			string_table_header = sh;
+			break;
+		case SHT_PROGBITS:
+			if (strcmp(name, ".plt") == 0) {
+			} else  {
+			}
+			break;
 		}
 	}
-	assert(0);
 }
 
 #if 0
@@ -203,7 +221,8 @@ static int display_symbol_table(void)
 	size_t n;
 	size_t i;
 
-	assert(symbol_table_header);
+	if (!symbol_table_header)
+		return EXIT_SUCCESS;
 	symbol= (Elf32_Sym *)&file_contents[symbol_table_header->sh_offset];
 	n= symbol_table_header->sh_size;
 	assert(n%sizeof(Elf32_Sym) == 0);
