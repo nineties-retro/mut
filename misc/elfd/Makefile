@@ -1,17 +1,8 @@
 #.intro: GNU Makefile
 
-ACC_WARNINGS= -Wall -Wcast-align -Wcast-qual -Winline \
+CFLAGS = -Wall -Wcast-align -Wcast-qual -Winline \
               -Wmissing-prototypes -Wpointer-arith \
-              -Wstrict-prototypes -Wwrite-strings
-ACC_CFLAGS= -pipe $(ACC_WARNINGS) 
-
-ACC=gcc
-
-COMPILE.c= $(ACC) $(ACC_CFLAGS) $(ACC_CPPFLAGS) -c
-
-LINK.c= $(ACC) $(LDFLAGS)
-
-
+              -Wstrict-prototypes -Wwrite-strings -g
 all: elf
 
 elf: elf.o

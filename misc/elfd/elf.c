@@ -25,6 +25,7 @@ static char **symbol_names;
 static Elf32_Shdr *symbol_table_header;
 static Elf32_Shdr *hash_table_header;
 static Elf32_Shdr *string_table_header;
+static Elf32_Shdr *dynamic_table_header;
 
 static void usage(void)
 {
@@ -102,16 +103,27 @@ static void locate_table_headers(void)
 			return;
 		case SHT_SYMTAB:
 			// sh->sh_link is index of string table.
+			if (!symbol_table_header) {
+				symbol_table_header = sh;
+				string_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff+symbol_table_header->sh_link*h->e_shentsize];
+			}
+			break;
+		case SHT_DYNSYM:
+			// sh->sh_link is index of string table.
 			symbol_table_header = sh;
 			string_table_header = (Elf32_Shdr *)&file_contents[h->e_shoff+symbol_table_header->sh_link*h->e_shentsize];
 			break;
 		case SHT_STRTAB:
-			string_table_header = sh;
+			if (!string_table_header)
+				string_table_header = sh;
 			break;
 		case SHT_PROGBITS:
 			if (strcmp(name, ".plt") == 0) {
 			} else  {
 			}
+			break;
+		case SHT_DYNAMIC:
+			dynamic_table_header = sh;
 			break;
 		}
 	}
@@ -228,7 +240,35 @@ static int display_symbol_table(void)
 	assert(n%sizeof(Elf32_Sym) == 0);
 	printf("SYMSIZE= %d, %x\n", sizeof(Elf32_Sym), sizeof(Elf32_Sym));
 	for (i= 1; n != 0; n-=sizeof(Elf32_Sym), i+=1, symbol+=1) {
-		printf("SYM%u (%p) name=%u (%s), addr=%x, size=%u, shndx=%u\n", i, symbol, symbol->st_name, locate_string(symbol->st_name), symbol->st_value, symbol->st_size, symbol->st_shndx);
+		printf("SYM%u (%p) name=%u (%s), addr=%x, size=%u, bind=%u, type=%u, other=%x, shndx=%u\n",
+		       i, symbol, symbol->st_name,
+		       locate_string(symbol->st_name),
+		       symbol->st_value,
+		       symbol->st_size,
+		       (unsigned int)ELF32_ST_BIND(symbol->st_info),
+		       (unsigned int)ELF32_ST_TYPE(symbol->st_info),
+		       (unsigned int)symbol->st_other,
+		       symbol->st_shndx);
+	}
+	return EXIT_SUCCESS;
+}
+
+
+static int display_dynamic_table(void)
+{
+	Elf32_Dyn *d;
+	size_t n;
+	size_t i;
+
+	if (!dynamic_table_header)
+		return EXIT_SUCCESS;
+	d = (Elf32_Dyn *)&file_contents[dynamic_table_header->sh_offset];
+	n = dynamic_table_header->sh_size;
+	assert(sizeof(*d) == dynamic_table_header->sh_entsize);
+	assert(n%sizeof(*d) == 0);
+	
+	for (i = 1; n != 0; n -= sizeof(*d), i += 1, d += 1) {
+		printf("DYN%u tag %u val %u %x\n", i, d->d_tag, d->d_un.d_val, d->d_un.d_val);
 	}
 	return EXIT_SUCCESS;
 }
@@ -336,6 +376,9 @@ static int debug(void)
 	if (display_symbol_table() == EXIT_FAILURE)
 		goto could_not_display_symbol_table;
 
+	if (display_dynamic_table() == EXIT_FAILURE)
+		goto could_not_display_dynamic_table;
+
 	if (display_symbols() == EXIT_FAILURE)
 		goto could_not_display_symbols;
 
@@ -348,6 +391,7 @@ static int debug(void)
 	return EXIT_SUCCESS;
 
 could_not_display_symbols:
+could_not_display_dynamic_table:
 could_not_display_symbol_table:
 could_not_display_section_headers:
 could_not_display_program_headers:

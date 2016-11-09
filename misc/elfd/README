@@ -1,3 +1,86 @@
 			     -*- Text -*-
 
 .intro: A simple dynamic ELF dumper.
+
+   Running ./elf on one of the sample programs and looking at the output :-
+   
+      $ ./elf ../../tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe      ...
+      S5 sh_name= 78 (.dynsym)
+      S5 sh_type= 11
+      S5 sh_flags= 2
+      S5 sh_addr= 80481cc
+      S5 sh_offset= 460
+      S5 sh_size= 96
+      S5 sh_link= 6
+      S5 sh_info= 1
+      S5 sh_addralign= 4
+      S5 sh_entsize= 16
+      ...
+      S12 sh_name= 135 (.plt)
+      S12 sh_type= 1
+      S12 sh_flags= 6
+      S12 sh_addr= 80482f0
+      S12 sh_offset= 752
+      S12 sh_size= 64
+      S12 sh_link= 0
+      S12 sh_info= 0
+      S12 sh_addralign= 10
+      S12 sh_entsize= 4
+      ...
+      SYM1 (0x984f1d4) name=0 (), addr=0, size=0, bin=0, type=0, other=0, shndx=0
+      SYM2 (0x984f1e4) name=26 (malloc), addr=0, size=0, bin=1, type=2, other=0, shndx=0
+      SYM3 (0x984f1f4) name=57 (__gmon_start__), addr=0, size=0, bin=2, type=0, other=0, shndx=0
+      SYM4 (0x984f204) name=33 (__libc_start_main), addr=0, size=0, bin=1, type=2, other=0, shndx=0
+      SYM5 (0x984f214) name=51 (write), addr=0, size=0, bin=1, type=2, other=0, shndx=0
+      SYM6 (0x984f224) name=11 (_IO_stdin_used), addr=804851c, size=4, bin=1, type=1,
+
+   and cross referencing it with the output of objdump -d :-
+
+      Disassembly of section .plt:
+
+      080482f0 <malloc@plt-0x10>:
+       80482f0:	ff 35 04 a0 04 08    	pushl  0x804a004
+       80482f6:	ff 25 08 a0 04 08    	jmp    *0x804a008
+       80482fc:	00 00                	add    %al,(%eax)
+	      ...
+
+      08048300 <malloc@plt>:
+       8048300:	ff 25 0c a0 04 08    	jmp    *0x804a00c
+       8048306:	68 00 00 00 00       	push   $0x0
+       804830b:	e9 e0 ff ff ff       	jmp    80482f0 <_init+0x24>
+
+      08048310 <__libc_start_main@plt>:
+       8048310:	ff 25 10 a0 04 08    	jmp    *0x804a010
+       8048316:	68 08 00 00 00       	push   $0x8
+       804831b:	e9 d0 ff ff ff       	jmp    80482f0 <_init+0x24>
+
+      08048320 <write@plt>:
+       8048320:	ff 25 14 a0 04 08    	jmp    *0x804a014
+       8048326:	68 10 00 00 00       	push   $0x10
+       804832b:	e9 c0 ff ff ff       	jmp    80482f0 <_init+0x24>
+
+    and gdb :-
+
+       (gdb) b main
+       Breakpoint 1 at 0x804844c: file src/mlk_malloc.c, line 12.
+       (gdb) run
+       Starting program: /home/stephen/mut/tests/gen/gcc.x86.fp.dynamic.elfd.off.on/exe/mlk_malloc.exe 
+
+       Breakpoint 1, main () at src/mlk_malloc.c:12
+       (gdb) n
+       A
+       (gdb) x/5i $rip
+       Value can't be converted to integer.
+       (gdb) x/5i $eip
+       => 0x8048460 <main+37>:	sub    $0xc,%esp
+	  0x8048463 <main+40>:	push   $0x8
+	  0x8048465 <main+42>:	call   0x8048300 <malloc@plt>
+	  0x804846a <main+47>:	add    $0x10,%esp
+	  0x804846d <main+50>:	mov    %eax,-0xc(%ebp)
+       (gdb)
+
+   shows that the .plt entries are in the same order as the function
+   entries in the .dynsym section.  Thus breakpointing malloc can be
+   done by noticing that the entry has address 0, and then determining
+   the ordinal n of the function of interest and then setting the
+   breakpoint address as .plt + n*plt.sh_addr_align.
