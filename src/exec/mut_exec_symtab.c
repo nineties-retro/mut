@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Linked-list symbol table.
  */
 
@@ -42,12 +40,14 @@ void mut_exec_symtab_open(struct mut_exec_symtab *s, mut_log *l)
 }
 
 
-static struct mut_exec_symtab_fun *mut_exec_symtab_fun_open(struct mut_exec_symtab *s,
-							    char const *name,
-							    mut_exec_addr start_addr, 
-							    struct mut_exec_symtab_fun *next)
+static struct mut_exec_symtab_fun *
+mut_exec_symtab_fun_open(struct mut_exec_symtab *s,
+			 char const *name,
+			 mut_exec_addr start_addr, 
+			 struct mut_exec_symtab_fun *next)
 {
 	struct mut_exec_symtab_fun *nf = mut_mem_malloc(sizeof(*nf));
+
 	if (nf == 0) {
 		mut_log_fatal(s->log, "mem.full", errno);
 		(void)mut_log_end(s->log);
@@ -61,7 +61,8 @@ static struct mut_exec_symtab_fun *mut_exec_symtab_fun_open(struct mut_exec_symt
 }
 
 
-int mut_exec_symtab_add_fun(struct mut_exec_symtab *s, char const *n, mut_exec_addr a)
+int mut_exec_symtab_add_fun(struct mut_exec_symtab *s,
+			    char const *n, mut_exec_addr a)
 {
 	struct mut_exec_symtab_fun ** fp = &s->head;
 	struct mut_exec_symtab_fun  * f;
@@ -79,12 +80,14 @@ int mut_exec_symtab_add_fun(struct mut_exec_symtab *s, char const *n, mut_exec_a
 }
 
 
-static struct mut_exec_symtab_fun_line *mut_exec_symtab_fun_line_open(struct mut_exec_symtab * s,
-								      mut_exec_addr a,
-								      unsigned int l,
-								      struct mut_exec_symtab_fun_line *n)
+static struct mut_exec_symtab_fun_line *
+mut_exec_symtab_fun_line_open(struct mut_exec_symtab * s,
+			      mut_exec_addr a,
+			      unsigned int l,
+			      struct mut_exec_symtab_fun_line *n)
 {
 	struct mut_exec_symtab_fun_line *nfl = mut_mem_malloc(sizeof(*nfl));
+
 	if (nfl == 0) {
 		mut_log_fatal(s->log, "mem.full", errno);
 		(void)mut_log_end(s->log);
@@ -97,7 +100,9 @@ static struct mut_exec_symtab_fun_line *mut_exec_symtab_fun_line_open(struct mut
 }
 
 
-static int mut_exec_symtab_add_xxx(struct mut_exec_symtab *s, mut_exec_addr a, unsigned int l)
+static int
+mut_exec_symtab_add_xxx(struct mut_exec_symtab *s, mut_exec_addr a,
+			unsigned int l)
 {
 	struct mut_exec_symtab_fun_line  * fl = 0;
 	struct mut_exec_symtab_fun_line ** flp = &s->cache->fun_lines;
@@ -147,7 +152,8 @@ int mut_exec_symtab_add_range(struct mut_exec_symtab *s, mut_exec_addr a,
 
 
 
-int mut_exec_symtab_lookup_addr(const struct mut_exec_symtab *s, mut_exec_addr a,
+int mut_exec_symtab_lookup_addr(const struct mut_exec_symtab *s,
+				mut_exec_addr a,
 				mut_exec_addr *sa, char const **n,
 				char const **fn, unsigned int *l)
 {
@@ -175,7 +181,8 @@ int mut_exec_symtab_lookup_addr(const struct mut_exec_symtab *s, mut_exec_addr a
 }
 
 
-mut_exec_addr mut_exec_symtab_lookup_name(const struct mut_exec_symtab *s, char const *n) 
+mut_exec_addr
+mut_exec_symtab_lookup_name(const struct mut_exec_symtab *s, char const *n) 
 {
 	struct mut_exec_symtab_fun * f;
 

@@ -31,7 +31,8 @@ int mut_exec_open(mut_exec *, char const *, mut_log *, char const *);
 
 void mut_exec_functions_addr(mut_exec *, size_t, mut_exec_function *);
 
-int mut_exec_addr_name(mut_exec *, mut_exec_addr, mut_exec_addr *, char const **, char const **, unsigned int *);
+int mut_exec_addr_name(mut_exec *, mut_exec_addr, mut_exec_addr *,
+		       char const **, char const **, unsigned int *);
 
 int mut_exec_has_backtrace_symbols(mut_exec * exec);
 

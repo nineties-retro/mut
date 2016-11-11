@@ -223,8 +223,9 @@ static void mut_exec_strtab_close(mut_exec *exec)
  * If there are any problems with doing this, then an error is logged
  * and 0 is returned.  Otherwise a non-zero value is returned.
  */
-static int mut_exec_extract_symbols(mut_exec *exec, mut_exec_reader *reader,
-				    char const *undesirable_suffix)
+static int
+mut_exec_extract_symbols(mut_exec *exec, mut_exec_reader *reader,
+			 char const *undesirable_suffix)
 {
 	mut_elf_sym * symbols;
 	size_t      n_symbols;
@@ -286,8 +287,9 @@ incorrect_symtab_size:
 }
 
 
-static int mut_exec_extract_stabs(mut_exec_reader *reader,
-				  struct mut_exec_stab **stabs, size_t *n_stabs)
+static int
+mut_exec_extract_stabs(mut_exec_reader *reader,
+		       struct mut_exec_stab **stabs, size_t *n_stabs)
 {
 	mut_assert_pre(reader->stabs != 0);
 
@@ -338,7 +340,8 @@ incorrect_stabs_size:
  * Based on the stab section header in reader->stabs, locates the
  * stab strings (.stabstr) and reads it all into exec->stabstr.
  */
-static int mut_exec_stabstr_open(mut_exec * exec, mut_exec_reader * reader)
+static int
+mut_exec_stabstr_open(mut_exec * exec, mut_exec_reader * reader)
 {
 	long strtab_offset;
 	mut_elf_shdr strtab;
@@ -428,7 +431,8 @@ static void mut_exec_stabstr_close(mut_exec *exec)
  * If there are any problems with doing this, then an error is logged
  * and 0 is returned.  Otherwise a non-zero value is returned.
  */
-static int mut_exec_extract_debug_info(mut_exec * exec, mut_exec_reader * reader)
+static int
+mut_exec_extract_debug_info(mut_exec * exec, mut_exec_reader * reader)
 {
 	struct mut_exec_stab    * stabs;
 	size_t                    n_stabs;
@@ -495,9 +499,10 @@ could_not_extract_stabs:
  * Uses the initialised reader->header to read in the section header string
  * table (.shstrtab) and store it in reader->header.strings.
  */
-static int mut_exec_shstrtab_open(mut_exec_reader * reader)
+static int
+mut_exec_shstrtab_open(mut_exec_reader * reader)
 {
-	size_t byte_shstrndx= reader->header.e_shstrndx*reader->header.e_shentsize;
+	size_t byte_shstrndx = reader->header.e_shstrndx*reader->header.e_shentsize;
 	long byte_offset= reader->header.e_shoff + byte_shstrndx;
 	mut_elf_shdr header;
 
@@ -548,7 +553,8 @@ could_not_allocate_strings:
 }
 
 
-static const char *mut_exec_shstrtab_lookup(mut_exec_reader *reader, mut_elf_word index)
+static const char *
+mut_exec_shstrtab_lookup(mut_exec_reader *reader, mut_elf_word index)
 {
 	mut_assert_pre(index < reader->strings.size);
 	return &reader->strings.data[index];
