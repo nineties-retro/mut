@@ -26,6 +26,7 @@ static Elf32_Shdr *symbol_table_header;
 static Elf32_Shdr *hash_table_header;
 static Elf32_Shdr *string_table_header;
 static Elf32_Shdr *dynamic_table_header;
+static Elf32_Shdr *plt_header;
 
 static void usage(void)
 {
@@ -118,9 +119,8 @@ static void locate_table_headers(void)
 				string_table_header = sh;
 			break;
 		case SHT_PROGBITS:
-			if (strcmp(name, ".plt") == 0) {
-			} else  {
-			}
+			if (strcmp(name, ".plt") == 0)
+				plt_header = sh;
 			break;
 		case SHT_DYNAMIC:
 			dynamic_table_header = sh;
@@ -129,63 +129,6 @@ static void locate_table_headers(void)
 	}
 }
 
-#if 0
-
-static Elf32_Shdr * locate_symbol_table_header(void)
-{
-	Elf32_Ehdr * header = (Elf32_Ehdr *)file_contents;
-	size_t max = header->e_shnum;
-	size_t n;;
-
-	for (n= 1; n < max; n += 1) {
-		Elf32_Shdr * dh= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
-		if (sh->sh_type == SHT_SYMTAB)
-			return sh;
-	}
-	return 0;
-}
-#endif
-
-#if 0
-static void locate_string_table(char const ** table, size_t *size)
-{
-	Elf32_Ehdr * header= (Elf32_Ehdr *)file_contents;
-	size_t max= header->e_shnum;
-	size_t n= 1;
-
-	for (n= 1; n < max; n += 1) {
-		Elf32_Shdr * section_header= (Elf32_Shdr *)&file_contents[header->e_shoff+n*header->e_shentsize];
-		if (section_header->sh_type == SHT_STRTAB && n != header->e_shstrndx && strcmp(".strtab", locate_section_header_string(section_header->sh_name)) == 0) {
-			assert(section_header->sh_offset);
-			*table= &file_contents[section_header->sh_offset];
-			*size= section_header->sh_size;
-			return;
-		}
-	}
-	assert(0);
-}
-
-#endif
-
-#if 0
-static char const * locate_string(Elf32_Word name)
-{
-	char const * string;
-	static char const * string_table= 0;
-	static size_t       string_table_size;
-
-	if (string_table == 0) {
-		locate_string_table(&string_table, &string_table_size);
-		assert(string_table != (char const *)0);
-		assert(string_table_size > 0);
-	}
-
-	assert(name < string_table_size);
-	string= &string_table[name];
-	assert(string);
-	return string;
-}
-#endif
 
 
 static char const * locate_string(Elf32_Word name)
@@ -221,7 +164,8 @@ static unsigned long elf_hash(const char *name)
 static int display_symbols(void)
 {
 	for (; *symbol_names; symbol_names+=1) {
-		printf("XXX %s=%lu\n", *symbol_names, elf_hash(*symbol_names));
+		printf("XXX %s=%lu\n", *symbol_names,
+		       elf_hash(*symbol_names));
 	}
 	return EXIT_SUCCESS;
 }
@@ -232,6 +176,7 @@ static int display_symbol_table(void)
 	Elf32_Sym * symbol;
 	size_t n;
 	size_t i;
+	size_t func = 1;
 
 	if (!symbol_table_header)
 		return EXIT_SUCCESS;
@@ -239,6 +184,7 @@ static int display_symbol_table(void)
 	n= symbol_table_header->sh_size;
 	assert(n%sizeof(Elf32_Sym) == 0);
 	printf("SYMSIZE= %d, %x\n", sizeof(Elf32_Sym), sizeof(Elf32_Sym));
+
 	for (i= 1; n != 0; n-=sizeof(Elf32_Sym), i+=1, symbol+=1) {
 		printf("SYM%u (%p) name=%u (%s), addr=%x, size=%u, bind=%u, type=%u, other=%x, shndx=%u\n",
 		       i, symbol, symbol->st_name,
@@ -249,6 +195,12 @@ static int display_symbol_table(void)
 		       (unsigned int)ELF32_ST_TYPE(symbol->st_info),
 		       (unsigned int)symbol->st_other,
 		       symbol->st_shndx);
+		if (ELF32_ST_TYPE(symbol->st_info) == STT_FUNC) {
+			if ((symbol->st_value == 0) && plt_header) {
+				printf("PLT addr %x\n", plt_header->sh_addr + func*plt_header->sh_addralign);
+			}
+			func += 1;
+		}
 	}
 	return EXIT_SUCCESS;
 }
