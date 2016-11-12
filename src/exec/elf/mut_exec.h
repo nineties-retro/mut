@@ -10,7 +10,12 @@ struct mut_exec_strings {
 
 struct mut_exec {
 	struct mut_exec_symtab symtab;
-	struct mut_exec_strings strings;
+	/*
+	 * The following three are named after the corresponding
+	 * ELF section.
+	 */
+	struct mut_exec_strings strtab;
+	struct mut_exec_strings dynstr;
 	struct mut_exec_strings stabstr;
 	int       has_full_symbols;
 	mut_log * log;

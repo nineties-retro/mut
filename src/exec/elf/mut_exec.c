@@ -55,11 +55,19 @@ static size_t mut_exec_stab_str(struct mut_exec_stab * s)
 #define mut_exec_stab_addr(s) ((s)->value)
 #define mut_exec_stab_offset(s) ((s)->value)
 
+enum {
+	/*
+	 * The maximum number of sections that were are interested
+	 * in caching the details of.  If you add another section,
+	 * then obviously increase this value.
+	 */
+	mut_exec_reader_sections_max = 4
+};
 
 struct mut_exec_reader {
 	mut_elf_ehdr   header;
 	struct {
-		mut_elf_shdr header[3];
+		mut_elf_shdr header[mut_exec_reader_sections_max];
 		size_t     free;
 	} section;
 	struct {
@@ -69,6 +77,7 @@ struct mut_exec_reader {
 	mut_elf_shdr * dsymtab;
 	mut_elf_shdr * symtab;
 	mut_elf_shdr * stabs;
+	mut_elf_shdr * plt;
 	mut_elf_shdr   strtab;
 	FILE       * source;
 	mut_log    * log;
@@ -138,79 +147,111 @@ static int mut_exec_check_type(mut_exec_reader *reader)
  * If there are any problems, an error is logged and 0 is returned.
  * Otherwise a non-zero value is returned.
  */
-static int mut_exec_strtab_open(mut_exec *exec, mut_exec_reader * reader)
+static int
+mut_exec_strtab_open(mut_exec *exec,
+		     mut_exec_reader *r,
+		     mut_elf_shdr *symtab,
+		     struct mut_exec_strings *strs)
 {
-	long strtab_offset;
+	const size_t es = r->header.e_shentsize;
+	const size_t shi = symtab->sh_link;
+	const long o = r->header.e_shoff + shi * es;
+	mut_elf_shdr strtab;
 
-	if (reader->symtab->sh_link > reader->header.e_shnum) {
-		mut_log_fatal(reader->log, "elf.section_index.range", 0);
-		mut_log_string(reader->log, reader->file_name);
-		mut_log_string(reader->log, ".strtab");
-		(void)mut_log_end(reader->log);
+	if (r->header.e_shentsize != sizeof(strtab)) {
+		mut_log_fatal(r->log, "elf.section.size", 0);
+		mut_log_string(r->log, r->file_name);
+		mut_log_uint(r->log, r->header.e_shentsize);
+		mut_log_uint(r->log, sizeof(strtab));
+		(void)mut_log_end(r->log);
+		goto bad_section_header_size;
+	}
+	if (shi > r->header.e_shnum) {
+		mut_log_fatal(r->log, "elf.section.index.range", 0);
+		mut_log_string(r->log, r->file_name);
+		mut_log_string(r->log, ".strtab");
+		mut_log_uint(r->log, shi);
+		mut_log_uint(r->log, r->header.e_shnum);
+		(void)mut_log_end(r->log);
 		goto hash_link_range_error;
 	}
-	strtab_offset= reader->header.e_shoff 
-		+ reader->symtab->sh_link*reader->header.e_shentsize;
-	if (fseek(reader->source, strtab_offset, SEEK_SET) < 0) {
-		mut_log_fatal(reader->log, "io.seek", 0);
-		mut_log_string(reader->log, reader->file_name);
-		(void)mut_log_end(reader->log);
+	if (fseek(r->source, o, SEEK_SET) < 0) {
+		int e = errno;
+		mut_log_fatal(r->log, "io.seek", 0);
+		mut_log_string(r->log, r->file_name);
+		mut_log_int(r->log, e);
+		(void)mut_log_end(r->log);
 		goto could_not_seek_to_header;
 	}
-	if (fread(&reader->strtab, reader->header.e_shentsize, 1, reader->source) != 1) {
-		mut_log_fatal(reader->log, "io.read", errno);
-		mut_log_string(reader->log, reader->file_name);
-		(void)mut_log_end(reader->log);
+	if (fread(&strtab, sizeof(strtab), 1, r->source) != 1) {
+		int e = errno;
+		mut_log_fatal(r->log, "io.read", errno);
+		mut_log_string(r->log, r->file_name);
+		mut_log_int(r->log, e);
+		(void)mut_log_end(r->log);
 		goto could_not_read_header;
 	}
-	if (reader->strtab.sh_type != SHT_STRTAB) {
-		mut_log_fatal(reader->log, "elf.symtab.strtab", 0);
-		mut_log_string(reader->log, reader->file_name);
-		(void)mut_log_end(reader->log);
+	if (strtab.sh_type != SHT_STRTAB) {
+		mut_log_fatal(r->log, "elf.symtab.strtab", 0);
+		mut_log_string(r->log, r->file_name);
+		mut_log_int(r->log, strtab.sh_type);
+		mut_log_int(r->log, SHT_STRTAB);
+		(void)mut_log_end(r->log);
 		goto could_not_read_header;
 	}
-	exec->strings.size= reader->strtab.sh_size;
-	exec->strings.data= mut_mem_malloc(reader->strtab.sh_size);
-	if (exec->strings.data == 0) {
-		mut_log_fatal(reader->log, "mem.full", errno);
-		(void)mut_log_end(reader->log);
+	/*
+	 * @@@ should check that strtab.sh_size is less than
+	 * the size of the file.
+	 */
+	strs->size = strtab.sh_size;
+	strs->data = mut_mem_malloc(strtab.sh_size);
+	if (strs->data == 0) {
+		mut_log_fatal(r->log, "mem.full", errno);
+		mut_log_uint(r->log, strtab.sh_size);
+		(void)mut_log_end(r->log);
 		goto could_not_allocate_strings;
 	}
-	if (fseek(reader->source, reader->strtab.sh_offset, SEEK_SET) < 0) {
-		mut_log_fatal(reader->log, "io.seek", errno);
-		mut_log_string(reader->log, reader->file_name);
-		(void)mut_log_end(reader->log);
+	if (fseek(r->source, strtab.sh_offset, SEEK_SET) < 0) {
+		int e = errno;
+		mut_log_fatal(r->log, "io.seek", errno);
+		mut_log_string(r->log, r->file_name);
+		mut_log_int(r->log, e);
+		(void)mut_log_end(r->log);
 		goto could_not_seek_to_strings;
 	}
-	if (fread(exec->strings.data, reader->strtab.sh_size, 1, reader->source) != 1) {
-		mut_log_fatal(reader->log, "io.read", errno);
-		mut_log_string(reader->log, reader->file_name);
-		(void)mut_log_end(reader->log);
+	if (fread(strs->data, strtab.sh_size, 1, r->source) != 1) {
+		int e = errno;
+		mut_log_fatal(r->log, "io.read", errno);
+		mut_log_string(r->log, r->file_name);
+		mut_log_int(r->log, e);
+		(void)mut_log_end(r->log);
 		goto could_not_read_strings;
 	}
 	return 1;
 
 could_not_read_strings:
 could_not_seek_to_strings:
-	mut_mem_free(exec->strings.data);
+	mut_mem_free(strs->data);
 could_not_allocate_strings:
 could_not_read_header:
 could_not_seek_to_header:
 hash_link_range_error:
+bad_section_header_size:
 	return 0;
 }
 
 
-static char const *mut_exec_strtab_lookup(mut_exec * exec, mut_elf_word str)
+static char const *
+mut_exec_strtab_lookup(struct mut_exec_strings *strs, mut_elf_word str)
 {
-	mut_assert_pre(str < exec->strings.size);
-	return &exec->strings.data[str];
+	mut_assert_pre(str < strs->size);
+	return &strs->data[str];
 }
 
 
-static void mut_exec_strtab_close(mut_exec *exec)
+static void mut_exec_strtab_close(struct mut_exec_strings *strs)
 {
-	mut_mem_free(exec->strings.data);
+	mut_mem_free(strs->data);
 }
 
 
@@ -224,53 +265,58 @@ static void mut_exec_strtab_close(mut_exec *exec)
  * and 0 is returned.  Otherwise a non-zero value is returned.
  */
 static int
-mut_exec_extract_symbols(mut_exec *exec, mut_exec_reader *reader,
-			 char const *undesirable_suffix)
+mut_exec_extract_symbols(mut_exec *exec,
+			 mut_exec_reader *reader,
+			 mut_elf_shdr *symtab,
+			 struct mut_exec_strings *strtab,
+			 char const *undesirable_suffix,
+			 mut_elf_shdr *plt)
 {
 	mut_elf_sym * symbols;
 	size_t      n_symbols;
 	size_t      i;
+	size_t      f = 1;
 
-	mut_assert_pre(reader->symtab != 0);
-	mut_assert_pre(exec->strings.data != 0);
+	mut_assert_pre(strtab->data != 0);
 
-	if (reader->symtab->sh_size % sizeof(mut_elf_sym) != 0) {
+	if (symtab->sh_size % sizeof(mut_elf_sym) != 0) {
 		mut_log_fatal(reader->log, "elf.sym.size", 0);
 		mut_log_string(reader->log, reader->file_name);
 		(void)mut_log_end(reader->log);
 		goto incorrect_symtab_size;
 	}
-	n_symbols= reader->symtab->sh_size/sizeof(mut_elf_sym);
-	symbols= mut_mem_malloc(reader->symtab->sh_size);
+	n_symbols= symtab->sh_size/sizeof(mut_elf_sym);
+	symbols= mut_mem_malloc(symtab->sh_size);
 	if (symbols ==  0) {
 		mut_log_mem_full(reader->log, errno);
 		goto could_not_allocate_symbols;
 	}
-	if (fseek(reader->source, reader->symtab->sh_offset, SEEK_SET) < 0) {
+	if (fseek(reader->source, symtab->sh_offset, SEEK_SET) < 0) {
 		mut_log_fatal(reader->log, "io.seek", 0);
 		mut_log_string(reader->log, reader->file_name);
-		mut_log_long(reader->log, reader->symtab->sh_offset);
+		mut_log_long(reader->log, symtab->sh_offset);
 		(void)mut_log_end(reader->log);
 		goto could_not_seek_to_symbols;
 	}
-	if (fread(symbols, reader->symtab->sh_size, 1, reader->source) != 1){
+	if (fread(symbols, symtab->sh_size, 1, reader->source) != 1){
 		mut_log_fatal(reader->log, "io.read", errno);
 		mut_log_string(reader->log, reader->file_name);
 		(void)mut_log_end(reader->log);
 		goto could_not_read_symbols;
 	}
-	mut_exec_symtab_open(&exec->symtab, reader->log);
-	for (i= 0; i < n_symbols; i += 1) {
+	for (i = 0; i < n_symbols; i += 1) {
 		mut_elf_sym * s= &symbols[i];
 		if (mut_elf_st_type(s->st_info) == STT_FUNC) {
 			mut_exec_addr sa= mut_exec_addr_from_ulong(s->st_value);
-			char const * n= mut_exec_strtab_lookup(exec, s->st_name);
+			char const *n= mut_exec_strtab_lookup(strtab, s->st_name);
 			char * start = undesirable_suffix ? strstr(n, undesirable_suffix) : 0;
-			if (start != 0) {
+			if (start != 0)
 				*start= '\0';
-			}
-			if (!mut_exec_symtab_add_fun(&exec->symtab, n, sa))
+			if (!sa && plt)
+				sa = plt->sh_addr + f*plt->sh_addralign;
+			if (sa && !mut_exec_symtab_add_fun(&exec->symtab, n, sa))
 				goto could_not_add_fun;
+			f += 1;
 		}
 	}
 	mut_mem_free(symbols);
@@ -604,6 +650,7 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 	reader->symtab= 0;
 	reader->dsymtab= 0;
 	reader->stabs= 0;
+	reader->plt = 0;
 	for (n= 1;  n < n_headers;  n+=1) {
 		mut_elf_shdr *section_header= &reader->section.header[reader->section.free];
 		size_t size= reader->header.e_shentsize;
@@ -635,11 +682,16 @@ static int mut_exec_locate_sections(mut_exec_reader * reader)
 			}
 			break;
 		case SHT_PROGBITS:
-			if (reader->stabs != 0) /* .protect */
-				break;
 			section_name = mut_exec_shstrtab_lookup(reader, section_header->sh_name);
 			if (strcmp(section_name, ".stab") == 0) {
+				if (reader->stabs != 0) /* .protect */
+					break;
 				reader->stabs= section_header;
+				reader->section.free += 1;
+			} else if (strcmp(section_name, ".plt") == 0) {
+				if (reader->plt != 0) /* .protect */
+					break;
+				reader->plt = section_header;
 				reader->section.free += 1;
 			}
 			break;
@@ -662,10 +714,10 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 {
 	mut_exec_reader reader;
 
-	reader.log= log;
-	reader.file_name= file_name;
+	reader.log = log;
+	reader.file_name = file_name;
 
-	if ((reader.source= fopen(file_name, "r")) == (FILE *)0) {
+	if ((reader.source = fopen(file_name, "r")) == (FILE *)0) {
 		mut_log_fatal(log, "io.open", errno);
 		mut_log_string(log, file_name);
 		(void)mut_log_end(log);
@@ -694,26 +746,30 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 	if (!mut_exec_locate_sections(&reader))
 		goto could_not_locate_sections;
 
-	if (reader.symtab == 0) {
-		reader.symtab= reader.dsymtab;
-		exec->has_full_symbols= 0;
-	} else {
-		exec->has_full_symbols= 1;
+	mut_exec_symtab_open(&exec->symtab, reader.log);
+	exec->strtab.data = 0;
+	exec->dynstr.data = 0;
+	if (reader.symtab) {
+		if (!mut_exec_strtab_open(exec, &reader, reader.symtab, &exec->strtab))
+			goto could_not_open_strtab;
+		if (!mut_exec_extract_symbols(exec, &reader, reader.symtab, &exec->strtab, undesirable_suffix, 0))
+			goto could_not_open_symtab;
+		exec->has_full_symbols = 1;
 	}
-
-	if (!mut_exec_strtab_open(exec, &reader))
-		goto could_not_open_strtab;
-
-	if (!mut_exec_extract_symbols(exec, &reader, undesirable_suffix))
-		goto could_not_open_symtab;
-
+	if (reader.dsymtab) {
+		if (!mut_exec_strtab_open(exec, &reader, reader.dsymtab, &exec->dynstr))
+			goto could_not_open_dynstr;
+		if (!mut_exec_extract_symbols(exec, &reader, reader.dsymtab, &exec->dynstr, undesirable_suffix, reader.plt))
+			goto could_not_open_dynsym;
+	}
+	
 	if (reader.stabs != 0) {
 		if (!mut_exec_stabstr_open(exec, &reader))
 			goto could_not_open_stabstr;
 		if (!mut_exec_extract_debug_info(exec, &reader))
 			goto could_not_extract_debug_info;
 	} else {
-		exec->stabstr.data= 0;
+		exec->stabstr.data = 0;
 	}
 
 	if (fclose(reader.source) != 0) {
@@ -722,17 +778,20 @@ int mut_exec_open(mut_exec *exec, char const *file_name, mut_log *log,
 		(void)mut_log_end(log);	/* XXX */
 	}
 	mut_exec_shstrtab_close(&reader);
-	exec->log= log;
+	exec->log = log;
 	return 1;
 
 could_not_extract_debug_info:
 	if (reader.stabs != 0)
 		mut_exec_stabstr_close(exec);
 could_not_open_stabstr:
-	mut_exec_symtab_close(&exec->symtab);
+could_not_open_dynsym:
+	mut_exec_strtab_close(&exec->dynstr);
+could_not_open_dynstr:
 could_not_open_symtab:
-	mut_exec_strtab_close(exec);
+	mut_exec_strtab_close(&exec->strtab);
 could_not_open_strtab:
+	mut_exec_symtab_close(&exec->symtab);
 could_not_locate_sections:
 	mut_exec_shstrtab_close(&reader);
 could_not_open_section_header_string_table:
@@ -746,12 +805,13 @@ could_not_read_header:
 
 
 
-void mut_exec_functions_addr(mut_exec * exec, size_t n, mut_exec_function * fs)
+void mut_exec_functions_addr(mut_exec *exec, size_t n, mut_exec_function *fs)
 {
 	size_t i;
-	for (i= 0;  i < n;  i += 1) {
-		mut_exec_addr sa = 
-			mut_exec_symtab_lookup_name(&exec->symtab, fs[i].name);
+	mut_exec_addr sa;
+
+	for (i = 0;  i < n;  i += 1) {
+		sa = mut_exec_symtab_lookup_name(&exec->symtab, fs[i].name);
 		fs[i].addr = sa;
 		fs[i].flags = (sa != 0);
 	}
@@ -780,7 +840,8 @@ int mut_exec_close(mut_exec *exec)
 {
 	if (exec->stabstr.data != 0)
 		mut_exec_stabstr_close(exec);
-	mut_exec_strtab_close(exec);
+	mut_exec_strtab_close(&exec->strtab);
+	mut_exec_strtab_close(&exec->dynstr);
 	mut_exec_symtab_close(&exec->symtab);
 	return 1;
 }

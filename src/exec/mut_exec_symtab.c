@@ -71,6 +71,8 @@ int mut_exec_symtab_add_fun(struct mut_exec_symtab *s,
 	while ((f = *fp) != 0) {
 		if (a < f->fun_start_addr)
 			break;
+		if (a == f->fun_start_addr)
+			return 1;
 		fp = &f->next;
 	}
 	if ((nf = mut_exec_symtab_fun_open(s, n, a, f)) == 0)

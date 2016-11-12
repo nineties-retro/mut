@@ -14,7 +14,6 @@ void mut_log_warning(mut_log *, char const *);
 void mut_log_string(mut_log *, char const *);
 
 void mut_log_int(mut_log *, int);
-
 void mut_log_uint(mut_log *, unsigned int);
 
 void mut_log_uint_hex(mut_log *, unsigned int);

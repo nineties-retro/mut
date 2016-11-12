@@ -66,25 +66,26 @@ loop:
 
 
 
-static int mut_manage_action(mut *m, mut_action *action, struct mut_exec_function *function)
+static int
+mut_manage_action(mut *m, mut_action *a,
+		  struct mut_exec_function *f)
 {
-	action->hits = mut_counter_from_uint(0);
-	if (function->flags == 0) {
+	mut_action *oa;
+
+	a->hits = mut_counter_from_uint(0);
+	if (f->flags == 0)
 		return 1;
-	} else {
-		mut_action * old;
-		action->addr = function->addr;
-		old = mut_actions_enter(m, action);
-		if (old->name != action->name) {
-			mut_log_info(m->log, "duplicate.addr");
-			mut_log_string(m->log, action->name);
-			mut_log_string(m->log, old->name);
-			mut_log_exec_addr(m->log, action->addr);
-			(void)mut_log_end(m->log);
-			return 1;
-		} 
-		return mut_process_breakpoint(&m->process, action->addr, &action->instr);
-	}
+	a->addr = f->addr;
+	oa = mut_actions_enter(m, a);
+	if (oa->name != a->name) {
+		mut_log_info(m->log, "duplicate.addr");
+		mut_log_string(m->log, a->name);
+		mut_log_string(m->log, oa->name);
+		mut_log_exec_addr(m->log, a->addr);
+		(void)mut_log_end(m->log);
+		return 1;
+	} 
+	return mut_process_breakpoint(&m->process, a->addr, &a->instr);
 }
 
 
@@ -831,8 +832,9 @@ free_backtrace:
  * `mut_realloc_failure' is passed the ownership of `bt' which means it
  * is up to `mut_realloc_failure' to close `bt' if it is no longer needed.
  */
-static void mut_realloc_failure(mut *m, size_t new_size, mut_exec_addr old_addr,
-				size_t old_size, mut_backtrace *bt)
+static void
+mut_realloc_failure(mut *m, size_t new_size, mut_exec_addr old_addr,
+		    size_t old_size, mut_backtrace *bt)
 {
 	mut_action *realloc = &m->actions.realloc;
 

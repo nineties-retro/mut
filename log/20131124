@@ -5,7 +5,7 @@ Unpacked after a 12+ year hibernation.
 Try to make it compile under Ubuntu 12.04.
 
 Seems 2001 vintage changes to make it compile under OpenBSD 2.8 broke
-ELF due to some API changes that were no propagated to the ELF code.
+ELF due to some API changes that were not propagated to the ELF code.
 
 Since Code was an inconsistent mixture of original 2 space indentation
 and K&R II done in 2001 decided to make it consistent.  Went with

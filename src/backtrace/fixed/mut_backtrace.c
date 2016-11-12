@@ -19,6 +19,7 @@
 mut_backtrace *mut_backtrace_open(mut_log *log, mut_exec * exec)
 {
 	mut_backtrace * bt= mut_mem_malloc(sizeof(mut_backtrace));
+
 	if (bt == (mut_backtrace *)0) {
 		mut_log_mem_full(log, errno);
 	} else {
