@@ -1,4 +1,3 @@
-# $Id$
 #
 #.intro: src GNU Makefile
 #
@@ -15,6 +14,7 @@ mut_opt_stddef=vendor
 mut_opt_stdio=vendor
 mut_opt_stdlib=vendor
 mut_opt_string=vendor
+mut_opt_stdint=vendor
 mut_opt_resources=list
 mut_opt_ui=tty
 
@@ -115,6 +115,7 @@ mut_tty_dirs := \
 	include/stddef/$(mut_opt_stddef) \
 	include/stdio/$(mut_opt_stdio) \
 	include/stdlib/$(mut_opt_stdlib) \
+	include/stdint/$(mut_opt_stdint) \
 	include/string/$(mut_opt_string) \
 	mem/$(mut_opt_mem) \
 	uint64/$(mut_opt_uint64) \

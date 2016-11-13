@@ -1,9 +1,12 @@
 /*
- *.intro: Dumps out the string and symbol tables for a a.out file.
+ *.intro: Dumps out the string and symbol tables for an a.out file.
  *
  */
 
-#include <a.out.h>		/* struct exec */
+#include <sys/types.h>         /* needed by sys/exec.h on OpenBSD 2.8 */
+#include <sys/cdefs.h>         /* needed by sys/exec.h on OpenBSD 2.8 */
+#include <sys/exec.h>
+#include <a.out.h>
 #include <errno.h>		/* errno */
 #include <string.h>		/* strerror */
 #include <stdio.h>		/* fprintf, sprintf */

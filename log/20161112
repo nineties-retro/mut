@@ -1,0 +1,392 @@
+                            -*- Text -*-
+
+10:36
+  Start installing OpenBSD 2.8 under VMware.
+
+    $ wget ftp://ftp.vim.org/pub/OpenBSD/2.8/i386/cdrom28.fs
+
+  Rename it so that VMware floopy disk dialog will allow it
+  to be selected.
+
+    $ mv cdrom28.fs cdrom28.flp
+
+  Create custom VM and attach floppy drive with cdrom28.flp.
+  Initially 32MB of memory with 2GB disk.  Used type "FreeBSD".
+  Used Internet Sharing for networking.
+
+  Booted.  Now need some additional tools to edit and download mut ...
+
+    # pkg_add -v ftp://ftp.vim.org/pub/OpenBSD/2.8/packages/i386/emacs-20.7-no_xll.tgz
+    # pkg_add -v ftp://ftp.vim.org/pub/OpenBSD/2.8/packages/i386/wget-1.5.4.tgz
+
+10:47
+  Stop.
+
+11:42
+  Restart.
+
+  
+12:54
+  Tried downloading mut diretly from github :-
+
+    $ wget https://github.com/nineties-retro/mut-master.zip
+
+  but this fails with some kind of SSL issue.  Trying to connect
+  directly with openssl s_client also fails :-
+
+    $ openssl s_client -connect github.com:443 -tls1
+    CONNECTED(00000003)
+    2124:error:14094410::lib(20) :SSL3_READ_BYTES:sslv3 alert handshake failure:/usr/src/lib/libssl/obj/ssl/../src/ssl/s3_pkt.c:956:SSL alert number 40
+    2124:error:1409E0E5::lib(20) :SSL3_WRITE_BYTES:ssl handshake failure:/usr/src/lib/libssl/obj/ssl/../src/ssl/s3_pkt.c:490:
+    $ 
+
+  since the server won't let any client connect unless it has at least
+  TLS 1.1 and that isn't supported by the default version of OpenSSL
+  that comes with OpenBSD 2.8 :-
+
+    $ openssl version
+    openssl version
+    OpenSSL 0.9.5a 1 Apr 2000
+
+  Could download later OpenSSL/wget source code but in the end decided
+  it was simpler to do :-
+
+    $ wget http://192.168.0.105:8080/Download/mut-master.zip
+
+  where 192.168.0.105 is the MacOS VMware host running :-
+
+    $ python -m SimpleHTTPServer 8080
+
+  Of course :-
+
+    $ unzip mut-master.zip
+
+  failed due to lack of unzip so :-
+
+    # pkg_add -v ftp://ftp.vim.org/pub/OpenBSD/2.8/packages/i386/unzip-5.41.tgz
+
+    $ unzip mut-master.zip
+
+  Obviously no git in OpenBSD 2.8 but no svn either.  So, cvs it is.
+
+
+     $ export CVSROOT=/home/nr
+     $ cvs init
+     $ cvs import mut master first
+     $ cvs commit -m "Initial Import"
+
+  Building with make failed on '-C' :-
+
+    $ cd mut
+    $ make
+
+  So tried the src directory :-
+
+    $ cd src
+    $ make
+
+  and this failed because make can't understand the define in the
+  Makefile.  Then had the doh moment that make(1) on *BSD is not GNU
+  make.  So ...
+  
+    # pkg_add -v ftp://ftp.vim.org/pub/OpenBSD/2.8/packages/i386/gmake-3.79.1.tgz
+
+  Now can compile :-
+
+    $ gmake mut_ops_exec=aout mut_ops_os=bsd
+
+  Failed to compile due to missing <stdint.h>.  Abstracted over that detail
+  by adding mut_ops_stdint.  Now it compiles :-
+
+    $ gmake mut_ops_exec=aout mut_ops_os=bsd mut_ops_stdint=inttypes
+
+  Built tests :-
+
+    $ cd ../tests
+    $ gmake exec=aout
+    $ cd ../
+
+  Failed on stripping executables, but that's OK, will run
+  non-stripped version :-
+    
+    $ src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe
+    A
+    B
+    src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty info process.exited 0
+
+  Didn't do anything.  What is in the executable :-
+
+    $ objdump --headers tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe
+    tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe:     file format a.out-i386-netbsd
+
+    Sections:
+    Idx Name          Size      VMA       LMA       File off  Algn
+      0 .text         00001000  00001000  00001000  00000000  2**3
+                     CONTENTS, ALLOC, LOAD, CODE
+      1 .data         00001000  00002000  00002000  00001000  2**3
+                     CONTENTS, ALLOC, LOAD, DATA
+      2 .bss          00000000  00003000  00003000  00000000  2**3
+                     ALLOC
+    $ 
+
+  Hm, no symbols or string tables.
+
+    $ file tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe
+    tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe: OpenBSD/i386 demand paged dynamically linked executable not stripped
+    $ 
+  Stop.
+
+15:45
+  Restart.
+
+16:47
+  Re-created the above notes from others I took during the proces.
+
+  Commit the changes so far :-
+
+    $ cvs commit -F commit src/Makefile src/arch/x86/32/mut_reg.h src/exec/aout/mut_exec_addr.h src/proc/ptrace/arch/x86/mut_process_arch.c
+
+16:53
+  Also commit this file.
+
+  Stop.
+
+17:28
+  Restart.
+
+    $ objdump -f /bin/ls
+
+    /bin/ls:     file format a.out-i386-netbsd
+    architecture: i386, flags 0x00000182:
+    EXEC_P, WP_TEXT, D_PAGED
+    start address 0x00001020
+
+    $ objdump -f /usr/bin/mg
+
+    /usr/bin/mg:     file format a.out-i386-netbsd
+    architecture: i386, flags 0x000001c2:
+    EXEC_P, DYNAMIC, WP_TEXT, D_PAGED
+    start address 0x00001020
+
+    $ objdump -f tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe 
+
+    tests/gen/gcc.x86.fp.dynamic.aout.off.on/exe/mlk_malloc.exe:     file format a.out-i386-netbsd
+    architecture: i386, flags 0x000001fe:
+    EXEC_P, HAS_LINENO, HAS_DEBUG, HAS_SYMS, HAS_LOCALS, DYNAMIC, WP_TEXT, D_PAGED
+    start address 0x00001020
+
+    $ 
+
+18:02
+  Finally had enough of the hangs due to low memory and not
+  configuring any swap.  Changed VMware configuration for
+  the image from 32MB to 256MB.
+
+18:09
+  No getting much joy with objdump.  Can see _malloc in the output
+  of one of the objdump options.  With --source the body of the
+  main function of mlk_malloc.c looks like :-
+
+    int main(void)
+    {
+       17a6:   e8 c5 00 00 00          call   1870 <___main>
+           char *x;
+           write(1, "A\n", 2);
+       17ab:   83 c4 fc                add    $0xfffffffc,%esp
+       17ae:   6a 02                   push   $0x2
+       17b0:   68 98 17 00 00          push   $0x1798
+       17b5:   6a 01                   push   $0x1
+       17b7:   e8 c8 08 00 00          call   2084 <__DYNAMIC+0x84>
+       17bc:   83 c4 10                add    $0x10,%esp
+           x = malloc(8);
+       17bf:   83 c4 f4                add    $0xfffffff4,%esp
+       17c2:   6a 08                   push   $0x8
+       17c4:   e8 c3 08 00 00          call   208c <__DYNAMIC+0x8c>
+       17c9:   83 c4 10                add    $0x10,%esp
+       17cc:   89 c0                   mov    %eax,%eax
+       17ce:   89 45 fc                mov    %eax,0xfffffffc(%ebp)
+           write(1, "B\n", 2);
+       17d1:   83 c4 fc                add    $0xfffffffc,%esp
+       17d4:   6a 02                   push   $0x2
+       17d6:   68 9b 17 00 00          push   $0x179b
+       17db:   6a 01                   push   $0x1
+       17dd:   e8 a2 08 00 00          call   2084 <__DYNAMIC+0x84>
+       17e2:   83 c4 10                add    $0x10,%esp
+           *x = 10;
+       17e5:   8b 45 fc                mov    0xfffffffc(%ebp),%eax
+       17e8:   c6 00 0a                movb   $0xa,(%eax)
+           return 0;
+       17eb:   31 c0                   xor    %eax,%eax
+       17ed:   eb 01                   jmp    17f0 <_main+0x50>
+    }
+
+  How to map malloc/write to __DYNAMIC+x?
+
+18:26
+  Fixed up misc/aout/aout.c so that it compiles under OpenBSD 2.8.
+  Not sure what platform it was last comiled on -- possibly Linux 1.x or
+  earlier 2.x -- but under OpenBSD 2.8 it runs but, as with objdump,
+  there is no malloc listed in the symbols :-
+
+    $ aout malloc | grep malloc
+    aout malloc | grep malloc
+    22 x= f0 (malloc.o), type 31/1f/37, value 6040/6040/1798
+    $ 
+
+    $ aout malloc | head -2
+    NSYMS= 457, SYMS= 8192, STRS= 13676
+    STR_SIZE= 11881
+
+18:35
+  Reading the old logs realised I was in exactly this point 15 years
+  ago on 2001-06-07 and I didn't spend any time on finding out where
+  the symbols were, I just tested statically linked executables :-
+
+    $ cd tests
+    $ gmake exec=aout linkage=static
+    ...
+
+    $ cd ..
+    $ src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 
+    A
+    B
+    src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty info process.exited 0
+    src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty error MLK malloc 8 7030
+    $ 
+
+  Pushing it through the pretty-printer :-
+
+    $ src/out/tty.x86.32.gcc.uint64.aout.on.tty.debug.off.bsd.ptrace.struct.on/bin/mut_tty -b tests/gen/gcc.x86.fp.static.aout.off.on/exe/mlk_malloc.exe 2>&1 | grep "mut_tty" | src/mut.sh
+    error MLK: 8 byte object allocated by _malloc_ at address 0x7030
+    has not been deallocated.
+        0x17C4 = main(0x17A0+36) ?:0
+        0x1097 = start(0x1020+119) ?:0
+    $
+
+18:55
+  So, 15 years on, am in he same place when it comes to OpenBSD 2.8.
+
+    $ cd misc/aout
+
+  The otuput of :-
+
+    $ objdump -s malloc
+
+  has the following section which at least has the name "malloc"
+  in there :-
+
+     1bf0 00000000 5f5f4459 4e414d49 43005f64  ....__DYNAMIC._d
+     1c00 6c63746c 005f646c 6f70656e 005f5f65  lctl._dlopen.__e
+     1c10 7869745f 64756d6d 795f6465 636c005f  xit_dummy_decl._
+     1c20 646c636c 6f736500 5f646c65 72726f72  dlclose._dlerror
+     1c30 005f5f5f 646f5f67 6c6f6261 6c5f6474  .___do_global_dt
+     1c40 6f727300 5f5f5f44 544f525f 4c495354  ors.___DTOR_LIST
+     1c50 5f5f005f 5f5f4354 4f525f4c 4953545f  __.___CTOR_LIST_
+     1c60 5f005f5f 5f646f5f 676c6f62 616c5f63  _.___do_global_c
+     1c70 746f7273 005f7072 696e7466 005f5f5f  tors._printf.___
+     1c80 70726f67 6e616d65 00737461 7274005f  progname.start._
+     1c90 73747265 72726f72 005f6d61 6c6c6f63  strerror._malloc
+     1ca0 005f5f65 7869745f 64756d6d 795f7265  .__exit_dummy_re
+     1cb0 66005f65 74657874 005f656e 7669726f  f._etext._enviro
+     1cc0 6e005f61 74657869 74005f65 72726e6f  n._atexit._errno
+     1cd0 005f6578 6974005f 6d61696e 005f6672  ._exit._main._fr
+     1ce0 6565005f 646c7379 6d005f65 64617461  ee._dlsym._edata
+     1cf0 005f656e 64005f5f 5f6d6169 6e00bfdf  ._end.___main...
+
+19:20
+  printf = _DYNAMIC+132
+  malloc = _DYNAMIC+148
+
+  Only 16 apart which is the standard size for a jump table entry.
+
+  If the order of the symbols in the has any meaning, as they do for .plt
+  section in ELF, then it would mean that printf and malloc should be
+  next to each other but they aren't ;-
+
+    dlctl
+    dlopen
+    exit_dummy_decl
+    dlclose
+    dlerror
+    do_global_dtors
+    __DTOR_LIST
+    __CTOR_LIST
+    __do_gloval_ctors
+    _printf
+    progname
+    start
+    strerror
+    malloc
+    __exit_dummy_ref
+    _etext
+    environ
+
+19:34
+  With a bit of hex editing noticed that the dynamic section in a
+  running executable :-
+
+    (gdb) x/20bx 0x2064
+    0x2064 <_DYNAMIC+100>:     0x90    0xe9    0xfa    0xff    0xff    0xff    0x00    0x00
+    0x206c <_DYNAMIC+108>:     0x90    0xe8    0xf2    0xff    0xff    0xff    0x00    0x00
+    0x2074 <_DYNAMIC+116>:     0x90    0xe8    0xea    0xff
+    (gdb) 
+
+  Matches offset 1064 in the executable file ...
+
+    00001060: 0020 0000 90e9 faff ffff 0000 90e8 f2ff  . ..............
+    00001070: ffff 0000 90e8 eaff ffff 0100 90e8 e2ff  ................
+    00001080: ffff 0200 90e8 daff ffff 0300 90e8 d2ff  ................
+    00001090: ffff 0400 90e8 caff ffff 0500 0000 0000  ................
+    000010a0: 244f 7065 6e42 5344 3a20 6372 7430 2e63  $OpenBSD: crt0.c
+    000010b0: 
+
+  Hardly a major dicovery since the headers explicitly state that
+  file-offset 0x1000 is loaded at VMA 0x2000 :-
+
+    $ objdump --headers malloc
+
+    malloc:     file format a.out-i386-netbsd
+
+    Sections:
+    Idx Name          Size      VMA       LMA       File off  Algn
+      0 .text         00001000  00001000  00001000  00000000  2**3
+                     CONTENTS, ALLOC, LOAD, CODE
+      1 .data         00001000  00002000  00002000  00001000  2**3
+                     CONTENTS, ALLOC, LOAD, DATA
+      2 .bss          00000000  00003000  00003000  00000000  2**3
+                     ALLOC
+
+19:51 
+  Noticed that malloc is not visible on load :-
+
+    $ gdb malloc
+    ...
+    (gdb) x/10i malloc
+    No symbol "malloc" in current context.
+
+  But if the program is run then the symbol is there :-
+
+    (gdb) b main
+    Breakpoint 1 at 0x1842
+    (gdb) run
+    Starting program: /home/nr/changes/mut/misc/aout/malloc 
+
+    Breakpoint 1, 0x1842 in main ()
+    (gdb) x/10i malloc
+    0x40083474 <malloc>:       push   %ebp
+    0x40083475 <malloc+1>:     mov    %ebp,%esp
+    0x40083477 <malloc+3>:     sub    %esp,16
+    0x4008347a <malloc+6>:     push   %esi
+    0x4008347b <malloc+7>:     push   %ebx
+    0x4008347c <malloc+8>:     call   0x40083481 <malloc+13>
+    0x40083481 <malloc+13>:    pop    %ebx
+    0x40083482 <malloc+14>:    add    %ebx,0x11bdf
+    0x40083488 <malloc+20>:    lea    %eax,[%ebx-72731]
+    0x4008348e <malloc+26>:    mov    DWORD PTR [%ebx+224212],%eax
+    (gdb) 
+
+20:00
+  Probably going to leave this in the same place as 15 years ago since
+  OpenBSD went ELF a long time ago so solving dynamic a.out files
+  isn't something that anyone needs.
+

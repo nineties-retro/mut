@@ -10,10 +10,12 @@ INTRODUCTION
    nothing that the leaking program can do to corrupt the memory
    tracking.
 
-   In its current state only known to work on 32-bit Linux systems
-   (Ubuntu 14.04 ... Ubuntu 16.10), with some work could be made to
-   work on other 32-bit Unix systems and with more work on 64-bit
-   systems.
+   In its current state only known to work on 32-bit ELF based Linux
+   systems: Ubuntu 14.04 ... Ubuntu 16.10.  It should work on other
+   32-bit ELF based Linux based distributions but no tests have been
+   done.  It partially, static executables only, works for 32-bit
+   a.out OpenBSD 2.8.  With some work could be made to work on other
+   32-bit Unix systems and with more work on 64-bit systems.
 
 HISTORY
    During the early 1990s I was able to use Purify under Solaris to
