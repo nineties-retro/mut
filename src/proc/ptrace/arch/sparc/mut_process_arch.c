@@ -3,10 +3,9 @@
  *
  */
 
+#include <sys/types.h>
 #include "mut_stddef.h"		/* size_t */
 #include "mut_assert.h"		/* mut_assert_pre */
-#include <sys/types.h>		/* caddr_t (needed by sys/reg.h) */
-#include <sys/reg.h>		/* O6, O7, PC, nPC */
 #include "mut_log.h"		/* mut_log */
 #include "mut_arg.h"		/* mut_arg */
 #include "mut_exec_addr.h"	/* mut_exec_addr */
@@ -16,6 +15,7 @@
 #include "mut_backtrace_enter.h" /* mut_backtrace_enter */
 #include "mut_process_ref.h"
 #include "mut_process_arch.h"
+#include "mut_process_arch_regs.h"
 
 /*
  * See <URI:mut/log/19970315>
@@ -46,9 +46,9 @@ int mut_process_read_pc(mut_process * p, mut_exec_addr * pc)
 	int npc_reg;
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	if (!mut_trace_read_reg(&p->trace, PC, &pc_reg))
+	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_pc, &pc_reg))
 		return 0;
-	if (!mut_trace_read_reg(&p->trace, nPC, &npc_reg))
+	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_npc, &npc_reg))
 		return 0;
 	if (npc_reg != pc_reg + mut_instr_bytes) {
 		int xxx= mut_process_arch_is_dynamic_link(p, pc_reg);
@@ -57,9 +57,9 @@ int mut_process_read_pc(mut_process * p, mut_exec_addr * pc)
 		} else if (xxx > 0) {
 			pc_reg = npc_reg;
 			npc_reg += mut_instr_bytes;
-			if (!mut_trace_write_reg(&p->trace, PC, pc_reg))
+			if (!mut_trace_write_reg(&p->trace, mut_process_arch_regs_pc, pc_reg))
 				return 0;
-			if (!mut_trace_write_reg(&p->trace, nPC, npc_reg))
+			if (!mut_trace_write_reg(&p->trace, mut_process_arch_regs_npc, npc_reg))
 				return 0;
 			return -1;
 		} else {
@@ -75,14 +75,16 @@ int mut_process_read_pc(mut_process * p, mut_exec_addr * pc)
 
 
 
-mut_process_arch_public int
+int
 mut_process_write_pc(mut_process * p, mut_exec_addr addr)
 {
-	int pc= mut_exec_addr_to_int(addr);
-	int npc= pc+4;
+	mut_reg pc= mut_exec_addr_to_long(addr);
+	mut_reg npc= pc+4;
+
 	mut_assert_pre(p->status == mut_process_status_stopped);
-	return mut_trace_write_reg(&p->trace, PC, pc)
-		&&     mut_trace_write_reg(&p->trace, nPC, npc);
+
+	return mut_trace_write_reg(&p->trace, mut_process_arch_regs_pc, pc)
+		&& mut_trace_write_reg(&p->trace, mut_process_arch_regs_npc, npc);
 }
 
 
@@ -95,7 +97,7 @@ int mut_process_read_arg(mut_process *p, size_t n, mut_arg *arg)
 {
 	mut_assert_pre(p->status == mut_process_status_stopped);
 	mut_assert_pre(n < mut_process_n_arg_regs);
-	return mut_trace_read_reg(&p->trace, O0+n, arg);
+	return mut_trace_read_reg(&p->trace, mut_process_arch_regs_o0+n, arg);
 }
 
 
@@ -104,20 +106,20 @@ int mut_process_write_arg(mut_process *p, size_t n, mut_arg arg)
 	mut_assert_pre(p->status == mut_process_status_stopped);
 	mut_assert_pre(n < mut_process_n_arg_regs);
 
-	return mut_trace_write_reg(&p->trace, O0+n, arg);
+	return mut_trace_write_reg(&p->trace, mut_process_arch_regs_o0+n, arg);
 }
 
 
 
 int mut_process_function_return_addr(mut_process *p, mut_exec_addr *addr)
 {
-	int o7;
+	unsigned int o7;
 
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
-	if (!mut_trace_read_reg(&p->trace, O7, &o7))
+	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_o7, &o7))
 		return 0;
-	*addr= mut_exec_addr_from_int(o7+8); /* <URI:mut/bib/sparc9#call/return> */
+	*addr = mut_exec_addr_from_int(o7+8); /* <URI:mut/bib/sparc9#call/return> */
 	return 1;
 }
 
@@ -127,7 +129,7 @@ int mut_process_read_result(mut_process *p, mut_arg *result)
 {
 	mut_assert_pre(p->status == mut_process_status_stopped);
 
-	return mut_trace_read_reg(&p->trace, O0, result);
+	return mut_trace_read_reg(&p->trace, mut_process_arch_regs_o0, result);
 }
 
 
@@ -135,7 +137,7 @@ int mut_process_write_result(mut_process *p, mut_arg result)
 {
 	mut_assert_pre(p->status == mut_process_status_stopped);
 	
-	return mut_trace_write_reg(&p->trace, O0, result);
+	return mut_trace_write_reg(&p->trace, mut_process_arch_regs_o0, result);
 }
 
 
@@ -151,10 +153,10 @@ static int mut_process_function_xxx_backtrace(mut_process *p, mut_backtrace *bt)
 	int fp, link;
 	int status;
 
-	if (!mut_trace_read_reg(&p->trace, O6, &fp))
+	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_o6, &fp))
 		return 0;
 	for (; fp != 0; ) {
-		link_addr= mut_exec_addr_from_int(fp + 15*mut_reg_size);
+		link_addr = mut_exec_addr_from_int(fp + 15*mut_reg_size);
 		if (!mut_trace_read_data(&p->trace, link_addr, &link))
 			return 0;
 		status = mut_backtrace_enter(bt, mut_exec_addr_from_int(link));
@@ -173,7 +175,7 @@ int mut_process_function_backtrace(mut_process * p, mut_backtrace * bt)
 {
 	int link, status;
 
-	if (!mut_trace_read_reg(&p->trace, O7, &link))
+	if (!mut_trace_read_reg(&p->trace, mut_process_arch_regs_o7, &link))
 		return 0;
 	status = mut_backtrace_enter(bt, mut_exec_addr_from_int(link));
 	if (status < 0)  return 1;

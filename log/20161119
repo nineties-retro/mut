@@ -1,0 +1,9 @@
+-*- Text -*-
+
+20:05
+  Start.
+
+21:13
+  Stop.
+
+  Created src/proc/ptrace/arch/sparc/os/solaris/{mut_process_arch_regs.h,mut_trace_arch.c}

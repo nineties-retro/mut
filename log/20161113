@@ -1,0 +1,88 @@
+-*- Text -*-
+
+Decided to test out the SPARC support to see whether it works.  When
+it was last touched around 1997 it was compiling under some vintage of
+Solaris.  Junked my last box running Solaris in 2012, so don't have
+physical access anymore.  So while investigating how to get SunOS
+or Solaris running again under emulation, let's use NetBSD/sparc.
+Chose it rather than OpenBSD since NetBSD still maintains sparc wheras
+OpenBSD stopped supporting it and now only supports sparc64.  Perhaps
+will install an older OpenBSD does or does not work out.
+
+Download NetBSD-7.01-sparc.iso :-
+
+  ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-7.0.1/iso/NetBSD-7.0.1-sparc.iso
+
+Could have used 7.02 but decided to go with not quite the latest
+version.
+
+Make a disk image on which to store the NetBSD installation :-
+
+  $ dd if=/dev/zero of=disk.img bs=1048576 count=4096
+
+Decided to go for speed over space and full populate it rather than
+using a self-expanding version.  4G is probably overkill but I have
+space to spare to no point in using something smaller only to have
+something fail later due to lack of space.
+
+Run installation with default user-based networking to avoid having to
+install (privileged) tap device under MacOS :-
+
+  $ qemu-system-sparc -m 256 -drive file=disk.img,format=raw,index=0 -net nic -net user -nographic -cdrom NetBSD-7.01-sparc.iso -boot d
+
+Patition the disk such that first parition takes most the disk
+and is mounted as / and allocate at least 256 MB for swap.
+
+Do default install (no X11).  This will come back to bite me later as
+some packages assume that X11 is installed and so they have to be
+tweaked in order to get them to install. 
+
+When offered to configure networking use :-
+
+  ip 10.0.2.15
+  gateway 10.0.2.2
+  dns 10.0.2.3
+
+which are the default IP addresses that QEMU uses for "-net user".
+
+To simplify the installation of software once booted, take the
+option to install pkgsrc.  Note this can take a while depending
+on the network connection, took 20+ minutes on residential cable.
+
+Enable sshd and ntpd.
+
+Could add root password and non-privileged user at this stage
+but didn't do either.  Select halt/reboot.
+
+To run the installed system :-
+
+  $ qemu-system-sparc -m 256 -drive file=disk.img,format=raw,index=0 -net nic -net user -nographic
+
+On first boot this will take quite while to generate the sshd keys.
+
+Login as root, no password
+
+Networking not configured so for now just use DHCP :-
+
+  # dhclient le0
+
+and to get it permanently enabled :-
+
+  # cat >> /etc/rc.conf
+  dhclient=yes
+  ^D
+
+Wanted to edit with emacs and directly use git so :-
+
+  # cd /usr/pkgsrc/editors/emacs-nox11
+  # make
+
+However, after taking somewhere in the region of 6 hours downloading
+and compiling: digest, automake, help2man, gmake, gettext, perl, m4,
+and emacs24 the build failed due to :-
+
+    leim/ja-dic/ja-dic.el:16979:1:Error: Memory exhausted--use C-x s
+then exit and restart Emacs
+
+Tried re-starting with "-m 512" but it proceeded to start re-compiing
+emacs again so just gave up on emacs.

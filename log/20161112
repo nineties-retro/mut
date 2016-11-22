@@ -93,12 +93,12 @@
 
   Now can compile :-
 
-    $ gmake mut_ops_exec=aout mut_ops_os=bsd
+    $ gmake mut_opt_exec=aout mut_opt_os=bsd
 
   Failed to compile due to missing <stdint.h>.  Abstracted over that detail
-  by adding mut_ops_stdint.  Now it compiles :-
+  by adding mut_opt_stdint.  Now it compiles :-
 
-    $ gmake mut_ops_exec=aout mut_ops_os=bsd mut_ops_stdint=inttypes
+    $ gmake mut_opt_exec=aout mut_opt_os=bsd mut_opt_stdint=inttypes
 
   Built tests :-
 
@@ -389,4 +389,3 @@
   Probably going to leave this in the same place as 15 years ago since
   OpenBSD went ELF a long time ago so solving dynamic a.out files
   isn't something that anyone needs.
-

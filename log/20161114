@@ -1,0 +1,201 @@
+-*- Text -*-
+
+08:00
+  Start installing git ...
+
+    # cd /usr/pkgsrc/devel/git
+
+08:27
+  Building libcurl.
+
+09:03
+  Building git-base
+
+09:55
+  Installation phase of git-base.
+
+09:56
+  Wants to build git-contrib but that wants
+  asciidoc which in turn wants
+  docbook-xsl which in turn wants
+  xmlcatmgr
+  docbook-xml
+
+10:06
+  ascidocc wants python27 but that won't install since I don't have X11
+
+    ===> Installing binary package of getopt-1.1.6
+    => Returning to build of asciidoc-8.6.9nb2
+    => Full dependency python27>=2.7.1nb2: NOT found
+    => Verifying reinstall for ../../lang/python27
+    ERROR: This package has set PKG_FAIL_REASON:
+    ERROR: python27-2.7.12nb4 uses X11, but /usr/X11R7 not found
+    *** Error code 1
+
+10:25
+  Stop.
+
+16:30
+  Restart
+
+16:41
+  Not sure of the correct way to avoid python27 wanting X11 so just
+  went a head and edited python27/options.mk to stop it requiring X11
+  and re-started the build :-
+
+    # cd /usr/pkgsrc/lang/python27
+    # make install
+
+17:43
+  Finished python so go back and restart the git install :-
+
+    # cd /usr/pkgsrc/devel/git
+    # make install
+
+22:47
+
+  Made it through libxslt, libgcypt, libgpg, libxml, xmlto, bison,
+  bash, git-contrib and gitdocs only for it to fail on gitk due to the
+  lack of tk due to lack of X11 :- 
+  
+    => Returning to build of git-2.10.0
+    => Full dependency git-gitk>=2.10.0: NOT found
+    => Verifying reinstall for ../../devel/git-gitk
+    => Bootstrap dependency digest>=20010302: found digest-20160304
+    ===> Skipping vulnerability checks.
+    WARNING: No /var/db/pkg/pkg-vulnerabilities file found.
+    WARNING: To fix run: `/usr/sbin/pkg_admin -K /var/db/pkg fetch-pkg-vulnerabilities'.
+    => Checksum SHA1 OK for git-2.10.0.tar.xz
+    => Checksum RMD160 OK for git-2.10.0.tar.xz
+    => Checksum SHA512 OK for git-2.10.0.tar.xz
+    ===> Installing dependencies for git-gitk-2.10.0
+    => Tool dependency gmake>=3.81: found gmake-4.1nb2
+    => Full dependency git-base>=1.7.12nb1: found git-base-2.10.0
+    => Full dependency tk>=8.4: NOT found
+    => Verifying reinstall for ../../x11/tk
+    ERROR: This package has set PKG_FAIL_REASON:
+    ERROR: tk-8.6.6 uses X11, but /usr/X11R7 not found
+    *** Error code 1
+
+    Stop.
+
+22:53
+  Again, not sure of the official way to solve it so just remove
+  gitk from /usr/pkgsrc/devel/git/work/.depends.
+
+22:54
+  Now have git installed.
+
+
+===> Installing binary package of getopt-1.1.6
+=> Returning to build of asciidoc-8.6.9nb2
+=> Full dependency python27>=2.7.1nb2: NOT found
+=> Verifying reinstall for ../../lang/python27
+ERROR: This package has set PKG_FAIL_REASON:
+ERROR: python27-2.7.12nb4 uses X11, but /usr/X11R7 not found
+*** Error code 1
+
+10:25
+  Stop.
+  
+16:30
+  Restart.
+
+16:41
+  Tweaked python27/options.mk to stop it requiring X11.
+  Now it is downloading readline
+
+17:16
+  Part of the way through compiling python27.
+
+17:43
+  Done.  Restarting the git build.
+  Which currently seems to be doing more python27 installation.
+
+17:51
+  Finished python, now on libxslt.
+  which in turn wants libgcrypt.
+  which in turn wants libgpg.
+
+19:17
+  Finished libxml, now back to libxslt.
+
+19:29
+  Done, now building asciidoc.
+
+19:31
+  Done, back to git-contrib which wants
+  xmlto which wants
+  bash which wants bison
+
+19:51
+  bison done, back to bash.
+
+20:20
+  bash done, now back to xmlto
+
+20:23
+  xmlto done, back to git-contrib.
+
+20:27
+  git-contrib done, now back to git, but that wants git-docs.
+
+22:10
+  Very slowly making its way through asciidoc X.xml && xmlto X.1
+  to create the manual page for each git sub command.
+  So far up to git-mailinfo.
+
+22:47
+  gitdocs done, but now build fails on gitk, or rather tk ...
+
+    => Returning to build of git-2.10.0
+    => Full dependency git-gitk>=2.10.0: NOT found
+    => Verifying reinstall for ../../devel/git-gitk
+    => Bootstrap dependency digest>=20010302: found digest-20160304
+    ===> Skipping vulnerability checks.
+    WARNING: No /var/db/pkg/pkg-vulnerabilities file found.
+    WARNING: To fix run: `/usr/sbin/pkg_admin -K /var/db/pkg fetch-pkg-vulnerabilities'.
+    => Checksum SHA1 OK for git-2.10.0.tar.xz
+    => Checksum RMD160 OK for git-2.10.0.tar.xz
+    => Checksum SHA512 OK for git-2.10.0.tar.xz
+    ===> Installing dependencies for git-gitk-2.10.0
+    => Tool dependency gmake>=3.81: found gmake-4.1nb2
+    => Full dependency git-base>=1.7.12nb1: found ound
+    => Verifying reinstall for ../../x11/tk
+    ERROR: This package has set PKG_FAIL_REASON:
+    ERROR: tk-8.6.6 uses X11, but /usr/X11R7 not found
+    *** Error code 1
+
+    Stop.
+
+22:53
+  Removed gitk from the work/.depends file.
+
+22:54
+  Now have git.
+
+  Tried to download mut from github :-
+
+    # git clone https://github.com/nineties-retro/mut.git
+    Cloning into 'mut'...
+    fatal: unable to access 'https://github.com/nineties-retro/mut.git/':
+    SSL certificate problem: unable to get local issuer certificatehost
+
+  Tried with openssl s_client and found that all attempts to verify
+  server certificates were failing.  Apparently although the CA
+  certificates were downloaded as part of either the emacs or git
+  install (I forget which) the CAs themselves weren't installed.  That
+  was accomplished via :-
+
+    # mozilla-rootcerts install
+
+23:14
+  Can now successfully checkout mut from github :-
+
+    # git clone https://github.com/nineties-retro/mut.git
+    Cloning into 'mut'...
+    remote: Counting objects: 660, done.
+    remote: Compressing objects: 100% (118/118), done.
+    Receiving objects: 100% (660/660), 268.95 KiB | 147.00 KiB/s, done.
+    Resolving deltas: 100% (128/128), done.
+    remote: Total 660 (delta 53), reused 0 (delta 0), pack-reused 533

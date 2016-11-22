@@ -1,0 +1,13 @@
+-*- Text -*-
+
+Since could not get emacs installed and don't want to edit anything
+non-trivial with vi, decided to install what I hoped was the smallest
+Emacs compatible editor :-
+
+  # cd /usr/pkgsrc/editors/mg
+  # make install
+
+After pulling down ncurses and some other things, 
+
+12:15
+  mg finally installed.
