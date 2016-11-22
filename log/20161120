@@ -11,6 +11,8 @@
 21:41
   Restart.
 
+  $ gmake mut_opt_os=bsd mut_opt_arch=sparc
+
 22:06
   Finally have a NetBSD/sparc version that compiles, but more amazingly
   it works :-
